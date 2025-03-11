@@ -45,8 +45,8 @@ install_docker_compose() {
 }
 
 start_containers() {
-    export OPEN_WEBUI_DIR=/home/ec2-user/open-webui
-    mkdir $OPEN_WEBUI_DIR
+    export OPEN_WEBUI_DIR=/home/ec2-user/docker/open-webui
+    mkdir -p $OPEN_WEBUI_DIR
 
     # See terraform\main.tf file for LITELLM_CONFIG_CONTENT and DOCKER_COMPOSE_CONTENT
 
@@ -186,12 +186,24 @@ EOF
     fi
 }
 
+install_portainer() {
+    echo "Installing portainer in docker"
+    export PORTAINER_DIR=/home/ec2-user/docker/portainer
+    mkdir -p $PORTAINER_DIR
+    echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
+    cd $PORTAINER_DIR
+    docker-compose up -d
+    sudo chown -R ec2-user:ec2-user $PORTAINER_DIR
+    echo "Portainer installed"
+}
+
 # Main execution
 update_dnf
 install_ansible
 install_docker
 install_docker_compose
 start_containers
+install_portainer
 install_caddy
 install_code_server
 

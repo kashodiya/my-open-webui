@@ -24,6 +24,7 @@ services:
 
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
     volumes:
       - ./litellm-config.yml:/app/config.yaml
     ports:

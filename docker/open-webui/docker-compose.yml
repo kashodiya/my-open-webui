@@ -17,7 +17,8 @@ services:
     environment:
       - OPENAI_API_BASE_URL=http://litellm:8105
       - OPENAI_API_KEY=123123
-      - GLOBAL_LOG_LEVEL="DEBUG"      
+      - GLOBAL_LOG_LEVEL="DEBUG"     
+      - OLLAMA_BASE_URL=http://ollama:11434 
     ports:
       - "8101:8080"
     restart: always

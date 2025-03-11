@@ -1,3 +1,3 @@
 set ELASTIC_IP=52.4.76.86
 set PROJECT_ID=myowu
-set INSTANCE_ID=i-04c4678b2bff66571
+set INSTANCE_ID=i-0e4cbe1e0e2b5e80c

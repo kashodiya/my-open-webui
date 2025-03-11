@@ -171,8 +171,8 @@ resource "aws_key_pair" "main_key" {
 }
 
 locals {
-  litellm_config_yml = file("${path.module}/../docker/litellm-config.yml")
-  docker_compose_yml = file("${path.module}/../docker/docker-compose.yml")
+  litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
+  docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
 
   ec2_user_data = <<-EOT

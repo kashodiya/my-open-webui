@@ -66,13 +66,17 @@ terraform init
 terraform apply  
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
 
-### SSH into EC2
-- Find Elastic IP address from terraform\output.json file.
+### SSH into EC2 (hard way)
+- Find Elastic IP address from terraform\set-tf-output-2-env-var.bat file.
 - SSH into the EC2 server using this command:
-
 set PROJECT_DIR=path/to/your/project/folder  
 set ELASTIC_IP=your.elastic.ip.address  
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
+
+### SSH into EC2 (easy way)
+- Run scripts\start-dev.bat
+- Use this shortcut:  
+sshe  
 
 ### Verify the install
 - To see complete cloud init log:  

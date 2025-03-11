@@ -63,6 +63,44 @@ start_containers() {
     echo "Containers started"
 }
 
+
+# Function to install Caddy
+install_caddy() {
+    if command_exists caddy; then
+        echo "Caddy is already installed."
+    else
+        echo "Installing Caddy..."
+        cd /tmp
+        wget -q https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz
+        tar xzf caddy_2.9.1_linux_amd64.tar.gz
+        sudo mv caddy /usr/local/bin/
+        sudo chmod +x /usr/local/bin/caddy
+        caddy version
+        sudo mkdir -p /etc/caddy
+        cat << EOF > /etc/systemd/system/caddy.service
+[Unit]
+Description=Caddy
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile
+TimeoutStopSec=5
+LimitNOFILE=1048576
+LimitNPROC=512
+PrivateTmp=true
+ProtectSystem=full
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        sudo systemctl daemon-reload
+        sudo systemctl start caddy
+        sudo systemctl enable caddy
+    fi
+}
+
 # Main execution
 update_dnf
 install_ansible

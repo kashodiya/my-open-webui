@@ -19,7 +19,7 @@ services:
       - OPENAI_API_KEY=123123
       - GLOBAL_LOG_LEVEL="DEBUG"      
     ports:
-      - "9106:8080"
+      - "8100:8080"
     restart: always
 
   litellm:
@@ -29,8 +29,6 @@ services:
     environment:
       - LITELLM_API_KEY=123123
       - AWS_REGION=us-east-1
-    ports:
-      - "8101:4000"
     command: --config /app/config.yaml --detailed_debug
 
 volumes:

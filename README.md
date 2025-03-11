@@ -62,6 +62,7 @@ OPENAI_API_KEY
 cd terraform  
 terraform init  
 terraform apply  
+- Check the plan and when ask for Enter a value, enter yes, hit Enter key
 
 ### SSH into EC2
 - Find Elastic IP address from terraform\output.json file.
@@ -81,7 +82,7 @@ start http://%ELASTIC_IP%:8101
 - Sign up for admin user
 
 ### Request access to bedrock models
-- Open docker\litellm-config.yml and request model access for each models mentioned in the config.
+- Open docker\open-webui\litellm-config.yml and request model access for each models mentioned in the config.
 - Login to AWS Console
 - Request models access by going to:  
 https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
@@ -129,5 +130,14 @@ TODO
 cd docker
 docker logs -f open-webui
 docker logs -f litellm
+
+### How to recreate EC2?
+- WARNING: This will delete your EC2 and all data inside it!
+- Execute following commands  
+cd terraform  
+terraform taint aws_instance.main_instance  
+- After you create new EC2, before doing SSH into EC2, do this:
+ssh-keygen -R %ELASTIC_IP%  
+
 
 ## Troubleshooting

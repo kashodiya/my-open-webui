@@ -1,0 +1,39 @@
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_DEBUG=1
+    restart: always
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URL=http://litellm:4000
+      - OPENAI_API_KEY=123123
+      - GLOBAL_LOG_LEVEL="DEBUG"      
+    ports:
+      - "9106:8080"
+    restart: always
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    volumes:
+      - ./litellm-config.yml:/app/config.yaml
+    environment:
+      - LITELLM_API_KEY=123123
+      - AWS_REGION=us-east-1
+    ports:
+      - "8101:4000"
+    command: --config /app/config.yaml --detailed_debug
+
+volumes:
+  ollama:
+  open-webui:
+

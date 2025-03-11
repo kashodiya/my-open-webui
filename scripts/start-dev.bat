@@ -29,8 +29,14 @@ echo ec2x = Stop EC2
 doskey open-webui=start https://%ELASTIC_IP%:7101/
 echo open-webui = Opens Open WebUI in Browser
 
+doskey portainer=start https://%ELASTIC_IP%:7102/
+echo portainer = Opens Portainer in Browser
+
 doskey code-server=start https://%ELASTIC_IP%:7104/
 echo code-server = Opens code-server in Browser
+
+doskey litellm=start https://%ELASTIC_IP%:7105/
+echo litellm = Opens LiteLLM in Browser
 
 doskey taint-ec2=cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance  
 

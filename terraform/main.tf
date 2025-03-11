@@ -173,6 +173,7 @@ resource "aws_key_pair" "main_key" {
 locals {
   litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
   docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
+  portainer_compose_yml = file("${path.module}/../docker/portainer/docker-compose.yml")
   caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
   ec2_user_data = <<-EOT
@@ -186,9 +187,15 @@ read -r -d '' DOCKER_COMPOSE_CONTENT << 'EOF'
   ${local.docker_compose_yml}
 EOF
 
+read -r -d '' PORTAINER_COMPOSE_CONTENT << 'EOF'
+  ${local.portainer_compose_yml}
+EOF
+
 read -r -d '' CADDYFILE_CONTENT << 'EOF'
   ${local.caddyfile}
 EOF
+
+
   
 ${local.user_data_script}
 
@@ -212,6 +219,10 @@ resource "aws_instance" "main_instance" {
     volume_size = 2048 # 2TB root volume
     # encrypted = false 
     # delete_on_termination = true
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 
   tags = {

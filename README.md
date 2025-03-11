@@ -114,13 +114,21 @@ docker-compose down
 docker-compose up -d
 
 ### How to add more Bedrock models?
-- Make sure that you have request access to the model
+- Make sure that you have requested access to the model
 - SSH into EC2 server
 - Edit docker/litellm-config.yml
     - Add a model in the model list
-- Restart LiteLLM container
-cd docker
-docker-compose restart litellm
+- Restart LiteLLM container  
+cd docker  
+docker-compose restart litellm  
 
 ### How to manage Open WebUI users?
 TODO
+
+### How to check server logs?
+- SSH into EC2 server  
+cd docker
+docker logs -f open-webui
+docker logs -f litellm
+
+## Troubleshooting

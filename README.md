@@ -82,7 +82,11 @@ start http://%ELASTIC_IP%:8101
 - Sign up for admin user
 
 ### Request access to bedrock models
-TODO
+- Open docker\litellm-config.yml and request model access for each models mentioned in the config.
+- Login to AWS Console
+- Request models access by going to:  
+https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
+
 
 ### Setup Open WebUI connections 
 TODO
@@ -110,7 +114,13 @@ docker-compose down
 docker-compose up -d
 
 ### How to add more Bedrock models?
-TODO
+- Make sure that you have request access to the model
+- SSH into EC2 server
+- Edit docker/litellm-config.yml
+    - Add a model in the model list
+- Restart LiteLLM container
+cd docker
+docker-compose restart litellm
 
 ### How to manage Open WebUI users?
 TODO

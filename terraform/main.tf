@@ -67,8 +67,8 @@ resource "aws_security_group" "allow_sources" {
 
   ingress {
     description = "All web apps"
-    from_port   = 8100
-    to_port     = 8110
+    from_port   = 7100
+    to_port     = 7200
     protocol    = "tcp"
     cidr_blocks = var.allowed_source_ips
   }
@@ -173,8 +173,8 @@ resource "aws_key_pair" "main_key" {
 locals {
   litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
   docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
+  caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
-
   ec2_user_data = <<-EOT
 #!/bin/bash
 
@@ -186,6 +186,10 @@ read -r -d '' DOCKER_COMPOSE_CONTENT << 'EOF'
   ${local.docker_compose_yml}
 EOF
 
+read -r -d '' CADDYFILE_CONTENT << 'EOF'
+  ${local.caddyfile}
+EOF
+  
 ${local.user_data_script}
 
 EOT 

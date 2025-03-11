@@ -30,7 +30,7 @@ cd my-open-webui
 ### Use your VPC!
 - Find out your VPC Id using this command 
 aws ec2 describe-vpcs  
-- Chance vpc_id in terraform\terraform.tfvars.json to your VPC
+- Change vpc_id in terraform\terraform.tfvars.json to your VPC
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  
@@ -75,8 +75,10 @@ set ELASTIC_IP=your.elastic.ip.address
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 
 ### Verify the install
-- See the user data script:
-sudo tail -f /var/log/cloud-init-output.log
+- To see complete cloud init log:  
+sudo tail -f /var/log/cloud-init-output.log  
+- To see only user data script log:  
+sudo tail -f /var/log/user-data.log  
 
 ### Set admin user password for Open WebUI
 - Run this command in cmd window:  
@@ -88,6 +90,22 @@ start http://%ELASTIC_IP%:8101
 - Login to AWS Console
 - Request models access by going to:  
 https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
+
+
+### Use Open WebUI
+- Open open-webui in browser using shortcut
+open-webui  
+- OR, Open code-server in browser using url:  
+https://your.public.ip.address:7101
+
+### Use code server (VSCode to EC2 server in your Browser!)
+- Get code-server password by SSH into the server and running:  
+cat /home/ec2-user/.config/code-server/config.yaml
+- Copy password from that
+- Open code-server in browser using shortcut
+code-server  
+- OR, Open code-server in browser using url:  
+https://your.public.ip.address:7104
 
 
 ### Setup Open WebUI connections 
@@ -140,6 +158,17 @@ cd terraform
 terraform taint aws_instance.main_instance  
 - After you create new EC2, before doing SSH into EC2, do this:
 ssh-keygen -R %ELASTIC_IP%  
+
+### Commands related to the code-server
+sudo systemctl status code-server@$USER
+sudo systemctl stop code-server@$USER
+sudo cat /usr/lib/systemd/system/code-server@.service
+sudo vi /usr/lib/systemd/system/code-server@.service
+sudo systemctl daemon-reload
+sudo systemctl restart code-server@$USER
+
+- Read password
+cat /home/ec2-user/.config/code-server/config.yaml
 
 
 ## Tips and tricks

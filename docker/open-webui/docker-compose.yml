@@ -15,20 +15,23 @@ services:
     volumes:
       - open-webui:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://litellm:4000
+      - OPENAI_API_BASE_URL=http://litellm:8105
       - OPENAI_API_KEY=123123
       - GLOBAL_LOG_LEVEL="DEBUG"      
     ports:
-      - "8100:8080"
+      - "8101:8080"
     restart: always
 
   litellm:
     image: ghcr.io/berriai/litellm:main-latest
     volumes:
       - ./litellm-config.yml:/app/config.yaml
+    ports:
+      - "8105:8105"
     environment:
       - LITELLM_API_KEY=123123
       - AWS_REGION=us-east-1
+      - PORT=8105
     command: --config /app/config.yaml --detailed_debug
 
 volumes:

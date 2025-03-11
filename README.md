@@ -62,7 +62,6 @@ OPENAI_API_KEY
 cd terraform  
 terraform init  
 terraform apply  
-terraform output -json > output.json
 
 ### SSH into EC2
 - Find Elastic IP address from terraform\output.json file.

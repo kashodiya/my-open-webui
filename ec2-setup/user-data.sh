@@ -58,6 +58,7 @@ start_containers() {
     sudo chown -R ec2-user:ec2-user $OPEN_WEBUI_DIR
 
     echo "Creating containers"
+    cd $OPEN_WEBUI_DIR
     docker-compose up -d
     echo "Containers started"
 }

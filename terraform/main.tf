@@ -171,8 +171,10 @@ resource "aws_key_pair" "main_key" {
 }
 
 locals {
-  litellm_config_yml = file("${path.module}/../docker/litellm_config.yaml")
+  litellm_config_yml = file("${path.module}/../docker/litellm-config.yml")
   docker_compose_yml = file("${path.module}/../docker/docker-compose.yml")
+  user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
+
   ec2_user_data = <<-EOT
 #!/bin/bash
 
@@ -184,7 +186,7 @@ read -r -d '' DOCKER_COMPOSE_CONTENT << 'EOF'
   ${local.docker_compose_yml}
 EOF
 
-${file("${path.module}/../ec2-setup/user-data.sh")}
+${local.user_data_script}
 
 EOT 
 
@@ -281,4 +283,14 @@ output "elastic_ip" {
 
 output "PROJECT_ID" {
   value = var.project_id
+}
+
+# Local file resource to create the output file
+resource "local_file" "outputs" {
+  filename = "${path.module}/set-tf-output-2-env-var.bat"
+  content  = <<-EOT
+set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
+set PROJECT_ID=${var.project_id}
+set INSTANCE_ID=${aws_instance.main_instance.id}
+EOT
 }

@@ -26,8 +26,16 @@ echo ec2 = Start EC2
 doskey ec2x=aws ec2 stop-instances --instance-ids %INSTANCE_ID%
 echo ec2x = Stop EC2
 
-doskey open-webui=start https://%ELASTIC_IP%:8100/
+doskey open-webui=start https://%ELASTIC_IP%:7101/
 echo open-webui = Opens Open WebUI in Browser
+
+doskey code-server=start https://%ELASTIC_IP%:7104/
+echo code-server = Opens code-server in Browser
+
+doskey taint-ec2=cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance  
+
+doskey rkh=ssh-keygen -R %ELASTIC_IP%  
+echo rkh = Remove known SSH host
 
 title %PROJECT_ID%
 

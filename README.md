@@ -27,8 +27,10 @@ cd my-open-webui
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
 
-### Find out your VPC Id using this command
-aws ec2 describe-vpcs
+### Use your VPC!
+- Find out your VPC Id using this command 
+aws ec2 describe-vpcs  
+- Chance vpc_id in terraform\terraform.tfvars.json to your VPC
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  

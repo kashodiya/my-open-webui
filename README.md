@@ -140,4 +140,14 @@ terraform taint aws_instance.main_instance
 ssh-keygen -R %ELASTIC_IP%  
 
 
+## Tips and tricks
+### Tip for setting your development environment
+- Prefer to use AWS profile instead of directly using AWS credentials in enviroment variables
+- Create a bat file on your desktop with this content:  
+@echo off  
+set AWS_DEFAULT_PROFILE=your-aws-profile  
+start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
+- Whenever you want to start working on this project, just double click this bat file!  
+- Read the info presented in the cmd window!  
+
 ## Troubleshooting

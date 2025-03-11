@@ -53,9 +53,9 @@ https://whatismyipaddress.com/
 
 ### Set LiteLLM API Key
 - Decide a key (random string)
-- Edit docker\docker-compose.yml and update following 2 values.
-LITELLM_API_KEY
-OPENAI_API_KEY
+- Edit docker\docker-compose.yml and update following 2 values.  
+LITELLM_API_KEY  
+OPENAI_API_KEY  
 - Ensure that both the values are same
 
 ### Init and apply terraform

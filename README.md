@@ -59,7 +59,7 @@ aws ec2 describe-vpcs
 }
 ```
 - Update your VPC Id in vpc_id
-- Set a unused subnet range for a new subnet in subnet_cidr
+- Set a unused subnet range for a new subnet in subnet_cidr. See tips section to find out how to find unused cidr. 
 - Go to and copy IPv4: https://whatismyipaddress.com/
 - Add '/32' after te IP
 - Set that ip range in allowed_source_ips
@@ -244,6 +244,13 @@ cat /home/ec2-user/.config/code-server/config.yaml
 
 
 ## Tips and tricks
+### How to find out unused cidr for new subnet
+- Run this command in cmd. Make sure you replace VPC ID in the command with your VPC ID.
+```bat
+cd scripts
+powershell.exe -ExecutionPolicy Bypass -File find-next-available-cidr.ps1 "vpc-your-vpc-id-here"
+```
+
 ### Tip for setting your development environment
 - Prefer to use AWS profile instead of directly using AWS credentials in enviroment variables
 - Create a bat file on your desktop with this content:  

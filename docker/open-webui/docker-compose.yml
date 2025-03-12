@@ -19,6 +19,7 @@ services:
       - OPENAI_API_KEY=123123
       - GLOBAL_LOG_LEVEL="DEBUG"     
       - OLLAMA_BASE_URL=http://ollama:11434 
+      - ENV=dev
     ports:
       - "8101:8080"
     restart: always

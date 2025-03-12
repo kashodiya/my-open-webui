@@ -43,6 +43,18 @@ cd my-open-webui
 - Ensure env var AWS_REGION is set
 
 
+### Check if you have VPC
+- From cmd window, run
+```bat
+aws ec2 describe-vpcs
+```
+- If you see your VPC, note down VPC ID
+- If you do not see VPC, please create one
+- From cmd window, run
+```bat
+aws ec2 create-vpc --cidr-block 10.0.0.0/16
+```
+
 ### Set your VPC ID for terraform
 - Find out your VPC Id using this command 
 ```bat

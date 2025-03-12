@@ -1,5 +1,4 @@
 @echo off
-set AWS_DEFAULT_PROFILE=sso-778130744137-AWSAdministratorAccess
 
 set "PROJECT_DIR=%CD%"
 set "PATH=%PROJECT_DIR\scripts%;%PATH%"

@@ -8,3 +8,4 @@
 keys/*.pem
 temp
 terraform/terraform.tfvars.json
+terraform/set-tf-output-2-env-var.bat

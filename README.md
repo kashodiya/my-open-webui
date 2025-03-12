@@ -181,11 +181,15 @@ terraform destroy
 TODO: Add more details 
 - SSH into EC2
 - Stop Docker containers using command:  
+```bash
 cd open-webui  
 docker-compose down
+```
 - Delete Open WebUI image
 - Start docker compose
+```bash
 docker-compose up -d
+```
 
 ### How to add more Bedrock models?
 - Make sure that you have requested access to the model
@@ -193,33 +197,43 @@ docker-compose up -d
 - Edit docker/litellm-config.yml
     - Add a model in the model list
 - Restart LiteLLM container  
+```bash
 cd docker  
 docker-compose restart litellm  
+```
 
 ### How to manage Open WebUI users?
 TODO
 
 ### How to check server logs?
 - SSH into EC2 server  
+```bash
 cd docker
 docker logs -f open-webui
 docker logs -f litellm
+```
 
 ### How to recreate EC2?
 - WARNING: This will delete your EC2 and all data inside it!
 - Execute following commands  
+```bat
 cd terraform  
 terraform taint aws_instance.main_instance  
+```
 - After you create new EC2, before doing SSH into EC2, do this:
+```bat
 ssh-keygen -R %ELASTIC_IP%  
+```
 
 ### Commands related to the code-server
+```bash
 sudo systemctl status code-server@$USER
 sudo systemctl stop code-server@$USER
 sudo cat /usr/lib/systemd/system/code-server@.service
 sudo vi /usr/lib/systemd/system/code-server@.service
 sudo systemctl daemon-reload
 sudo systemctl restart code-server@$USER
+```
 
 - Read password
 cat /home/ec2-user/.config/code-server/config.yaml
@@ -266,10 +280,12 @@ rkh = Remove known SSH host
 - [Home page](https://caddyserver.com/docs/quick-starts/reverse-proxy)
 
 ## Troubleshooting
+### When doing terraform apply: Error: No matching Internet Gateway found
+- You should create Internet gatewat and attach to your VPC (see the instructions above)
+
 
 
 ## TODO:
 How to reset password of Open WebUI
 Figure out VPC, should not be checked in
 
-Error: No matching Internet Gateway found

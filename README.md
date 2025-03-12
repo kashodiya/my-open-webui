@@ -41,21 +41,30 @@ cd my-open-webui
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
 
+
 ### Set your VPC ID for terraform
 - Find out your VPC Id using this command 
 ```bat
 aws ec2 describe-vpcs  
 ```
 - Create new file: terraform\terraform.tfvars.json
-- Enter VPC Id and an unused subnet range for a new subnet
+- Here is a sample:
 ```json
 {
     "vpc_id": "vpc-your-vpc-id-here",
+    "subnet_cidr": "10.0.2.0/26",
     "allowed_source_ips": [
-        "3.83.200.219/32"
+        "replace.this.with.your-ip"
     ]
 }
 ```
+- Update your VPC Id in vpc_id
+- Set a unused subnet range for a new subnet in subnet_cidr
+- Go to and copy IPv4: https://whatismyipaddress.com/
+- Add '/32' after te IP
+- Set that ip range in allowed_source_ips
+- Optional:
+    - If you also want to access Open WebUI from some other network/laptop make sure that you add that machine's public IP address to the allowed_source_ips array.
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  
@@ -70,20 +79,6 @@ aws ec2 create-internet-gateway
 ```bat
 aws ec2 attach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx
 ```
-
-### Find our your IP address
-- Go to:  
-https://whatismyipaddress.com/
-- Copy IPv4
-
-### Update values in terraform\terraform.tfvars.json file
-- Update allowed_source_ips array by replacing your IP address in there.
-- Optional:
-    - If you also want to access Open WebUI from some other network/laptop make sure that you add that machine's public IP address to the array.
-    - Update these items if needed:
-        - ami (this must be Amazon Linux os)
-        - instance_type
-        - project_id
 
 ### Set LiteLLM API Key
 - Decide a key (short random string/numbers)

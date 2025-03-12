@@ -289,6 +289,10 @@ cat /home/ec2-user/.config/code-server/config.yaml
 
 
 ## Tips and tricks
+
+### Stop EC2 when not used without worry
+- When you start the EC2 (use shortcut "ec2") all your apps are started by default!
+
 ### How to find out unused cidr for new subnet
 - Run this command in cmd. Make sure you replace VPC ID in the command with your VPC ID.
 ```bat

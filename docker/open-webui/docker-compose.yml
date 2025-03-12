@@ -18,7 +18,8 @@ services:
       - open-webui:/app/backend/data
     environment:
       - OPENAI_API_BASE_URL=http://litellm:8105
-      - OPENAI_API_KEY=123123
+      # See ec2-setup\user-data.sh for how LITELLM_API_KEY is created
+      - OPENAI_API_KEY=$LITELLM_API_KEY
       - GLOBAL_LOG_LEVEL="DEBUG"     
       - OLLAMA_BASE_URL=http://ollama:11434 
       - ENV=dev
@@ -34,7 +35,8 @@ services:
     ports:
       - "8105:8105"
     environment:
-      - LITELLM_API_KEY=123123
+      # See ec2-setup\user-data.sh for how LITELLM_API_KEY is created
+      - LITELLM_API_KEY=$LITELLM_API_KEY
       - AWS_REGION=us-east-1
       - PORT=8105
     command: --config /app/config.yaml --detailed_debug

@@ -10,12 +10,14 @@ Install your own instance of Open WebUI for personal use
 - KISS - Keep it simple, stupid 
 - Scale, performance and security are not primary focus. Primary focus is to get things done quickly
 
-## What you will get?
-- Open WebUI
-- Portainer (Web based Docker management)
-- Code-server (VSCode on EC2 in your browser)
-- LiteLLM (Gateway to Bedrock)
-- Caddy (reverse proxy and authetication server)
+## What you will be installed?
+- An EC2 will be created and following softwares will be installed in it:
+    - Open WebUI
+    - Portainer (Web based Docker management)
+    - Code-server (VSCode on EC2 in your browser)
+    - LiteLLM (Gateway to Bedrock)
+    - Jupyter Lab
+    - Caddy (reverse proxy and authetication server)
 
 ## SETUP GUIDE
 ### Install Terraform
@@ -71,11 +73,15 @@ aws ec2 describe-vpcs
     ]
 }
 ```
+- All the values in "terraform.tfvars" are over-written by values in "terraform\terraform.tfvars" at runtime.
 - Update your VPC Id in vpc_id
-- Set a unused subnet range for a new subnet in subnet_cidr. See tips section to find out how to find unused cidr. 
-- Go to and copy IPv4: https://whatismyipaddress.com/
-- Add '/32' after te IP
-- Set that ip range in allowed_source_ips
+- The script will create a new subnet. You need to provide a CIDR range (with /32) for new subnet. Set a unused CIDR range "subnet_cidr" field. 
+- See tips section to find out how to find unused CIDR. 
+- Set "allowed_source_ips": 
+    - Go to and copy IPv4: https://whatismyipaddress.com/
+    - Add '/32' after the IP
+    - Set that ip range in "allowed_source_ips"
+    - The EC2 will allow traffic coming in from only these IP addresses. 
 - Optional:
     - If you also want to access Open WebUI from some other network/laptop make sure that you add that machine's public IP address to the allowed_source_ips array.
 
@@ -93,13 +99,6 @@ aws ec2 create-internet-gateway
 aws ec2 attach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx
 ```
 
-### Set LiteLLM API Key
-- Decide a key (short random string/numbers)
-- Edit docker\docker-compose.yml and update following 2 values.  
-LITELLM_API_KEY  
-OPENAI_API_KEY  
-- Ensure that both the values are same
-
 ### Init and apply terraform
 ```bat
 cd terraform  
@@ -110,6 +109,7 @@ terraform apply
 
 ### Create launcher
 - Create a bat file (launch.bat or whatever you like) on your desktop with this content:  
+TODO: tell them 2 things to change in example launcher
 ```bat
 @echo off  
 set AWS_DEFAULT_PROFILE=your-aws-profile  
@@ -130,6 +130,11 @@ litellm = Opens LiteLLM in Browser
 rkh = Remove known SSH host  
 ```
 
+### SSH into EC2 (easy way)
+- Run scripts\start-dev.bat
+- Use this shortcut (read - ssh to ec2):  
+sshe  
+
 ### SSH into EC2 (hard way)
 - Find Elastic IP address from terraform\set-tf-output-2-env-var.bat file.
 - SSH into ec2 using shortcut from launcher OR,
@@ -140,24 +145,20 @@ set ELASTIC_IP=your.elastic.ip.address
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 ```
 
-### SSH into EC2 (easy way)
-- Run scripts\start-dev.bat
-- Use this shortcut (read - ssh to ec2):  
-sshe  
-
-### Verify the EC2 install
+### Track the setup of software in EC2
 - SSH into the server, and execute
 ```bash
 tail_setup_log
 ```
+- This should be the last line in the log:
+All installations completed.
 - To see complete cloud init log:  
 sudo tail -f /var/log/cloud-init-output.log  
 - To see only user data script log:  
 sudo tail -f /var/log/user-data.log  
 
 ### Set admin user password for Open WebUI
-- Run this command in cmd window:  
-start http://%ELASTIC_IP%:8101
+TODO: Ask them to use laucnher shortcut
 - Sign up for admin user
 
 ### Request access to bedrock models
@@ -168,17 +169,14 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 
 
 ### Use Open WebUI
-- Open open-webui in browser using shortcut
-open-webui  
-- OR, Open code-server in browser using url:  
-https://your.public.ip.address:7101
+- Open open-webui in browser using shortcut: open-webui  
 
 ### Find auto-generated passwords and tokens
 - SSH into the server, and execute
 ```bash
 show_passwords
 ```
-- Note down 
+- Note down password and token to be used with Jupyter Lab and Code-server
 
 ### Use code server (VSCode to EC2 server in your Browser!)
 - Get code-server password by SSH into the server and running:  
@@ -359,6 +357,15 @@ rkh = Remove known SSH host
 - [Home page](https://caddyserver.com/docs/quick-starts/reverse-proxy)
 
 ## Troubleshooting
+
+### I messed up the install. How can I restart?
+- If you have done terraform apply...
+    - In cmd window cd to terraform folder and do "terraform destroy"
+    - Git clone in new folder, and follow instructions
+- If yoh have not done terraform apply...
+    - Git clone in new folder, and follow instructions
+- See section: How to recreate EC2?
+
 ### When doing terraform apply: Error: No matching Internet Gateway found
 - You should create Internet gatewat and attach to your VPC (see the instructions above)
 
@@ -375,7 +382,7 @@ docker restart portainer
 
 ## Internal design/architecture
 
-### To avoud cost...
+### To avoid cost...
 - We are not using Route53, API Gateay and ALBs
 - All the work is done on single EC2
 - Shortcuts are provided to start and stop EC2 easily

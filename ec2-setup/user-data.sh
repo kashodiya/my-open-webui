@@ -54,6 +54,7 @@ start_containers() {
     echo "$LITELLM_CONFIG_CONTENT" > "$OPEN_WEBUI_DIR/litellm-config.yml"
     echo "LiteLLM config file created"
 
+    export LITELLM_API_KEY=$(openssl rand -base64 32)
     echo "$DOCKER_COMPOSE_CONTENT" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "$(eval "echo \"$DOCKER_COMPOSE_CONTENT\"")" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "Docker compose file created"
@@ -284,11 +285,15 @@ EOF
 #!/bin/bash
 echo === Password for code-server ===
 echo To change this password, edit file: home/ec2-user/.config/code-server/config.yaml 
-cat /home/ec2-user/.config/code-server/config.yaml
+grep -E 'password:' /home/ec2-user/.config/code-server/config.yaml
 echo 
 echo === Token for Jupyter Lab ===
 echo To change this token, edit file: /home/ec2-user/.jupyter/jupyter_server_config.py 
-cat /home/ec2-user/.jupyter/jupyter_server_config.py
+grep -E c.ServerApp.token /home/ec2-user/.jupyter/jupyter_server_config.py
+echo 
+echo === LiteLLM Key ===
+echo To change this key, edit file: /home/ec2-user/docker/open-webui/docker-compose.yml 
+grep -E 'LITELLM_API_KEY=' /home/ec2-user/docker/open-webui/docker-compose.yml | sed 's/^[[:space:]]*//'
 EOF
 
     chmod 755 /home/ec2-user/.local/bin/tail_setup_log

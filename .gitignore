@@ -6,5 +6,5 @@
 *.tfstate.*
 
 keys/*.pem
-
 temp
+terraform/terraform.tfvars.json

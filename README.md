@@ -16,7 +16,7 @@ Install your own instance of Open WebUI for personal use
 - LiteLLM (Gateway to Bedrock)
 - Caddy (reverse proxy and authetication server)
 
-## Setup guide:
+## SETUP GUIDE
 ### Install Terraform
 - Download installer from (Use AMD64):  
 https://developer.hashicorp.com/terraform/install
@@ -41,12 +41,21 @@ cd my-open-webui
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
 
-### Use your VPC!
+### Set your VPC ID for terraform
 - Find out your VPC Id using this command 
 ```bat
 aws ec2 describe-vpcs  
 ```
-- Change vpc_id in terraform\terraform.tfvars.json to your VPC
+- Create new file: terraform\terraform.tfvars.json
+- Enter VPC Id and an unused subnet range for a new subnet
+```json
+{
+    "vpc_id": "vpc-your-vpc-id-here",
+    "allowed_source_ips": [
+        "3.83.200.219/32"
+    ]
+}
+```
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  

@@ -1,3 +1,4 @@
+# Following 2 values will be over written by values from terraform\terraform.tfvars.json
 vpc_id             = "vpc-put-your-id-here"
 subnet_cidr        = "10.0.2.0/26"
 allowed_source_ips = ["3.83.200.219/32"]

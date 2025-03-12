@@ -197,6 +197,82 @@ install_portainer() {
     echo "Portainer installed"
 }
 
+# Function to install Miniconda
+install_miniconda() {
+    if [ -d "/home/ec2-user/miniconda" ]; then
+        echo "Miniconda is already installed."
+    else
+        echo "Installing Miniconda..."
+        su - ec2-user -c '
+            wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            chmod +x Miniconda3-latest-Linux-x86_64.sh
+            ./Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+            rm Miniconda3-latest-Linux-x86_64.sh
+            $HOME/miniconda/bin/conda init
+            source ~/.bashrc
+            conda --version
+            python --version
+        '
+    fi
+}
+
+
+# Function to install JupyterLab
+install_jupyterlab() {
+    if su - ec2-user -c 'command -v jupyter'; then
+        echo "JupyterLab is already installed."
+    else
+        echo "Installing JupyterLab..."
+        su - ec2-user -c '
+            $HOME/miniconda/bin/pip install jupyterlab
+            $HOME/miniconda/bin/jupyter --version
+        '
+    fi
+
+    # Configure JupyterLab to run on port 8106
+    echo "Configuring JupyterLab to run on port 8106..."
+
+    su - ec2-user -c '
+        JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
+        mkdir -p $HOME/.jupyter
+        cat << EOF > $HOME/.jupyter/jupyter_server_config.py
+c.ServerApp.port = 8103
+c.ServerApp.ip = "0.0.0.0"
+c.ServerApp.allow_origin = "*"
+c.ServerApp.open_browser = False
+c.ServerApp.token = "$JUPYTER_LAB_TOKEN"
+EOF
+'
+
+    sudo bash -c 'cat << EOF > /etc/systemd/system/jupyter-lab.service
+[Unit]
+Description=Jupyter Lab
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+Environment="PATH=/home/ec2-user/.local/bin:/home/ec2-user/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+ExecStart=/bin/bash -c "source /home/ec2-user/.bashrc && jupyter lab --no-browser"
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+
+    chmod 644 /etc/systemd/system/jupyter-lab.service
+    systemctl daemon-reload
+    systemctl enable jupyter-lab.service
+    systemctl start jupyter-lab.service
+
+    echo "Jupyter Lab service has been created, enabled, and started."
+
+    echo "JupyterLab installation and configuration completed."
+}
+
+
 # Main execution
 update_dnf
 install_ansible
@@ -206,5 +282,7 @@ start_containers
 install_portainer
 install_caddy
 install_code_server
+install_miniconda
+install_jupyterlab
 
 echo "All installations completed."

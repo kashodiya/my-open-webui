@@ -364,3 +364,9 @@ docker restart portainer
 
 
 
+
+
+
+## TODO
+### How to find JupyterLab generated password
+cat $HOME/.jupyter/jupyter_server_config.py

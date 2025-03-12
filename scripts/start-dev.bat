@@ -31,6 +31,9 @@ echo open-webui = Opens Open WebUI in Browser
 doskey portainer=start https://%ELASTIC_IP%:7102/
 echo portainer = Opens Portainer in Browser
 
+doskey jupyterlab=start https://%ELASTIC_IP%:7103/
+echo jupyterlab = Opens Jupyter Lab in Browser
+
 doskey code-server=start https://%ELASTIC_IP%:7104/
 echo code-server = Opens code-server in Browser
 

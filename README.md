@@ -156,6 +156,7 @@ open-webui
 - OR, Open code-server in browser using url:  
 https://your.public.ip.address:7101
 
+
 ### Use code server (VSCode to EC2 server in your Browser!)
 - Get code-server password by SSH into the server and running:  
 cat /home/ec2-user/.config/code-server/config.yaml
@@ -178,8 +179,10 @@ aws ec2 stop-instances --instance-ids %INSTANCE_ID%
 aws ec2 start-instances --instance-ids %INSTANCE_ID%
 
 ### Delete everything on AWS that was created via this project
+```bat
 cd terraform  
 terraform destroy  
+```
 
 ### How to upgrade Open WebUI to new version?
 TODO: Add more details 
@@ -254,12 +257,15 @@ powershell.exe -ExecutionPolicy Bypass -File find-next-available-cidr.ps1 "vpc-y
 ### Tip for setting your development environment
 - Prefer to use AWS profile instead of directly using AWS credentials in enviroment variables
 - Create a bat file on your desktop with this content:  
+```bat
 @echo off  
 set AWS_DEFAULT_PROFILE=your-aws-profile  
 start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
+```
 - Whenever you want to start working on this project, just double click this bat file!  
 - Read the info presented in the cmd window!  
 - It offers following shortcuts:  
+```ini
 tfa = Terraform apply  
 sshe = SSH into EC2  
 ec2 = Start EC2  
@@ -269,7 +275,7 @@ portainer = Opens Portainer in Browser
 code-server = Opens code-server in Browser  
 litellm = Opens LiteLLM in Browser  
 rkh = Remove known SSH host  
-
+```
 
 ## Resources and references
 ### Open WebUI
@@ -294,9 +300,4 @@ rkh = Remove known SSH host
 ### When doing terraform apply: Error: No matching Internet Gateway found
 - You should create Internet gatewat and attach to your VPC (see the instructions above)
 
-
-
-## TODO:
-How to reset password of Open WebUI
-Figure out VPC, should not be checked in
 

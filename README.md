@@ -270,3 +270,6 @@ rkh = Remove known SSH host
 
 ## TODO:
 How to reset password of Open WebUI
+Figure out VPC, should not be checked in
+
+Error: No matching Internet Gateway found

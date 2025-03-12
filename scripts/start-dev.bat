@@ -2,7 +2,7 @@
 set AWS_DEFAULT_PROFILE=sso-778130744137-AWSAdministratorAccess
 
 set "PROJECT_DIR=%CD%"
-set "PATH=%PROJECT_DIR\temp%;%PATH%"
+set "PATH=%PROJECT_DIR\scripts%;%PATH%"
 set "TERRAFORM_DIR=%PROJECT_DIR%\terraform"
 set "KEYS_DIR=%PROJECT_DIR%\keys"
 set "SCRIPTS_DIR=%~dp0"

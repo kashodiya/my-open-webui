@@ -16,7 +16,7 @@ Install your own instance of Open WebUI for personal use
 - LiteLLM (Gateway to Bedrock)
 - Caddy (reverse proxy and authetication server)
 
-## Guide to installing Open WebUI on EC2
+## Setup guide:
 ### Install Terraform
 - Download installer from (Use AMD64):  
 https://developer.hashicorp.com/terraform/install
@@ -30,8 +30,11 @@ https://git-scm.com/downloads/win
 https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 ### Clone this project
+- Open cmd window and execute:
+```bat
 git clone https://github.com/kashodiya/my-open-webui.git
 cd my-open-webui
+```
 
 ### Login to AWS
 - Either set the AWS credentials env vars
@@ -40,16 +43,24 @@ cd my-open-webui
 
 ### Use your VPC!
 - Find out your VPC Id using this command 
+```bat
 aws ec2 describe-vpcs  
+```
 - Change vpc_id in terraform\terraform.tfvars.json to your VPC
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  
+```bat
 aws ec2 describe-internet-gateways
+```
 - If you do not have Internet Gatewy, create one using:  
+```bat
 aws ec2 create-internet-gateway  
+```
 - Note down internet gateway id and associate it to the VPC using this command:  
+```bat
 aws ec2 attach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx
+```
 
 ### Find our your IP address
 - Go to:  
@@ -58,35 +69,63 @@ https://whatismyipaddress.com/
 
 ### Update values in terraform\terraform.tfvars.json file
 - Update allowed_source_ips array by replacing your IP address in there.
-- Tips: If you also want to access Open WebUI from some other network make sure that you add that machine's public IP address to the array.
-- Optional: Update these items if you want:
-    - ami (this must be Amazon Linux os)
-    - instance_type
-    - project_id
+- Optional:
+    - If you also want to access Open WebUI from some other network/laptop make sure that you add that machine's public IP address to the array.
+    - Update these items if needed:
+        - ami (this must be Amazon Linux os)
+        - instance_type
+        - project_id
 
 ### Set LiteLLM API Key
-- Decide a key (random string)
+- Decide a key (short random string/numbers)
 - Edit docker\docker-compose.yml and update following 2 values.  
 LITELLM_API_KEY  
 OPENAI_API_KEY  
 - Ensure that both the values are same
 
 ### Init and apply terraform
+```bat
 cd terraform  
 terraform init  
 terraform apply  
+```
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
+
+### Create launcher
+- Create a bat file (launch.bat or whatever you like) on your desktop with this content:  
+```bat
+@echo off  
+set AWS_DEFAULT_PROFILE=your-aws-profile  
+start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
+```
+- Whenever you want to start working on this project, just double click this bat file!  
+- Read the info presented in the cmd window!  
+- It offers following shortcuts:  
+```ini
+tfa = Terraform apply  
+sshe = SSH into EC2  
+ec2 = Start EC2  
+ec2x = Stop EC2  
+open-webui = Opens Open WebUI in Browser  
+portainer = Opens Portainer in Browser  
+code-server = Opens code-server in Browser  
+litellm = Opens LiteLLM in Browser  
+rkh = Remove known SSH host  
+```
 
 ### SSH into EC2 (hard way)
 - Find Elastic IP address from terraform\set-tf-output-2-env-var.bat file.
+- SSH into ec2 using shortcut from launcher OR,
 - SSH into the EC2 server using this command:
+```bat
 set PROJECT_DIR=path/to/your/project/folder  
 set ELASTIC_IP=your.elastic.ip.address  
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
+```
 
 ### SSH into EC2 (easy way)
 - Run scripts\start-dev.bat
-- Use this shortcut:  
+- Use this shortcut (read - ssh to ec2):  
 sshe  
 
 ### Verify the install
@@ -195,6 +234,17 @@ set AWS_DEFAULT_PROFILE=your-aws-profile
 start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
 - Whenever you want to start working on this project, just double click this bat file!  
 - Read the info presented in the cmd window!  
+- It offers following shortcuts:  
+tfa = Terraform apply  
+sshe = SSH into EC2  
+ec2 = Start EC2  
+ec2x = Stop EC2  
+open-webui = Opens Open WebUI in Browser  
+portainer = Opens Portainer in Browser  
+code-server = Opens code-server in Browser  
+litellm = Opens LiteLLM in Browser  
+rkh = Remove known SSH host  
+
 
 ## Resources and references
 ### Open WebUI
@@ -216,3 +266,7 @@ start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev
 - [Home page](https://caddyserver.com/docs/quick-starts/reverse-proxy)
 
 ## Troubleshooting
+
+
+## TODO:
+How to reset password of Open WebUI

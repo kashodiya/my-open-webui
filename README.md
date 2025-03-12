@@ -8,6 +8,7 @@ Install your own instance of Open WebUI for personal use
 ## Design principles
 - Keep cost lowest
 - KISS - Keep it simple, stupid 
+- Scale, performance and security are not primary focus. Primary focus is to get things done quickly
 
 ## What you will get?
 - Open WebUI
@@ -185,18 +186,22 @@ terraform destroy
 ```
 
 ### How to upgrade Open WebUI to new version?
-TODO: Add more details 
 - SSH into EC2
-- Stop Docker containers using command:  
+- Delete Docker containers using command:  
 ```bash
 cd open-webui  
 docker-compose down
 ```
 - Delete Open WebUI image
-- Start docker compose
+```bash
+docker rmi ghcr.io/open-webui/open-webui:main
+```
+- Create docker containers
 ```bash
 docker-compose up -d
 ```
+- Latest image will be automatically downloaded and used
+
 
 ### How to add more Bedrock models?
 - Make sure that you have requested access to the model
@@ -277,6 +282,24 @@ litellm = Opens LiteLLM in Browser
 rkh = Remove known SSH host  
 ```
 
+### How to allow my frieds to use my Open WebUI server?
+- Login to Open WebUI
+- Click on top right avatar icon
+- Settings -> Admin Settings -> General
+- Turn on - Enable New Sign Ups
+- Ensure that Default User Role is 'pending'
+- If your friend is on other network, find out its public facing address, add it to the allowed_source_ips JSON array in terraform\terraform.tfvars.json file
+- Do terraform apply
+- Give your friend the URL of the Open WebUI
+- Ask them to self sign
+- Once they self sign, enable their access by:
+    - Click on top right avatar icon
+    - Click Admin Panel
+    - Click PENDING once to make it USER
+- Ask your user to login or refresh their page
+
+
+
 ## Resources and references
 ### Open WebUI
 - [Docs](https://docs.openwebui.com/)
@@ -299,5 +322,45 @@ rkh = Remove known SSH host
 ## Troubleshooting
 ### When doing terraform apply: Error: No matching Internet Gateway found
 - You should create Internet gatewat and attach to your VPC (see the instructions above)
+
+### When I go to portainer using browser, I get error: New Portainer installation Your Portainer instance timed out for security purposes. To re-enable your Portainer instance, you will need to restart Portainer.
+- To resolve this, SSH into EC2 server
+- Run this command
+```bash
+docker restart portainer
+```
+- Refresh browser
+- Set password (min length 12 characters)
+
+
+
+## Internal design/architecture
+
+### To avoud cost...
+- We are not using Route53, API Gateay and ALBs
+- All the work is done on single EC2
+- Shortcuts are provided to start and stop EC2 easily
+
+### How Caddy server is used?
+- All the port numbers starting from 7100 are used by Caddy to serve apps running on ports from 8100 respectively. 
+- Caddy config is stored at /etc/caddy/Caddyfile
+- It uses a dummy cert to serve HTTPS
+- Caddy can manage users and password and offer authentication. This is useful for appss that do not have native/local user management, like demo apps you may create etc.
+
+### How server prodcuts are instaled on EC2?
+- Server is setup using user-data script when creating EC2
+- User data script is dynamically generated in terraform main.tf
+- Files from docker etc folder are read by terraform and injected into user-data script along with ec2-setup/user-data.sh file. 
+- See user-data.sh file to find how things are installed.
+- Most of the products are run as Docker containers
+
+### How Open WebUI is configured?
+- For details look at these files:
+    - docker\open-webui\docker-compose.yml
+    - docker\open-webui\litellm-config.yml
+- Open WebUI talks to LiteLLM and LiteLLM talks to Bedrock based on litellm-config.yml
+- Open WebUI is using sqlite3 as the database
+    - Location of sqlite3 db file: 
+
 
 

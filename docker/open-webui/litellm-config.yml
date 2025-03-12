@@ -1,11 +1,11 @@
 model_list:
-  - model_name: Bedrock Anthropic Claude v3.5
+  - model_name: Claude 3.5 Sonnet by Anthropic
     litellm_params:
       model: anthropic.claude-3-5-sonnet-20240620-v1:0
-  - model_name: Bedrock Meta LLAMA Instruct v1
+  - model_name: Llama 3 8B Instruct by Meta
     litellm_params:
       model: meta.llama3-8b-instruct-v1:0
-  - model_name: Bedrock Mistral Instruct v0
+  - model_name: Mistral 7B Instruct by Mistral AI
     litellm_params:
       model: mistral.mistral-7b-instruct-v0:2
 

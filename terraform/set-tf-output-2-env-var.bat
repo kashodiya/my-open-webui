@@ -1,3 +1,0 @@
-set ELASTIC_IP=18.208.20.234
-set PROJECT_ID=myowu
-set INSTANCE_ID=i-0e72a3be4a37e8a86

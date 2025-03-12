@@ -197,7 +197,7 @@ https://your.public.ip.address:7104
 ```bash
 cat $HOME/.jupyter/jupyter_server_config.py
 ```
-- To use Jupyter Lab, use shortcut command: jupyterlab
+- To open Jupyter Lab, use shortcut command: jupyterlab
 
 
 ## Maintenance and operations
@@ -246,12 +246,22 @@ docker-compose restart litellm
 ### How to manage Open WebUI users?
 TODO
 
-### How to check server logs?
+### How to check server (running in Docker) logs?
 - SSH into EC2 server  
 ```bash
 cd docker
 docker logs -f open-webui
 docker logs -f litellm
+```
+### Jupyter Lab service related commands:
+```bash
+sudo systemctl status jupyter-lab.service
+sudo systemctl stop jupyter-lab.service
+sudo systemctl start jupyter-lab.service
+sudo systemctl restart jupyter-lab.service
+sudo systemctl enable jupyter-lab.service
+sudo journalctl -u jupyter-lab.service
+sudo journalctl -fu jupyter-lab.service
 ```
 
 ### How to recreate EC2?
@@ -392,7 +402,15 @@ docker restart portainer
     - Location of sqlite3 db file: 
 
 
-
+### How launcher works?
+- Launcher is a bat file that you create on dektop so that you can work with this project.
+- Launcher knows about the EC2, its IP address, etc.
+- Launcher also offers you several shortcuts
+- How do Launcher knows about this project?
+    - When you do terraform apply, the script generates a bat file terraform\set-tf-output-2-env-var.bat
+    - This bat file has information like Elastic IP, EC2 ID etc. 
+    - The launcher read this file so it can use those information.
+    - Shortcuts offered by Launcher is printed to the console when you launch it, so you not need to remember it!
 
 
 

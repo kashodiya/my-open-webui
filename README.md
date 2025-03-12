@@ -5,6 +5,17 @@ Install your own instance of Open WebUI for personal use
 - You are using Windows machine
 - You have access to an AWS account
 
+## Design principles
+- Keep cost lowest
+- KISS - Keep it simple, stupid 
+
+## What you will get?
+- Open WebUI
+- Portainer (Web based Docker management)
+- Code-server (VSCode on EC2 in your browser)
+- LiteLLM (Gateway to Bedrock)
+- Caddy (reverse proxy and authetication server)
+
 ## Guide to installing Open WebUI on EC2
 ### Install Terraform
 - Download installer from (Use AMD64):  
@@ -184,5 +195,24 @@ set AWS_DEFAULT_PROFILE=your-aws-profile
 start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
 - Whenever you want to start working on this project, just double click this bat file!  
 - Read the info presented in the cmd window!  
+
+## Resources and references
+### Open WebUI
+- [Docs](https://docs.openwebui.com/)
+- [Home page](https://openwebui.com/)
+
+### LiteLLM
+- [Docs](https://docs.litellm.ai/docs/)
+- [Home page](https://www.litellm.ai/)
+
+### Code server
+- [GitHub page](https://github.com/coder/code-server)
+
+### Portainer
+- [GitHub page](https://github.com/portainer/portainer)
+- [Home page](https://www.portainer.io/)
+
+### Caddy
+- [Home page](https://caddyserver.com/docs/quick-starts/reverse-proxy)
 
 ## Troubleshooting

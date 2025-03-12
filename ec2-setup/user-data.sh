@@ -272,9 +272,35 @@ EOF'
     echo "JupyterLab installation and configuration completed."
 }
 
+create_utils() {
+    mkdir -p /home/ec2-user/.local/bin
+    # Create the tail_setup_log script
+    cat << 'EOF' > /home/ec2-user/.local/bin/tail_setup_log
+#!/bin/bash
+sudo tail -f /var/log/user-data.log  
+EOF
+
+    cat << 'EOF' > /home/ec2-user/.local/bin/show_passwords
+#!/bin/bash
+echo === Password for code-server ===
+echo To change this password, edit file: home/ec2-user/.config/code-server/config.yaml 
+cat /home/ec2-user/.config/code-server/config.yaml
+echo 
+echo === Token for Jupyter Lab ===
+echo To change this token, edit file: /home/ec2-user/.jupyter/jupyter_server_config.py 
+cat /home/ec2-user/.jupyter/jupyter_server_config.py
+EOF
+
+    chmod 755 /home/ec2-user/.local/bin/tail_setup_log
+    chmod 755 /home/ec2-user/.local/bin/show_passwords
+
+    chown -R ec2-user:ec2-user /home/ec2-user/.local
+
+}
 
 # Main execution
 update_dnf
+create_utils
 install_ansible
 install_docker
 install_docker_compose

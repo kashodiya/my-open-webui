@@ -133,7 +133,11 @@ ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 - Use this shortcut (read - ssh to ec2):  
 sshe  
 
-### Verify the install
+### Verify the EC2 install
+- SSH into the server, and execute
+```bash
+tail_setup_log
+```
 - To see complete cloud init log:  
 sudo tail -f /var/log/cloud-init-output.log  
 - To see only user data script log:  
@@ -157,10 +161,18 @@ open-webui
 - OR, Open code-server in browser using url:  
 https://your.public.ip.address:7101
 
+### Find auto-generated passwords and tokens
+- SSH into the server, and execute
+```bash
+show_passwords
+```
+- Note down 
 
 ### Use code server (VSCode to EC2 server in your Browser!)
 - Get code-server password by SSH into the server and running:  
+```bash
 cat /home/ec2-user/.config/code-server/config.yaml
+```
 - Copy password from that
 - Open code-server in browser using shortcut
 code-server  
@@ -168,8 +180,13 @@ code-server
 https://your.public.ip.address:7104
 
 
-### Setup Open WebUI connections 
-TODO
+### Use Jupyter Lab
+- First get the auto-generated password. SSH into the server, and execute
+```bash
+cat $HOME/.jupyter/jupyter_server_config.py
+```
+- To use Jupyter Lab, use shortcut command: jupyterlab
+
 
 ## Maintenance and operations
 
@@ -368,5 +385,6 @@ docker restart portainer
 
 
 ## TODO
-### How to find JupyterLab generated password
-cat $HOME/.jupyter/jupyter_server_config.py
+- Script to get all passwords
+- Script to tail setup log
+### How to setup Open WebUI to use Jupyter for code execution

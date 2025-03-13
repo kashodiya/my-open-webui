@@ -4,8 +4,10 @@
 - Ask a question to a specific model.
 - Ask a followup quetion.
 - Regenerate an answer. How to view original answer?
-- Ask Open WebUI to continue the answer.
-
+- Ask Open WebUI to continue the an answer.
+- Search a chat from chat history
+- Open and close left navigation panel
+- Pin, Rename, Delete, Download a chat
 
 
 
@@ -21,6 +23,19 @@
 #### Challenge exercise
 - Come up with innovative ideas to use this feature
 - Discuss this ideas with Open WebUI
+
+### Organize existing chats in custom folders
+- Hover over "Chats" on left navigation panel
+- Click '+' icon
+- Double click Untitled
+- Enter name of the folder, hit Enter
+- Drag and drop an existing chat in this folder
+#### Figureout yourself how to do:
+- Move folders up or down
+- Move a folder under another 
+- Delete a folder
+- Rename a folder
+
 
 ### Ask question to a web page
 

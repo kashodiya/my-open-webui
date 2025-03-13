@@ -1,5 +1,13 @@
 # Open WebUI Guide
 
+## Figureout yourself how to do:
+- Ask a question to a specific model.
+- Ask a followup quetion.
+- Regenerate an answer. How to view original answer?
+- Ask Open WebUI to continue the answer.
+
+
+
 
 ## Exercises to learn Open WebUI
 ### Use more than one models simultaneoulsy
@@ -13,6 +21,9 @@
 #### Challenge exercise
 - Come up with innovative ideas to use this feature
 - Discuss this ideas with Open WebUI
+
+### Ask question to a web page
+
 
 ### A question with System Prompt
 - Open Open WebUI
@@ -30,6 +41,40 @@
 
 
 ## Cool experiments exercises
+
+### Generate ERD diagram from DDL script
+- Go to: https://learndatamodeling.com/blog/ddl-scripts-from-a-data-model/
+- Copy DDL commands (text in yellow box)
+- Open Open WebUI
+- Type: Create ERD diagram from this DDL script:
+- Press Ctrl+V to paste DDL
+- Hit Enter
+- Review the reply
+- Ask: Generate Mermaid diagram
+- Review the diagram
+- Explore how to interact with diagram: Zoom in, out, download, refresh, copy etc.
+#### Challenge exercise
+- Come up with the ideas on how to use this feature?
+- Chat with Open WebUI to explore more about your ideas
+
+
+
+### Get insight from an ERD (Entity Relationship) diagram 
+- Open this image in new browser tab
+https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
+- Right click and copy image
+- Open Open WebUI
+- Select model: Claude 3 Haiku By Anthropic
+- New chat
+- Put your curser in question box
+- Press Ctrl+V
+- Type: Describe this ERD diagram:
+- Hit Enter
+- Review and verify the results.
+#### Challenge exercise
+- Come up with the ideas on how to use this feature?
+- Chat with Open WebUI to explore more about your ideas
+
 ### Understand how Python execution and interpretation works
 - Open Open WebUI
 - New chat

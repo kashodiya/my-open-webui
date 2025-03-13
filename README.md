@@ -107,9 +107,8 @@ terraform apply
 ```
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
 
-### Create launcher
-- Create a bat file (launch.bat or whatever you like) on your desktop with this content:  
-TODO: tell them 2 things to change in example launcher
+### Create Launcher
+- Create a bat file (launch.bat or whatever you like) on your desktop with following content. Do not forget to replace place holder values, profile and path:  
 ```bat
 @echo off  
 set AWS_DEFAULT_PROFILE=your-aws-profile  
@@ -132,12 +131,11 @@ rkh = Remove known SSH host
 
 ### SSH into EC2 (easy way)
 - Run scripts\start-dev.bat
-- Use this shortcut (read - ssh to ec2):  
-sshe  
+- Use this shortcut from the Launcher (read - ssh to ec2): sshe  
 
 ### SSH into EC2 (hard way)
 - Find Elastic IP address from terraform\set-tf-output-2-env-var.bat file.
-- SSH into ec2 using shortcut from launcher OR,
+- SSH into the EC2 using shortcut from launcher OR,
 - SSH into the EC2 server using this command:
 ```bat
 set PROJECT_DIR=path/to/your/project/folder  
@@ -146,7 +144,7 @@ ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 ```
 
 ### Track the setup of software in EC2
-- SSH into the server, and execute
+- SSH into the EC2, and execute
 ```bash
 tail_setup_log
 ```
@@ -158,7 +156,8 @@ sudo tail -f /var/log/cloud-init-output.log
 sudo tail -f /var/log/user-data.log  
 
 ### Set admin user password for Open WebUI
-TODO: Ask them to use laucnher shortcut
+- Use shortcut "open-webui" from launcher to start Open WebUI in the browser.
+- Since we are using self-signed certificates, bypass the warning by clicking Advance and then Continue. 
 - Sign up for admin user
 
 ### Request access to bedrock models
@@ -171,31 +170,26 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 ### Use Open WebUI
 - Open open-webui in browser using shortcut: open-webui  
 
+### At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+
 ### Find auto-generated passwords and tokens
-- SSH into the server, and execute
+- SSH into the EC2, and execute
 ```bash
 show_passwords
 ```
 - Note down password and token to be used with Jupyter Lab and Code-server
 
-### Use code server (VSCode to EC2 server in your Browser!)
-- Get code-server password by SSH into the server and running:  
-```bash
-cat /home/ec2-user/.config/code-server/config.yaml
-```
-- Copy password from that
-- Open code-server in browser using shortcut
-code-server  
-- OR, Open code-server in browser using url:  
-https://your.public.ip.address:7104
 
+### Use code server (VSCode to EC2 server in your Browser!)
+- To open code-server, use shortcut command: code-server
 
 ### Use Jupyter Lab
-- First get the auto-generated password. SSH into the server, and execute
-```bash
-cat $HOME/.jupyter/jupyter_server_config.py
-```
 - To open Jupyter Lab, use shortcut command: jupyterlab
+
+### Use Portainer (if you want to work with Docker using UI)
+- To open Portainer, use shortcut command: portainer
+- When you access it for first time, it was ask you to register as admin, follow the instructions.
+
 
 
 ## Maintenance and operations
@@ -323,15 +317,15 @@ litellm = Opens LiteLLM in Browser
 rkh = Remove known SSH host  
 ```
 
-### How to allow my frieds to use my Open WebUI server?
+### How to allow my team members to use my Open WebUI server?
 - Login to Open WebUI
 - Click on top right avatar icon
 - Settings -> Admin Settings -> General
 - Turn on - Enable New Sign Ups
 - Ensure that Default User Role is 'pending'
-- If your friend is on other network, find out its public facing address, add it to the allowed_source_ips JSON array in terraform\terraform.tfvars.json file
+- If your team member is on other network, find out its public facing address, add it to the allowed_source_ips JSON array in terraform\terraform.tfvars.json file
 - Do terraform apply
-- Give your friend the URL of the Open WebUI
+- Give them the URL of the Open WebUI
 - Ask them to self sign
 - Once they self sign, enable their access by:
     - Click on top right avatar icon
@@ -425,7 +419,3 @@ docker restart portainer
 
 
 
-## TODO
-- Script to get all passwords
-- Script to tail setup log
-### How to setup Open WebUI to use Jupyter for code execution

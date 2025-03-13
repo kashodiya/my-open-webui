@@ -1,4 +1,7 @@
 model_list:
+  - model_name: Nova Pro by Amazon
+    litellm_params:
+      model: amazon.nova-pro-v1:0
   - model_name: Claude 3.5 Sonnet by Anthropic
     litellm_params:
       model: anthropic.claude-3-5-sonnet-20240620-v1:0

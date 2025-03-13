@@ -5,9 +5,9 @@
 - Ask a followup quetion.
 - Regenerate an answer. How to view original answer?
 - Ask Open WebUI to continue the an answer.
-- Search a chat from chat history
-- Open and close left navigation panel
-- Pin, Rename, Delete, Download a chat
+- Search a chat from chat history.
+- Open and close left navigation panel.
+- Pin, Rename, Delete, Download a chat from history.
 
 
 
@@ -111,4 +111,15 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 #### Challenge exercise 2
 - Without writing single line of Python code get following things done just using Prompt Engineering:
 
-https://drive.google.com/uc?id=1zO8ekHWx9U7mrbx_0Hoxxu6od7uxJqWw&export=download
+
+
+
+
+
+## Misc
+Write Jupyter Python code to run system command to copy "/var/lib/docker/volumes/open-webui_open-webui/_data/webui.db" file to "/tmp/webui.db" using sudo command.
+Open that copied Sqlite file. 
+Create Mermaid ERD diagram.
+
+List records form user table.
+List tables.

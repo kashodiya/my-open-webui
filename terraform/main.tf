@@ -162,7 +162,7 @@ resource "local_file" "public_key" {
 }
 
 resource "aws_key_pair" "main_key" {
-  key_name   = "my-key-pair"  # Change this to your desired key pair name
+  key_name   = "${var.project_id}_key_pair"  # Change this to your desired key pair name
   public_key = tls_private_key.this.public_key_openssh
   tags = {
     Name      = "${var.project_id}_key_pair"

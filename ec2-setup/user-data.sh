@@ -287,7 +287,7 @@ EOF
     cat << 'EOF' > /home/ec2-user/.local/bin/show_passwords
 #!/bin/bash
 echo === Password for code-server ===
-echo To change this password, edit file: home/ec2-user/.config/code-server/config.yaml 
+echo To change this password, edit file: /home/ec2-user/.config/code-server/config.yaml 
 grep -E 'password:' /home/ec2-user/.config/code-server/config.yaml
 echo 
 echo === Token for Jupyter Lab ===

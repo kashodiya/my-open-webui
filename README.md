@@ -22,9 +22,11 @@ Install your own instance of Open WebUI for personal use along with a simple but
 
 ## SETUP GUIDE
 ### Install Terraform
-- Download installer from (Use AMD64):  
+- Download from (Use AMD64):  
 https://developer.hashicorp.com/terraform/install
-- Install terraform
+- Use Windows 386
+- Unzip file to a folder
+- Add the folder that contains terraform.exe file to the PATH
 
 ### Install Git for Windows
 - Download and install from:  
@@ -116,6 +118,15 @@ terraform apply
 set AWS_DEFAULT_PROFILE=your-aws-profile  
 start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
 ```
+- If you are not using profile and want to cut-paste credentials, your launch should look like this. Do not forget to replace the place holders:
+```bat
+@echo off  
+SET AWS_ACCESS_KEY_ID=access-key-id-here
+SET AWS_SECRET_ACCESS_KEY=secret-access-key-here
+SET AWS_SESSION_TOKEN=very-long-token-string-here
+start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
+```
+
 - Whenever you want to start working on this project, just double click this bat file!  
 - Read the info presented in the cmd window!  
 - It offers following shortcuts:  
@@ -243,6 +254,8 @@ docker-compose restart litellm
 ### How to manage Open WebUI users?
 TODO
 
+
+
 ### How to check server (running in Docker) logs?
 - SSH into EC2 server  
 ```bash
@@ -282,6 +295,16 @@ terraform taint aws_instance.main_instance
 - After you create new EC2, before doing SSH into EC2, do this:
 ```bat
 ssh-keygen -R %ELASTIC_IP%  
+```
+
+
+### How to change code-server password
+- Open code-server (using Launcher shortcut)
+- Edit: /home/ec2-user/.config/code-server/config.yaml 
+- Set new password
+- SSH into EC2 and restart code-server
+```bash
+sudo systemctl restart code-server@$USER
 ```
 
 ### Commands related to the code-server
@@ -395,6 +418,11 @@ docker restart portainer
 
 
 ## Internal design/architecture
+
+### Is this a good architecture?
+- Yes and No!
+- Do not use any design pattern used here in production systems.
+- This is good desgn for quick and dirty setup for learning and experimentation.
 
 ### To avoid cost...
 - We are not using Route53, API Gateay and ALBs

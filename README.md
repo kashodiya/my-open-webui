@@ -146,16 +146,15 @@ ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 ```
 
 ### Track the setup of software in EC2
-- SSH into the EC2, and execute
+- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
 ```bash
 tail_setup_log
 ```
 - This should be the last line in the log:
 All installations completed.
-- To see complete cloud init log:  
-sudo tail -f /var/log/cloud-init-output.log  
-- To see only user data script log:  
-sudo tail -f /var/log/user-data.log  
+- Press Ctrl+C to exit.
+- To see complete user data script log:  
+sudo less +G /var/log/user-data.log
 
 ### Set admin user password for Open WebUI
 - Use shortcut "open-webui" from launcher to start Open WebUI in the browser.
@@ -171,15 +170,19 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 
 ### Use Open WebUI
 - Open open-webui in browser using shortcut: open-webui  
+- Click on "Get started"
+- Register yourself with name, email and password. You can use fake email.
+- Ensure that you can see models at top left
+- Type a question and hit Enter. Ensure that you get the answer
 
-### At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
 
 ### Find auto-generated passwords and tokens
-- SSH into the EC2, and execute
+- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
 ```bash
 show_passwords
 ```
-- Note down password and token to be used with Jupyter Lab and Code-server
+- Note down passwords and token to be used with Jupyter Lab and Code-server
 
 
 ### Use code server (VSCode to EC2 server in your Browser!)

@@ -1,16 +1,17 @@
 # my-open-webui
-Install your own instance of Open WebUI for personal use
+Install your own instance of Open WebUI for personal use along with a simple but effective and powerful workbench to do explore GenAI. 
 
 ## Assumptions and pre-requisites
 - You are using Windows machine
 - You have access to an AWS account
+- You are using us-east-1 region
 
 ## Design principles
 - Keep cost lowest
 - KISS - Keep it simple, stupid 
-- Scale, performance and security are not primary focus. Primary focus is to get things done quickly
+- Scale, performance and security are not primary focus. Primary focus is to get things done quickly.
 
-## What you will be installed?
+## What will be installed?
 - An EC2 will be created and following softwares will be installed in it:
     - Open WebUI
     - Portainer (Web based Docker management)
@@ -106,6 +107,7 @@ terraform init
 terraform apply  
 ```
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
+- This may take a few min when you run first time
 
 ### Create Launcher
 - Create a bat file (launch.bat or whatever you like) on your desktop with following content. Do not forget to replace place holder values, profile and path:  
@@ -164,8 +166,8 @@ sudo tail -f /var/log/user-data.log
 - Open docker\open-webui\litellm-config.yml and request model access for each models mentioned in the config.
 - Login to AWS Console
 - Request models access by going to:  
+    - TIP: You only pay for what you use. You can request access to all the models. Click checkbox at the top on the model selection page. 
 https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
-
 
 ### Use Open WebUI
 - Open open-webui in browser using shortcut: open-webui  
@@ -254,6 +256,17 @@ sudo systemctl restart jupyter-lab.service
 sudo systemctl enable jupyter-lab.service
 sudo journalctl -u jupyter-lab.service
 sudo journalctl -fu jupyter-lab.service
+```
+
+### Caddy service related commands:
+```bash
+sudo systemctl status caddy
+sudo systemctl daemon-reload
+sudo systemctl enable caddy
+sudo systemctl start caddy
+sudo systemctl reload caddy
+caddy validate --config /etc/caddy/Caddyfile
+cat /etc/caddy/Caddyfile
 ```
 
 ### How to recreate EC2?

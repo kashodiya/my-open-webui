@@ -23,6 +23,11 @@ services:
       - GLOBAL_LOG_LEVEL="DEBUG"     
       - OLLAMA_BASE_URL=http://ollama:11434 
       - ENV=dev
+      - CODE_EXECUTION_ENGINE=jupyter
+      - CODE_EXECUTION_JUPYTER_URL=http://host.docker.internal:8103
+      - CODE_EXECUTION_JUPYTER_AUTH=token
+      # See ec2-setup\user-data.sh for how JUPYTER_LAB_TOKEN is created
+      - CODE_EXECUTION_JUPYTER_AUTH_TOKEN=$JUPYTER_LAB_TOKEN
     ports:
       - "8101:8080"
     restart: always

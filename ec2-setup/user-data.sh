@@ -3,6 +3,8 @@
 # Redirect output to a log file
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
+export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
+
 # Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
@@ -233,10 +235,8 @@ install_jupyterlab() {
     # Configure JupyterLab to run on port 8106
     echo "Configuring JupyterLab to run on port 8106..."
 
-    su - ec2-user -c '
-        JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
-        mkdir -p $HOME/.jupyter
-        cat << EOF > $HOME/.jupyter/jupyter_server_config.py
+    mkdir -p /home/ec2-user/.jupyter
+    cat << EOF > /home/ec2-user/.jupyter/jupyter_server_config.py
 c.ServerApp.port = 8103
 c.ServerApp.ip = "0.0.0.0"
 c.ServerApp.allow_origin = "*"
@@ -244,7 +244,9 @@ c.ServerApp.open_browser = False
 c.ServerApp.disable_check_xsrf = True
 c.ServerApp.token = "$JUPYTER_LAB_TOKEN"
 EOF
-'
+
+    chown -R ec2-user:ec2-user /home/ec2-user/.jupyter
+
 
     sudo bash -c 'cat << EOF > /etc/systemd/system/jupyter-lab.service
 [Unit]

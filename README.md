@@ -21,6 +21,11 @@ Install your own instance of Open WebUI for personal use along with a simple but
     - Jupyter Lab
     - Caddy (reverse proxy and authetication server)
 
+## Why should I use this?
+- Enjoy full privacy. All your chats private. Bedrock does not store your chats and does not use it for retraining.
+- Best use of your AWS account to learn and experiment GenAI.
+- Get a powerful workbench on which you can build further capabilities.
+
 ## SETUP GUIDE
 ### Install Terraform
 - Download from (Use AMD64):  
@@ -337,6 +342,9 @@ cat /home/ec2-user/.config/code-server/config.yaml
 
 ## Tips and tricks
 
+### Careful before changing project_id
+- If you have already deployed this product and change project_id and deploy again, it will destroy previous deployment. 
+
 ### Stop EC2 when not used without worry
 - When you start the EC2 (use shortcut "ec2") all your apps are started by default!
 
@@ -483,3 +491,4 @@ How to change passwords
 How to restart portainer when timed out
 Telll them open webui is contained and your data is not shread
 Add model, restart litellm
+Mention that your data is contained

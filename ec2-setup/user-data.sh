@@ -63,12 +63,38 @@ start_containers() {
 
     sudo chown -R ec2-user:ec2-user $OPEN_WEBUI_DIR
 
-    echo "Creating containers"
+    echo "Creating Open WebUI, Ollama, LiteLLM containers"
     cd $OPEN_WEBUI_DIR
-    docker-compose up -d
+
+    # docker-compose up -d
+
+    if ! docker_command "docker-compose up -d"; then
+        log "Failed to start containers. Cleaning up and exiting."
+        cleanup
+        exit 1
+    fi
+
     echo "Containers started"
 }
 
+# Function to run Docker commands with retry
+docker_command() {
+    local cmd="$1"
+    local max_attempts=3
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if timeout 300 $cmd; then
+            return 0
+        fi
+        log "Docker command failed. Attempt $attempt of $max_attempts. Retrying in 10 seconds..."
+        sleep 10
+        ((attempt++))
+    done
+
+    log "Docker command failed after $max_attempts attempts."
+    return 1
+}
 
 # Function to install Caddy
 install_caddy() {
@@ -306,13 +332,42 @@ EOF
 
 }
 
-run_scripts() {
+create_apps_json() {
     SCRIPTS_DIR=/home/ec2-user/scripts
+
     mkdir -p $SCRIPTS_DIR
+
     cp /etc/caddy/Caddyfile $SCRIPTS_DIR
-    # Generate apps.json
-    # Copy apps.json to S3 (This will be used by controller lambda)
+
+    cd $SCRIPTS_DIR
+
+    echo "$GENERATE_APP_URLS_PY_CONTENT" > "$SCRIPTS_DIR/generate-app-urls.py"
+
     chown -R ec2-user:ec2-user $SCRIPTS_DIR
+
+    su - ec2-user -c '
+        cd /home/ec2-user/scripts
+        python generate-app-urls.py
+    '
+
+    echo Contents of apps.json
+    cat apps.json
+
+    echo "Copying apps.json to s3://$DATA_BUCKET_NAME"
+
+    aws s3 cp apps.json s3://$DATA_BUCKET_NAME/
+
+    if [ $? -eq 0 ]; then
+        echo "File uploaded successfully to s3"
+    else
+        echo "Error uploading file"
+        exit 1  # Exit the script with a non-zero status to indicate failure
+    fi    
+
+    # rm Caddyfile
+    # rm apps.json
+
+    echo "apps.json has been generated."
 }
 
 # Main execution
@@ -327,5 +382,6 @@ install_caddy
 install_code_server
 install_miniconda
 install_jupyterlab
+create_apps_json
 
 echo "All installations completed."

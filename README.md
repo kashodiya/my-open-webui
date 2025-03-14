@@ -484,6 +484,28 @@ docker restart portainer
     - Shortcuts offered by Launcher is printed to the console when you launch it, so you not need to remember it!
 
 
+## If you want to taint controller lambda, you have to taint url also
+```bat
+terraform taint aws_lambda_function.main_controller_lambda 
+terraform taint aws_lambda_function_url.controller_lambda_url
+```
+
+
+
+### How to update and deploy Controller Lambda
+- To deploy lambda (after you modify):
+```bat
+cd lambda
+deploy controller
+```
+
+### How to update Controller Lambda key?
+- Open launcher, and run this commands:
+```bat
+set CONTROLLER_AUTH_KEY=<new-key>
+cd lambda
+deploy.bat controller
+```
 
 
 ## TODO:
@@ -492,3 +514,8 @@ How to restart portainer when timed out
 Telll them open webui is contained and your data is not shread
 Add model, restart litellm
 Mention that your data is contained
+
+Remove 
+set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
+from main.tf
+

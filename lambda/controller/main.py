@@ -3,10 +3,11 @@ import json
 import hashlib
 from datetime import datetime, timedelta
 import boto3
+from botocore.exceptions import ClientError
 
 # Get the AUTH_KEY from environment variables
-# auth_key = os.environ.get('AUTH_KEY')
-auth_key = "123123"
+auth_key = os.environ.get('AUTH_KEY')
+# auth_key = "123123"
 
 # Create EC2 client
 ec2_client = boto3.client('ec2')
@@ -289,7 +290,7 @@ def get_cognito_client_callback_urls(user_pool_name):
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
     ('/login', 'POST'): login_post_handler,
-    ('/controller', 'GET'): controller_get_handler,
+    ('/index', 'GET'): controller_get_handler,
     ('/ec2s', 'GET'): ec2s_get_handler,
     ('/allow', 'GET'): allow_get_handler,
     ('/sg', 'GET'): sg_get_handler,

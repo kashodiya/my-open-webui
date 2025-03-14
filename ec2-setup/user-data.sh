@@ -310,7 +310,7 @@ create_utils() {
 sudo tail -f /var/log/user-data.log  
 EOF
 
-    cat << 'EOF' > /home/ec2-user/.local/bin/show_passwords
+    cat << EOF > /home/ec2-user/.local/bin/show_passwords
 #!/bin/bash
 echo === Password for code-server ===
 echo To change this password, edit file: /home/ec2-user/.config/code-server/config.yaml 
@@ -323,6 +323,10 @@ echo
 echo === LiteLLM Key ===
 echo To change this key, edit file: /home/ec2-user/docker/open-webui/docker-compose.yml 
 grep -E 'LITELLM_API_KEY=' /home/ec2-user/docker/open-webui/docker-compose.yml | sed 's/^[[:space:]]*//'
+echo
+echo === Controller Lambda key ===
+echo To change passwkeyord, see README.md section - How to update Controller Lambda key?
+aws lambda get-function-configuration --function-name $PROJECT_ID-controller --query "Environment.Variables.AUTH_KEY" --output text
 EOF
 
     chmod 755 /home/ec2-user/.local/bin/tail_setup_log

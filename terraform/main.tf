@@ -174,6 +174,7 @@ locals {
   litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
   docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
   portainer_compose_yml = file("${path.module}/../docker/portainer/docker-compose.yml")
+  generate_app_urls_py = file("${path.module}/../scripts/generate-app-urls.py")
   caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
   ec2_user_data = <<-EOT
@@ -195,8 +196,13 @@ read -r -d '' CADDYFILE_CONTENT << 'EOF'
   ${local.caddyfile}
 EOF
 
+DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 
-  
+read -r -d '' GENERATE_APP_URLS_PY_CONTENT << 'EOF'
+  ${local.generate_app_urls_py}
+EOF
+
+
 ${local.user_data_script}
 
 EOT 
@@ -255,10 +261,18 @@ data "archive_file" "controller_lambda_zip" {
   source_dir  = "${path.module}/../lambda/controller"
 }
 
+
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 # Create an S3 bucket
 resource "aws_s3_bucket" "data_bucket" {
-  bucket = "${var.project_id}-my-open-webui-data"  # Replace with your desired bucket name
+  bucket = "${var.project_id}-data-${random_string.bucket_suffix.result}"  # Replace with your desired bucket name
 }
+
 
 
 # data "archive_file" "controller_lambda_zip" {

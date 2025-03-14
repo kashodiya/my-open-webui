@@ -180,6 +180,8 @@ locals {
   ec2_user_data = <<-EOT
 #!/bin/bash
 
+PROJECT_ID=${var.project_id}
+
 read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
   ${local.litellm_config_yml}
 EOF
@@ -300,6 +302,13 @@ resource "aws_s3_bucket" "data_bucket" {
 #   }
 # }
 
+resource "random_string" "controller_auth_key" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+
 resource "aws_lambda_function" "main_controller_lambda" {
   filename         = data.archive_file.controller_lambda_zip.output_path
   function_name    = "${var.project_id}-controller"
@@ -308,6 +317,13 @@ resource "aws_lambda_function" "main_controller_lambda" {
   runtime          = "python3.12" # Or your preferred Python runtime
   source_code_hash = data.archive_file.controller_lambda_zip.output_base64sha256
   timeout          = 60
+
+  environment {
+    variables = {
+      AUTH_KEY = random_string.controller_auth_key.result
+    }
+  }
+
   tags = {
     Name      = "${var.project_id}-controller"
     CreatedBy = "terraform"
@@ -413,3 +429,4 @@ set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 EOT
 }
+# set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}

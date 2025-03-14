@@ -16,6 +16,9 @@ echo ===== Shortcuts =====
 doskey tfa=%SCRIPTS_DIR%\tf-apply.bat
 echo tfa = Terraform apply
 
+doskey cdd=cd %PROJECT_DIR%
+echo cdd = CD to project directory
+
 doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ConnectTimeout=1200 ec2-user@%ELASTIC_IP%
 echo sshe = SSH into EC2
 

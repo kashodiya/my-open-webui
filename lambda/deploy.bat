@@ -37,7 +37,13 @@ REM Deploy the Lambda function
 echo Deploying Lambda function %FUNCTION_NAME%...
 aws lambda update-function-code ^
     --function-name %FUNCTION_NAME% ^
-    --zip-file fileb://%ZIP_FILE_PATH% 
+    --zip-file fileb://%ZIP_FILE_PATH% ^
+    --no-cli-pager
+
+aws lambda update-function-configuration ^
+    --function-name %FUNCTION_NAME% ^
+    --environment "Variables={AUTH_KEY=%CONTROLLER_AUTH_KEY%}" ^
+    --no-cli-pager
 
 if %ERRORLEVEL% neq 0 (
     echo Error: Failed to deploy Lambda function.

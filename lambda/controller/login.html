@@ -45,11 +45,19 @@
 <body>
     <div class="login-container">
         <h2>Login</h2>
-        <input type="password" id="key" placeholder="Enter your key">
-        <button onclick="login()">Login</button>
+        <form id="loginForm">
+            <input type="password" id="key" placeholder="Enter your key">
+            <button type="submit">Login</button>
+        </form>
     </div>
-
     <script>
+        const loginForm = document.getElementById('loginForm');
+
+        loginForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            await login();
+        });
+
         async function login() {
             const key = document.getElementById('key').value;
             try {
@@ -60,13 +68,12 @@
                     },
                     body: JSON.stringify({ key }),
                 });
-
                 if (response.ok) {
                     const data = await response.json();
                     // Store the token in localStorage (or you could use cookies)
                     localStorage.setItem('token', data.token);
                     // Redirect to the main page or dashboard
-                    window.location.href = '/controller';
+                    window.location.href = '/index';
                 } else {
                     const errorData = await response.json();
                     alert(errorData.error || 'Login failed');

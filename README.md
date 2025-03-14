@@ -9,7 +9,8 @@ Install your own instance of Open WebUI for personal use along with a simple but
 ## Design principles
 - Keep cost lowest
 - KISS - Keep it simple, stupid 
-- Scale, performance and security are not primary focus. Primary focus is to get things done quickly.
+- Scalability and performance are not primary focus. Primary focus is to get things done quickly.
+- Security is tight. But only as much required. (Ex: using dummy certs to enable HTTPS)
 
 ## What will be installed?
 - An EC2 will be created and following softwares will be installed in it:
@@ -24,8 +25,7 @@ Install your own instance of Open WebUI for personal use along with a simple but
 ### Install Terraform
 - Download from (Use AMD64):  
 https://developer.hashicorp.com/terraform/install
-- Use Windows 386
-- Unzip file to a folder
+- Unzip files to a folder
 - Add the folder that contains terraform.exe file to the PATH
 
 ### Install Git for Windows
@@ -85,8 +85,6 @@ aws ec2 describe-vpcs
     - Add '/32' after the IP
     - Set that ip range in "allowed_source_ips"
     - The EC2 will allow traffic coming in from only these IP addresses. 
-- Optional:
-    - If you also want to access Open WebUI from some other network/laptop make sure that you add that machine's public IP address to the allowed_source_ips array.
 
 ### Ensure you have Internet Gateway associated with VPC
 - Check if you already have Internet Gateway using this command:  
@@ -111,7 +109,23 @@ terraform apply
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
 - This may take a few min when you run first time
 
+
 ### Create Launcher
+- Open cmd window, if not already open.
+- Make sure you do one of the following:
+    - Set AWS_DEFAULT_PROFILE
+    - Set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and AWS_SESSION_TOKEN environment variable. 
+- Cd to the project folder (cd my-open-webui)
+- Run following command
+```bat
+scripts\create-launcher.bat
+```
+- "launcher.bat" file is created in local folder.
+- Windows Explorer is opened.
+- Double click "launcher.bat" file.
+- All the following instructions must be executed from the launcher.
+
+### OLD Create Launcher - DELETE THIS
 - Create a bat file (launch.bat or whatever you like) on your desktop with following content. Do not forget to replace place holder values, profile and path:  
 ```bat
 @echo off  
@@ -463,3 +477,9 @@ docker restart portainer
 
 
 
+
+## TODO:
+How to change passwords
+How to restart portainer when timed out
+Telll them open webui is contained and your data is not shread
+Add model, restart litellm

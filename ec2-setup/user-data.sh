@@ -306,6 +306,15 @@ EOF
 
 }
 
+run_scripts() {
+    SCRIPTS_DIR=/home/ec2-user/scripts
+    mkdir -p $SCRIPTS_DIR
+    cp /etc/caddy/Caddyfile $SCRIPTS_DIR
+    # Generate apps.json
+    # Copy apps.json to S3 (This will be used by controller lambda)
+    chown -R ec2-user:ec2-user $SCRIPTS_DIR
+}
+
 # Main execution
 update_dnf
 create_utils

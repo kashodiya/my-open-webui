@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controller</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+  <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/editor/editor.main.css"> -->
+
+  <style>
+  </style>
+
+  <script type="text/x-template" id="about-template">
+    <v-container fluid>
+      <div class="text-h5">About</div>
+      <p>About controller</p>
+    </v-container>
+  </script>
+
+  <script type="text/x-template" id="home-template">
+    <v-container fluid>
+      <div class="text-h5">Welcome</div>
+
+      <v-btn
+        color="success"
+        @click="allowIp"
+        :disabled="isLoading"
+        :loading="isLoading">
+        <v-icon left>mdi-door-open</v-icon>
+        Allow access to my Bank Account
+      </v-btn>      
+    </v-container>
+  </script>
+</head>
+
+<body>
+  <div id="app">
+    <v-app>
+      <v-app-bar color="primary">
+        <v-app-bar-title>Controller</v-app-bar-title>
+        <v-spacer></v-spacer>
+        <v-btn to="/">Home</v-btn>
+        <v-btn to="/about">About</v-btn>
+      </v-app-bar>
+
+      <v-main>
+        <router-view></router-view>
+      </v-main>
+    </v-app>
+  </div>
+
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify-labs.min.js"></script>
+  <script src="https://unpkg.com/vue-router@4.2.4/dist/vue-router.global.js"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script> -->
+  <script>
+    const { createApp, ref } = Vue;
+    const { createVuetify } = Vuetify;
+    const { createRouter, createWebHashHistory } = VueRouter;
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    let baseUrl = ''
+    if(isLocalhost){
+      baseUrl = isLocalhost ? "https://c7ycmijcll6zisan7ozxpfoswq0tzgpq.lambda-url.us-east-1.on.aws" : ""; // Replace with your production URL if needed
+      console.log(`Using base URL: ${baseUrl}`);
+    }
+  
+    const store = {
+      state: {}
+    }
+
+    const Home = {
+      template: '#home-template',
+      data: function () {
+        return {
+          state: store.state,
+          apps: [],
+          isLoading: false,
+        }
+      },
+      methods: {
+        async allowIp() {
+          this.isLoading = true;
+          console.log('Allowing...');
+          try {
+            const ipResp = await fetch('https://api.ipify.org?format=json');
+            if (!ipResp.ok) {
+              throw new Error(`HTTP error! status: ${ipResp.status}`);
+            }
+            let ipData = await ipResp.json();
+            console.log({ ip: ipData.ip });
+
+            const response = await fetch(`${baseUrl}/allow?ip=${ipData.ip}`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const reply = await response.json();
+            console.log({ reply });
+            
+          } catch (error) {
+            console.error("Could not allow: ", error);
+          } finally {
+            this.isLoading = false;
+          }
+        }
+      },
+      async mounted() {
+        console.log('Home mounted');
+        try {
+          const response = await fetch(`${baseUrl}/apps`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          this.apps = await response.json();
+          console.log({ apps: this.apps });
+        } catch (error) {
+          console.error("Could not fetch apps:", error);
+        }
+
+      },
+      created() {
+        console.log('Home created');
+      }
+    }
+
+    const About = {
+      template: '#about-template',
+      data: function () {
+        return {
+          state: store.state,
+        }
+      },
+      methods: {
+      },
+      mounted() {
+        console.log('About mounted');
+      },
+      created() {
+        console.log('About created');
+      }
+    }
+
+
+
+
+    const routes = [
+      { path: '/', component: Home },
+      { path: '/about', component: About }
+    ];
+
+    const router = createRouter({
+      history: createWebHashHistory(),
+      routes
+    });
+
+    const vuetify = createVuetify();
+    // {
+    //   components: {
+    //     VDataTable: vuetify.labs
+    //   }
+    // }    
+
+    const app = createApp({
+      data() {
+        return {
+        };
+      },
+      methods: {
+      }
+    });
+
+    app.use(vuetify);
+    app.use(router);
+    const vm = app.mount('#app');
+  </script>
+
+  <script>
+  </script>
+</body>
+
+</html>

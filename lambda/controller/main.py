@@ -27,13 +27,37 @@ def get_project_info(parameter_name):
         print(f"An error occurred: {str(e)}")
     return None
 
+# def generate_token(auth_key):
+#     timestamp = datetime.utcnow().timestamp()
+#     token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
+#     return token
+
+# def verify_token(token):
+#     return True
+
+
+# Add this at the beginning of your file, after the imports
+TOKEN_STORAGE = {}
+# Change this to a year in seconds
+TOKEN_EXPIRATION = 365 * 24 * 60 * 60  # One year in seconds
+
 def generate_token(auth_key):
     timestamp = datetime.utcnow().timestamp()
     token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
+    expiration = datetime.utcnow() + timedelta(seconds=TOKEN_EXPIRATION)
+    TOKEN_STORAGE[token] = expiration
     return token
 
+
 def verify_token(token):
-    return True
+    if token in TOKEN_STORAGE:
+        expiration = TOKEN_STORAGE[token]
+        if datetime.utcnow() < expiration:
+            return True
+        else:
+            del TOKEN_STORAGE[token]
+    return False
+
 
 def login_post_handler(event, auth_key):
     body = json.loads(event['body'])
@@ -324,23 +348,30 @@ def lambda_handler(event, context):
         data_bucket_name = get_data_bucket_name()
         security_group_id = 'NONE'
         
+        # cookies = event.get('headers', {}).get('cookie', '')
+        # token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
         cookies = event.get('headers', {}).get('cookie', '')
         token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
-        
-        if token:
-            if verify_token(token):
-                pass
-            else:
-                return {
-                    'statusCode': 401,
-                    'headers': {'Content-Type': 'application/json'},
-                    'body': json.dumps({'message': 'Invalid token'})
-                }
-        
+
         http_method = event['requestContext']['http']['method']
         path = event['rawPath']
+        newPath = '/login'
+        if path == '/login' or path == '/':
+            pass
+        else:
+            if token:
+                # authenticated_paths = ['/ec2s', '/allow', '/sg', '/apps', '/project-info']
+                # if path in authenticated_paths:
+                if not token or not verify_token(token):
+                    return {
+                        'statusCode': 401,
+                        'headers': {'Content-Type': 'application/json'},
+                        'body': json.dumps({'message': 'Invalid or expired token'})
+                    }            
+                else:
+                    newPath = path
         
-        handler = HANDLERS.get((path, http_method), default_handler)
+        handler = HANDLERS.get((newPath, http_method), default_handler)
         
         # Pass the required arguments to the handler functions
         if handler == login_post_handler:

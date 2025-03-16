@@ -73,6 +73,7 @@
         <v-spacer></v-spacer>
         <v-btn to="/">Home</v-btn>
         <v-btn to="/about">About</v-btn>
+        <v-btn @click="logout">Logout</v-btn>
       </v-app-bar>
 
       <v-main>
@@ -92,11 +93,11 @@
     const { createRouter, createWebHashHistory } = VueRouter;
     const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
     let baseUrl = ''
-    if(isLocalhost){
+    if (isLocalhost) {
       baseUrl = isLocalhost ? "https://c7ycmijcll6zisan7ozxpfoswq0tzgpq.lambda-url.us-east-1.on.aws" : ""; // Replace with your production URL if needed
       console.log(`Using base URL: ${baseUrl}`);
     }
-  
+
     const store = {
       state: {}
     }
@@ -134,7 +135,7 @@
 
             const reply = await response.json();
             console.log({ reply });
-            
+
           } catch (error) {
             console.error("Could not allow: ", error);
           } finally {
@@ -154,15 +155,15 @@
           this.projectInfo = await response.json();
           console.log({ projectInfo: this.projectInfo });
 
-          
+
           // response = await fetch(`${baseUrl}/apps`);
           // if (!response.ok) {
           //   throw new Error(`HTTP error! status: ${response.status}`);
           // }
           // this.apps = await response.json();
           // console.log({ apps: this.apps });
-          
-          
+
+
         } catch (error) {
           console.error("Could not fetch apps:", error);
         }
@@ -215,7 +216,16 @@
         return {
         };
       },
+
+
       methods: {
+        logout() {
+          // Remove the token from localStorage
+          localStorage.removeItem('token');
+
+          // Redirect to the login page
+          window.location.href = '/login';
+        }
       }
     });
 

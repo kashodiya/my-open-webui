@@ -3,7 +3,7 @@
 # Redirect output to a log file
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
+# export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
 
 # Function to check if a command exists
 command_exists() {
@@ -56,7 +56,6 @@ start_containers() {
     echo "$LITELLM_CONFIG_CONTENT" > "$OPEN_WEBUI_DIR/litellm-config.yml"
     echo "LiteLLM config file created"
 
-    export LITELLM_API_KEY=$(openssl rand -base64 32)
     echo "$DOCKER_COMPOSE_CONTENT" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "$(eval "echo \"$DOCKER_COMPOSE_CONTENT\"")" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "Docker compose file created"
@@ -198,7 +197,7 @@ install_code_server() {
         echo "code-server is already installed."
     else
         echo "Installing code-server..."
-        su - ec2-user -c '
+        su - ec2-user -c "
             curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.96.2
 
             mkdir -p /home/ec2-user/.config/code-server
@@ -206,10 +205,10 @@ install_code_server() {
             cat << EOF > /home/ec2-user/.config/code-server/config.yaml
 bind-addr: 127.0.0.1:8104
 auth: password
-password: ce2d9ae4bdb79236c1e6f27f
+password: $CODE_SERVER_PASSWORD
 cert: false
 EOF
-        '
+        "
         sudo systemctl enable --now code-server@ec2-user
         
     fi

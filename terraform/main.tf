@@ -7,6 +7,37 @@ variable "project_id" {}
 variable "ami" {}
 variable "instance_type" {}
 
+variable "jupyter_lab_token" {
+  type        = string
+  description = "Token for Jupyter Lab"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.jupyter_lab_token) >= 8
+    error_message = "The token for Jupyter Lab must be at least 8 characters long."
+  }
+}
+
+
+variable "litellm_api_key" {
+  type        = string
+  description = "Password for LiteLLM"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.litellm_api_key) >= 8
+    error_message = "The LiteLLm API key must be at least 8 characters long."
+  }
+}
+
+variable "code_server_password" {
+  type        = string
+  description = "Password for code-server"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.code_server_password) >= 8
+    error_message = "The code-server password password must be at least 8 characters long."
+  }
+}
+
 provider "aws" {
   region = var.region
 }
@@ -181,6 +212,9 @@ locals {
 #!/bin/bash
 
 PROJECT_ID=${var.project_id}
+CODE_SERVER_PASSWORD=${var.code_server_password}
+LITELLM_API_KEY=${var.litellm_api_key}
+JUPYTER_LAB_TOKEN=${var.jupyter_lab_token}
 
 read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
   ${local.litellm_config_yml}
@@ -488,3 +522,4 @@ set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 EOT
 }
 # set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
+# set TEST=${var.code_server_password}

@@ -1,10 +1,9 @@
 # This file is maintained automatically by "terraform init".
 # Manual edits may be lost in future updates.
 
-provider "registry.terraform.io/hashicorp/aws" {
-  version = "5.90.1"
+provider "registry.terraform.io/hashicorp/archive" {
+  version = "2.7.0"
   hashes = [
-    "h1:tfDZ8SDg8idrd+3ko44tkVosG9Q/1FGsbcBFYXchVmc=",
     "h1:yGLQgbuKB9DC0YDBs1WsX3umhG6jBUbWhl4aYLj2/BE=",
     "zh:0d6179ec7c086049fd2f2d4cb2680edd238083ea7119e19c64921b2af395e1df",
     "zh:208155e7d989941506deadabbd06159fac44fbddd557657b941d2ba0679ba9ce",

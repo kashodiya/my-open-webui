@@ -22,7 +22,7 @@
 
   <script type="text/x-template" id="home-template">
     <v-container fluid>
-      <div class="text-h5">Welcome</div>
+      <div class="text-h5">Applications</div>
 
 
       <v-list>
@@ -35,6 +35,23 @@
           <v-list-item-title>{{ app.name }}</v-list-item-title>
         </v-list-item>
       </v-list>
+
+      <v-btn
+        color="success"
+        @click="startEc2"
+        class="mr-4"
+      >
+        <v-icon left>mdi-play</v-icon>
+        Start EC2
+      </v-btn>
+      
+      <v-btn
+        color="error"
+        @click="stopEc2"
+      >
+        <v-icon left>mdi-stop</v-icon>
+        Stop EC2
+      </v-btn>
 
       <!-- <v-btn
         color="success"
@@ -95,6 +112,10 @@
         }
       },
       methods: {
+        async startEc2() {
+        },
+        async stopEc2() {
+        },
         async allowIp() {
           this.isLoading = true;
           console.log('Allowing...');

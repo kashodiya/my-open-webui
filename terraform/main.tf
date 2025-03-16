@@ -318,14 +318,14 @@ resource "aws_lambda_function" "main_controller_lambda" {
   source_code_hash = data.archive_file.controller_lambda_zip.output_base64sha256
   timeout          = 60
 
-  depends_on = [aws_s3_bucket.data_bucket]
+  # depends_on = [aws_s3_bucket.data_bucket]
 
-  environment {
-    variables = {
-      AUTH_KEY = random_string.controller_auth_key.result
-      DATA_BUCKET_NAME = aws_s3_bucket.data_bucket.id
-    }
-  }
+  # environment {
+  #   variables = {
+  #     AUTH_KEY = random_string.controller_auth_key.result
+  #     DATA_BUCKET_NAME = aws_s3_bucket.data_bucket.id
+  #   }
+  # }
 
   tags = {
     Name      = "${var.project_id}-controller"
@@ -419,6 +419,30 @@ output "controller_url" {
 output "bucket_name" {
   value       = aws_s3_bucket.data_bucket.id
   description = "The name of the S3 bucket"
+}
+
+# Create the parameter store item
+resource "aws_ssm_parameter" "resource_ids" {
+  name  = "/${var.project_id}/info"
+  type  = "String"
+  value = jsonencode({
+     elasticIP = aws_eip.dev_ec2_eip.public_ip,
+     projectId = var.project_id,
+     instanceId = aws_instance.main_instance.id,
+     controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
+     dataBucketName = aws_s3_bucket.data_bucket.id,
+     controller_auth_key = random_string.controller_auth_key.result
+  })
+
+  # Ensure this resource is created after all other resources
+  depends_on = [
+    aws_eip.dev_ec2_eip,
+    aws_instance.main_instance,
+    aws_lambda_function_url.controller_lambda_url,
+    aws_s3_bucket.data_bucket,
+    random_string.controller_auth_key
+  ]
+
 }
 
 # Local file resource to create the output file

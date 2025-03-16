@@ -40,17 +40,17 @@ aws lambda update-function-code ^
     --zip-file fileb://%ZIP_FILE_PATH% ^
     --no-cli-pager
 
-aws lambda update-function-configuration ^
-    --function-name %FUNCTION_NAME% ^
-    --environment "Variables={AUTH_KEY=%CONTROLLER_AUTH_KEY%}" ^
-    --no-cli-pager
+@REM aws lambda update-function-configuration ^
+@REM     --function-name %FUNCTION_NAME% ^
+@REM     --environment "Variables={AUTH_KEY=%CONTROLLER_AUTH_KEY%,DATA_BUCKET_NAME=%DATA_BUCKET_NAME%}" ^
+@REM     --no-cli-pager
 
 if %ERRORLEVEL% neq 0 (
     echo Error: Failed to deploy Lambda function.
     exit /b 1
 )
 
-@REM del %ZIP_FILE_PATH%
+del %ZIP_FILE_PATH%
 
 echo Lambda function %FUNCTION_NAME% deployed successfully.
 

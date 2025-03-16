@@ -368,8 +368,24 @@ create_apps_json() {
         exit 1  # Exit the script with a non-zero status to indicate failure
     fi    
 
-    # rm Caddyfile
-    # rm apps.json
+    # Read the existing parameter
+    existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
+
+    # Read the apps.json file
+    apps_value=$(cat apps.json)
+
+    # Combine the existing parameter with the new key-value pair
+    new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
+
+    # Update the parameter
+    aws ssm put-parameter \
+        --name "/$PROJECT_ID/info" \
+        --value "$new_param" \
+        --type "String" \
+        --overwrite    
+
+    rm Caddyfile
+    rm apps.json
 
     echo "apps.json has been generated."
 }

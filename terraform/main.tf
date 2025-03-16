@@ -174,10 +174,13 @@ locals {
   litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
   docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
   portainer_compose_yml = file("${path.module}/../docker/portainer/docker-compose.yml")
+  generate_app_urls_py = file("${path.module}/../scripts/generate-app-urls.py")
   caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
   ec2_user_data = <<-EOT
 #!/bin/bash
+
+PROJECT_ID=${var.project_id}
 
 read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
   ${local.litellm_config_yml}
@@ -195,8 +198,13 @@ read -r -d '' CADDYFILE_CONTENT << 'EOF'
   ${local.caddyfile}
 EOF
 
+DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 
-  
+read -r -d '' GENERATE_APP_URLS_PY_CONTENT << 'EOF'
+  ${local.generate_app_urls_py}
+EOF
+
+
 ${local.user_data_script}
 
 EOT 
@@ -225,6 +233,8 @@ resource "aws_instance" "main_instance" {
     create_before_destroy = true
   }
 
+  depends_on = [aws_s3_bucket.data_bucket]
+
   tags = {
     Name      = "${var.project_id}_main_server"
     CreatedBy = "terraform"
@@ -239,6 +249,106 @@ resource "aws_eip" "dev_ec2_eip" {
     CreatedBy = "terraform"
   }
 }
+
+
+# Add basic Lambda execution permissions
+resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
+  role       = aws_iam_role.dev_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+data "archive_file" "controller_lambda_zip" {
+  type        = "zip"
+  output_path = "${path.module}/../lambda/function.zip"
+  source_dir  = "${path.module}/../lambda/controller"
+}
+
+
+resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# Create an S3 bucket
+resource "aws_s3_bucket" "data_bucket" {
+  bucket = "${var.project_id}-data-${random_string.bucket_suffix.result}"  # Replace with your desired bucket name
+}
+
+
+
+# data "archive_file" "controller_lambda_zip" {
+#   type        = "zip"
+#   output_path = "${path.module}/../lambda/function.zip"
+
+#   source {
+#     content  = file("${path.module}/../lambda/controller/main.py")
+#     filename = "main.py"
+#   }
+
+#   source {
+#     content  = file("${path.module}/../lambda/controller/index.html")
+#     filename = "index.html"
+#   }
+
+#   source {
+#     content  = file("${path.module}/../lambda/controller/requirements.txt")
+#     filename = "requirements.txt"
+#   }
+
+#   source {
+#     content  = file("${path.module}/../lambda/controller/login.html")
+#     filename = "login.html"
+#   }
+# }
+
+resource "random_string" "controller_auth_key" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+
+resource "aws_lambda_function" "main_controller_lambda" {
+  filename         = data.archive_file.controller_lambda_zip.output_path
+  function_name    = "${var.project_id}-controller"
+  role             = aws_iam_role.dev_role.arn
+  handler          = "main.lambda_handler"
+  runtime          = "python3.12" # Or your preferred Python runtime
+  source_code_hash = data.archive_file.controller_lambda_zip.output_base64sha256
+  timeout          = 60
+
+  depends_on = [aws_s3_bucket.data_bucket]
+
+  environment {
+    variables = {
+      AUTH_KEY = random_string.controller_auth_key.result
+      DATA_BUCKET_NAME = aws_s3_bucket.data_bucket.id
+    }
+  }
+
+  tags = {
+    Name      = "${var.project_id}-controller"
+    CreatedBy = "terraform"
+  }
+}
+
+resource "aws_lambda_function_url" "controller_lambda_url" {
+  function_name      = aws_lambda_function.main_controller_lambda.function_name
+  authorization_type = "NONE"
+
+  cors {
+    allow_credentials = true
+    allow_origins     = ["*"]
+    allow_methods     = ["*"]
+    allow_headers     = ["date", "keep-alive"]
+    expose_headers    = ["keep-alive", "date"]
+    max_age           = 86400
+  }
+}
+
+
+
 
 
 output "subnet_id" {
@@ -300,6 +410,17 @@ output "PROJECT_ID" {
   value = var.project_id
 }
 
+
+output "controller_url" {
+  value = aws_lambda_function_url.controller_lambda_url.function_url
+}
+
+# Output the bucket name
+output "bucket_name" {
+  value       = aws_s3_bucket.data_bucket.id
+  description = "The name of the S3 bucket"
+}
+
 # Local file resource to create the output file
 resource "local_file" "outputs" {
   filename = "${path.module}/set-tf-output-2-env-var.bat"
@@ -307,5 +428,8 @@ resource "local_file" "outputs" {
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
 set PROJECT_ID=${var.project_id}
 set INSTANCE_ID=${aws_instance.main_instance.id}
+set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
+set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 EOT
 }
+# set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}

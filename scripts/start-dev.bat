@@ -16,6 +16,9 @@ echo ===== Shortcuts =====
 doskey tfa=%SCRIPTS_DIR%\tf-apply.bat
 echo tfa = Terraform apply
 
+doskey cdd=cd %PROJECT_DIR%
+echo cdd = CD to project directory
+
 doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ConnectTimeout=1200 ec2-user@%ELASTIC_IP%
 echo sshe = SSH into EC2
 
@@ -39,6 +42,10 @@ echo code-server = Opens code-server in Browser
 
 doskey litellm=start https://%ELASTIC_IP%:7105/
 echo litellm = Opens LiteLLM in Browser
+
+doskey controller=start %CONTROLLER_URL%
+echo controller = Opens Controller in Browser
+
 
 doskey taint-ec2=cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance  
 

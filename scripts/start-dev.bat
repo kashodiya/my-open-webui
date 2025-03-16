@@ -13,6 +13,9 @@ echo ===== Terraform values set as env vars =====
 type %TERRAFORM_DIR%\set-tf-output-2-env-var.bat
 
 echo ===== Shortcuts =====
+doskey tfd=%SCRIPTS_DIR%\tf-destroy.bat
+echo tfd = Terraform destroy
+
 doskey tfa=%SCRIPTS_DIR%\tf-apply.bat
 echo tfa = Terraform apply
 

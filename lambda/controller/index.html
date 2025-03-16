@@ -108,7 +108,7 @@
     if (!isLocalhost) {
       baseUrl = `https://${window.location.hostname}`
       console.log(`Using base URL: ${baseUrl}`);
-    }    
+    }
 
     const store = {
       state: {}
@@ -188,8 +188,7 @@
       async mounted() {
         console.log('Home mounted');
         try {
-          const cachedProjectInfo = localStorage.getItem('projectInfo');
-
+          const cachedProjectInfo = sessionStorage.getItem('projectInfo');
           if (cachedProjectInfo) {
             // If cached data exists, parse and use it
             this.projectInfo = JSON.parse(cachedProjectInfo);
@@ -202,9 +201,9 @@
             }
             this.projectInfo = await response.json();
             console.log('Fetched projectInfo:', this.projectInfo);
-            
+
             // Cache the fetched data
-            localStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
+            sessionStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
           }
         } catch (error) {
           console.error("Could not fetch apps:", error);
@@ -283,7 +282,7 @@
               window.location.href = '/login';
             } else {
               console.error('Logout failed');
-            }           
+            }
           } catch (error) {
             console.error("Could not fetch apps:", error);
           }

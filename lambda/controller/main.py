@@ -504,10 +504,16 @@ def lambda_handler(event, context):
         project_id = function_name.split('-')[0]
         parameter_name = f'/{project_id}/info'
         project_info = get_project_info(parameter_name)
+
+
+
+        # Remove keys
+        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key']  # Replace with the actual keys you want to remove
+        safe_project_info = {k: v for k, v in project_info.items() if k not in keys_to_remove}
         auth_key = project_info['controller_auth_key']
         # controller_token_bucket = project_info['controller_token_bucket']
         # TODO: Generate it in tf and read from info
-        jwt_secret_key = '123123'
+        jwt_secret_key = project_info['controller_jwt_secret_key']
 
         apps = project_info['apps'] 
         print(project_info)
@@ -563,7 +569,7 @@ def lambda_handler(event, context):
         elif handler == sg_get_handler:
             return handler(event, security_group_id)
         elif handler == project_info_get_handler:
-            return handler(event, project_info)
+            return handler(event, safe_project_info)
         elif handler == apps_get_handler:
             return handler(event, apps)
         elif handler == start_ec2_get_handler:

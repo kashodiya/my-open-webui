@@ -309,6 +309,12 @@ resource "random_string" "controller_auth_key" {
   upper   = false
 }
 
+resource "random_string" "controller_jwt_secret_key" {
+  length  = 24
+  special = false
+  upper   = false
+}
+
 
 resource "aws_lambda_function" "main_controller_lambda" {
   filename         = data.archive_file.controller_lambda_zip.output_path
@@ -443,7 +449,8 @@ locals {
     instanceId = aws_instance.main_instance.id,
     controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
     dataBucketName = aws_s3_bucket.data_bucket.id,
-    controller_auth_key = random_string.controller_auth_key.result
+    controller_auth_key = random_string.controller_auth_key.result,
+    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result
   }
 
   # Merge existing and new information

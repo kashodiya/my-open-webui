@@ -24,6 +24,18 @@
     <v-container fluid>
       <div class="text-h5">Welcome</div>
 
+
+      <v-list>
+        <v-list-item
+          v-for="app in projectInfo.apps"
+          :key="app.name"
+          :href="'https://' + projectInfo.elasticIP + ':' + app.port"
+          target="_blank"
+        >
+          <v-list-item-title>{{ app.name }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+
       <!-- <v-btn
         color="success"
         @click="allowIp"
@@ -78,6 +90,7 @@
         return {
           state: store.state,
           apps: [],
+          projectInfo: {},
           isLoading: false,
         }
       },
@@ -111,12 +124,24 @@
       async mounted() {
         console.log('Home mounted');
         try {
-          const response = await fetch(`${baseUrl}/apps`);
+
+
+          let response = await fetch(`${baseUrl}/project-info`);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          this.apps = await response.json();
-          console.log({ apps: this.apps });
+          this.projectInfo = await response.json();
+          console.log({ projectInfo: this.projectInfo });
+
+          
+          // response = await fetch(`${baseUrl}/apps`);
+          // if (!response.ok) {
+          //   throw new Error(`HTTP error! status: ${response.status}`);
+          // }
+          // this.apps = await response.json();
+          // console.log({ apps: this.apps });
+          
+          
         } catch (error) {
           console.error("Could not fetch apps:", error);
         }

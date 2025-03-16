@@ -129,6 +129,7 @@ scripts\create-launcher.bat
 - Windows Explorer is opened.
 - Double click "launcher.bat" file.
 - All the following instructions must be executed from the launcher.
+- NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.
 
 ### OLD Create Launcher - DELETE THIS
 - Create a bat file (launch.bat or whatever you like) on your desktop with following content. Do not forget to replace place holder values, profile and path:  
@@ -519,3 +520,4 @@ Remove
 set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
 from main.tf
 
+When tfa is done again , lambda auth key is overwrittend (it it was changed manually by lambda update) - in lambda update update the tf state?

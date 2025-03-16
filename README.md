@@ -78,11 +78,15 @@ aws ec2 describe-vpcs
     "subnet_cidr": "10.0.2.0/26",
     "allowed_source_ips": [
         "replace.this.with.your-ip"
-    ]
+    ],
+    "code_server_password": "fill-me",
+    "litellm_api_key": "fill-me",
+    "jupyter_lab_token": "fill-me"
 }
 ```
 - All the values in "terraform.tfvars" are over-written by values in "terraform\terraform.tfvars" at runtime.
 - Update your VPC Id in vpc_id
+- Set passwrod, key and token - to whatever you want. Minimum 8 characters. 
 - The script will create a new subnet. You need to provide a CIDR range (with /32) for new subnet. Set a unused CIDR range "subnet_cidr" field. 
 - See tips section to find out how to find unused CIDR. 
 - Set "allowed_source_ips": 

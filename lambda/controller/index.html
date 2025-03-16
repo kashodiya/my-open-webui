@@ -25,7 +25,7 @@
       <v-row>
         <v-col cols="12" md="6">
           <v-card>
-            <v-card-title>Applications</v-card-title>
+            <v-card-title>Application Links</v-card-title>
             <v-card-text>
               <v-list>
                 <v-list-item
@@ -135,7 +135,7 @@
             console.log({ state });
 
             if (state.status) {
-              this.$root.showSnackbar(state.status, 'success');
+              this.$root.showSnackbar(`Start status: ${state.status}`, 'success');
             }
           } catch (error) {
             console.error("Error starting EC2:", error);
@@ -152,7 +152,8 @@
             console.log({ state });
 
             if (state.status) {
-              this.$root.showSnackbar(state.status, 'success');
+              // this.$root.showSnackbar(state.status, 'success');
+              this.$root.showSnackbar(`Stop status: ${state.status}`, 'success');
             }
           } catch (error) {
             console.error("Error stopping EC2:", error);

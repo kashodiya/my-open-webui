@@ -7,12 +7,16 @@ from botocore.exceptions import ClientError
 
 # Get the AUTH_KEY from environment variables
 auth_key = os.environ.get('AUTH_KEY')
+data_bucket_name = os.environ.get('DATA_BUCKET_NAME')
+
 # auth_key = "123123"
 
 # Create EC2 client
 ec2_client = boto3.client('ec2')
 user_pool_name = 'myllm-user-pool'
 security_group_id = 'NONE'
+s3_client = boto3.client('s3')
+# data_bucket_name = ''
 
 def generate_token():
     # Generate a simple token using the current timestamp and AUTH_KEY
@@ -130,7 +134,7 @@ def apps_get_handler(event):
         # Prepare the response
         response = {
             'statusCode': 200,
-            'body': json.dumps(apps),
+            'body': apps,
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'  # For CORS support
@@ -211,18 +215,70 @@ def get_sg():
                 'error': str(e)
             })
         }
-    
+
 def get_apps():
-    callback_urls = get_cognito_client_callback_urls(user_pool_name)
-    urls = []
-    for key, value in callback_urls.items():
-        for url_string in value:
-            if 'ec2-' in url_string:
-                just_url = url_string.replace('/oauth2/callback', '')
-                just_url = just_url.replace('/oauth2/idpresponse', '')      
-                urls.append({'name': key, 'href': just_url, 'logout_href': f'{just_url}/oauth2/sign_out'})
-    urls.sort(key=lambda x: x['name'])
-    return urls
+    # name = get_data_bucket_name()
+    # if not name:
+    #     return '[]'
+    # else:
+    global data_bucket_name  # Declare the variable as global
+    json_txt = read_file_from_s3(data_bucket_name, 'apps.json')
+    print(f'{json_txt}')
+    return json_txt
+
+# def get_apps():
+#     callback_urls = get_cognito_client_callback_urls(user_pool_name)
+#     urls = []
+#     for key, value in callback_urls.items():
+#         for url_string in value:
+#             if 'ec2-' in url_string:
+#                 just_url = url_string.replace('/oauth2/callback', '')
+#                 just_url = just_url.replace('/oauth2/idpresponse', '')      
+#                 urls.append({'name': key, 'href': just_url, 'logout_href': f'{just_url}/oauth2/sign_out'})
+#     urls.sort(key=lambda x: x['name'])
+#     return urls
+
+def get_first_data_bucket():
+    response = s3_client.list_buckets()
+    
+    for bucket in response['Buckets']:
+        if '-data-' in bucket['Name']:
+            name = bucket['Name']
+            print(f'Found data bucket name: {name}')
+            return name
+    
+    
+    return None  # Return None if no matching bucket is found
+
+def get_data_bucket_name():
+    global data_bucket_name  # Declare the variable as global
+    if data_bucket_name == '':
+        data_bucket_name = get_first_data_bucket()
+
+    return data_bucket_name
+
+
+def read_file_from_s3(bucket_name, file_key):
+    # Create an S3 client with specified region
+    # s3 = boto3.client('s3', region_name=region_name)
+    # s3 = boto3.client('s3')
+    
+    try:
+        # Get the object from the bucket
+        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        
+        # Read the file contents
+        file_content = response['Body'].read().decode('utf-8')
+        
+        return file_content
+    
+    except ClientError as e:
+        if e.response['Error']['Code'] == "NoSuchKey":
+            print(f"The file {file_key} was not found in the bucket {bucket_name}")
+        else:
+            print(f"An error occurred: {e}")
+        return None
+
 
 def allow_get_handler(event):
     query_params = event.get('queryStringParameters', {})

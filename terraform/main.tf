@@ -318,9 +318,12 @@ resource "aws_lambda_function" "main_controller_lambda" {
   source_code_hash = data.archive_file.controller_lambda_zip.output_base64sha256
   timeout          = 60
 
+  depends_on = [aws_s3_bucket.data_bucket]
+
   environment {
     variables = {
       AUTH_KEY = random_string.controller_auth_key.result
+      DATA_BUCKET_NAME = aws_s3_bucket.data_bucket.id
     }
   }
 

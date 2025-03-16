@@ -277,6 +277,7 @@ resource "aws_s3_bucket" "data_bucket" {
 
 
 
+
 # data "archive_file" "controller_lambda_zip" {
 #   type        = "zip"
 #   output_path = "${path.module}/../lambda/function.zip"
@@ -421,18 +422,39 @@ output "bucket_name" {
   description = "The name of the S3 bucket"
 }
 
-# Create the parameter store item
+
+
+
+# Attempt to fetch the existing parameter value
+data "aws_ssm_parameter" "existing_info" {
+  name = "/${var.project_id}/info"
+  with_decryption = false
+}
+
+locals {
+  # Merge is needed to keep apps value in the JSON. "apps" value is added by user-data.sh. If the user do terraform apply after EC2 is generated, we want to keep apps and only update other values.
+  # Use an empty map if the parameter doesn't exist or can't be decoded
+  existing_info = try(jsondecode(data.aws_ssm_parameter.existing_info.value), {})
+
+  # New information to be added or updated
+  new_info = {
+    elasticIP = aws_eip.dev_ec2_eip.public_ip,
+    projectId = var.project_id,
+    instanceId = aws_instance.main_instance.id,
+    controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
+    dataBucketName = aws_s3_bucket.data_bucket.id,
+    controller_auth_key = random_string.controller_auth_key.result
+  }
+
+  # Merge existing and new information
+  merged_info = merge(local.existing_info, local.new_info)
+}
+
+# Create or update the parameter
 resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
-  value = jsonencode({
-     elasticIP = aws_eip.dev_ec2_eip.public_ip,
-     projectId = var.project_id,
-     instanceId = aws_instance.main_instance.id,
-     controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
-     dataBucketName = aws_s3_bucket.data_bucket.id,
-     controller_auth_key = random_string.controller_auth_key.result
-  })
+  value = jsonencode(local.merged_info)
 
   # Ensure this resource is created after all other resources
   depends_on = [
@@ -442,8 +464,10 @@ resource "aws_ssm_parameter" "resource_ids" {
     aws_s3_bucket.data_bucket,
     random_string.controller_auth_key
   ]
-
 }
+
+
+
 
 # Local file resource to create the output file
 resource "local_file" "outputs" {

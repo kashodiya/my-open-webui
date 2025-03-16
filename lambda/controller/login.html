@@ -70,10 +70,18 @@
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    // Store the token in localStorage (or you could use cookies)
-                    localStorage.setItem('token', data.token);
-                    // Redirect to the main page or dashboard
-                    window.location.href = '/index';
+                    if(data['token']){
+                        // Store the token in localStorage (or you could use cookies)
+                        // localStorage.setItem('token', data.token);
+                        let token = data['token'];
+                        // localStorage.setItem('token', token);
+                        document.cookie = `token=${token}; path=/; SameSite=Strict`;
+                        console.log({data})
+                        // Redirect to the main page or dashboard
+                        window.location.href = '/index';
+                    }else{
+                        alert('Login failed');
+                    }
                 } else {
                     const errorData = await response.json();
                     alert(errorData.error || 'Login failed');

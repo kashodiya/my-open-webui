@@ -208,6 +208,17 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 
 ### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
 
+### If you want to install Controller (a Lambda bsed web utility that allow you to manage the env)
+- Install Python or Miniconda
+- Run following commands:
+```bat
+cd lambda\controller
+pip install -r requirements.txt -t package
+cd ..
+deploy.bat controller
+```
+- To open controller from Launcher run shortcut: controller
+
 ### Find auto-generated passwords and tokens
 - SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
 ```bash

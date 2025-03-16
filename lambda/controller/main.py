@@ -1,9 +1,18 @@
 import os
+import sys
 import json
 import hashlib
 from datetime import datetime, timedelta
 import boto3
 from botocore.exceptions import ClientError
+
+
+# Add the /package directory to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), "package"))
+
+# Now you can import your packages
+import jwt
+
 
 # Create EC2 client
 ec2_client = boto3.client('ec2')
@@ -27,50 +36,95 @@ def get_project_info(parameter_name):
         print(f"An error occurred: {str(e)}")
     return None
 
-# def generate_token(auth_key):
-#     timestamp = datetime.utcnow().timestamp()
-#     token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
-#     return token
-
-# def verify_token(token):
-#     return True
 
 
 # Add this at the beginning of your file, after the imports
-TOKEN_STORAGE = {}
+# TOKEN_STORAGE = {}
 # Change this to a year in seconds
-TOKEN_EXPIRATION = 365 * 24 * 60 * 60  # One year in seconds
+# TOKEN_EXPIRATION = 365 * 24 * 60 * 60  # One year in seconds
 
-def generate_token(auth_key):
-    timestamp = datetime.utcnow().timestamp()
-    token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
-    expiration = datetime.utcnow() + timedelta(seconds=TOKEN_EXPIRATION)
-    TOKEN_STORAGE[token] = expiration
+
+def generate_token(auth_key, jwt_secret_key):
+    print(f"Generating token for auth_key: {auth_key}")
+    payload = {
+        'auth_key': auth_key,
+        'iat': datetime.utcnow()
+    }
+    token = jwt.encode(payload, jwt_secret_key, algorithm='HS256')
+    print(f"Generated token: {token}")
     return token
 
+def verify_token(token, jwt_secret_key):
+    print(f"Verifying token: {token}")
+    try:
+        payload = jwt.decode(token, jwt_secret_key, algorithms=['HS256'])
+        print(f"Token payload: {payload}")
+        print("Token is valid")
+        return True
+    except jwt.ExpiredSignatureError:
+        print("Token has expired")
+        return False
+    except jwt.InvalidTokenError:
+        print("Invalid token")
+        return False
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
+        return False
 
-def verify_token(token):
-    if token in TOKEN_STORAGE:
-        expiration = TOKEN_STORAGE[token]
-        if datetime.utcnow() < expiration:
-            return True
-        else:
-            del TOKEN_STORAGE[token]
-    return False
+
+# def generate_token(auth_key, controller_token_bucket):
+#     timestamp = datetime.utcnow().timestamp()
+#     token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
+#     expiration = int((datetime.utcnow() + timedelta(seconds=TOKEN_EXPIRATION)).timestamp())
+    
+#     S3_CLIENT.put_object(
+#         Bucket=controller_token_bucket,
+#         Key=f"tokens/{token}",
+#         Body=json.dumps({"expiration": expiration})
+#     )
+#     return token
+
+# def verify_token(token, controller_token_bucket):
+#     print(f"Verifying token: {token}")
+#     try:
+#         print(f"Attempting to retrieve token data from S3 bucket: {controller_token_bucket}")
+#         response = S3_CLIENT.get_object(Bucket=controller_token_bucket, Key=f"tokens/{token}")
+#         print("Successfully retrieved token data from S3")
+        
+#         token_data = json.loads(response['Body'].read().decode('utf-8'))
+#         print(f"Token data: {token_data}")
+        
+#         expiration = token_data['expiration']
+#         current_time = datetime.utcnow().timestamp()
+#         print(f"Current time: {current_time}, Token expiration: {expiration}")
+        
+#         if current_time < expiration:
+#             print("Token is valid")
+#             return True
+#         else:
+#             print("Token has expired, deleting from S3")
+#             S3_CLIENT.delete_object(Bucket=controller_token_bucket, Key=f"tokens/{token}")
+#             print("Expired token deleted from S3")
+#             return False
+#     except S3_CLIENT.exceptions.NoSuchKey:
+#         print(f"Token not found in S3: {token}")
+#         return False
+#     except Exception as e:
+#         print(f"An unexpected error occurred: {str(e)}")
+#         return False
 
 
-def login_post_handler(event, auth_key):
+def login_post_handler(event, auth_key, jwt_secret_key):
     body = json.loads(event['body'])
     print(f'Body key: {body.get('key')}')
     print(f'auth_key: {auth_key}')
     if body.get('key') == auth_key:
-        token = generate_token(auth_key)
+        token = generate_token(auth_key, jwt_secret_key)
         return {
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json',
-                'Set-Cookie': f'token={token}; HttpOnly; Secure; SameSite=Strict'
+                'Content-Type': 'application/json'
             },
             'body': json.dumps({'token': token})
         }
@@ -167,6 +221,60 @@ def project_info_get_handler(event, project_info):
         }
     return response
 
+
+def stop_ec2_get_handler(event, instance_id):
+    try:
+        stop_response = ec2_client.stop_instances(InstanceIds=[instance_id])
+        
+        # Get the current state of the instance
+        instance_state = stop_response['StoppingInstances'][0]['CurrentState']['Name']
+        
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({'status': str(instance_state)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
+def start_ec2_get_handler(event, instance_id):
+    try:
+        start_response = ec2_client.start_instances(InstanceIds=[instance_id])
+        
+        # Get the current state of the instance
+        instance_state = start_response['StartingInstances'][0]['CurrentState']['Name']
+        
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({'status': str(instance_state)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
+
 def apps_get_handler(event, apps):
     try:
         response = {
@@ -235,31 +343,31 @@ def get_sg(security_group_id):
             })
         }
 
-def get_apps(data_bucket_name):
-    json_txt = read_file_from_s3(data_bucket_name, 'apps.json')
-    print(f'{json_txt}')
-    return json_txt
+# def get_apps(data_controller_token_bucket):
+#     json_txt = read_file_from_s3(data_controller_token_bucket, 'apps.json')
+#     print(f'{json_txt}')
+#     return json_txt
 
-def get_first_data_bucket():
-    response = s3_client.list_buckets()
-    for bucket in response['Buckets']:
-        if '-data-' in bucket['Name']:
-            name = bucket['Name']
-            print(f'Found data bucket name: {name}')
-            return name
-    return None
+# def get_first_data_bucket():
+#     response = s3_client.list_buckets()
+#     for bucket in response['Buckets']:
+#         if '-data-' in bucket['Name']:
+#             name = bucket['Name']
+#             print(f'Found data bucket name: {name}')
+#             return name
+#     return None
 
-def get_data_bucket_name():
-    return get_first_data_bucket()
+# def get_data_controller_token_bucket():
+#     return get_first_data_bucket()
 
-def read_file_from_s3(bucket_name, file_key):
+def read_file_from_s3(controller_token_bucket, file_key):
     try:
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        response = s3_client.get_object(Bucket=controller_token_bucket, Key=file_key)
         file_content = response['Body'].read().decode('utf-8')
         return file_content
     except ClientError as e:
         if e.response['Error']['Code'] == "NoSuchKey":
-            print(f"The file {file_key} was not found in the bucket {bucket_name}")
+            print(f"The file {file_key} was not found in the bucket {controller_token_bucket}")
         else:
             print(f"An error occurred: {e}")
         return None
@@ -300,27 +408,70 @@ def add_ingress_rule(ip_range):
         else:
             print(f"Error adding ingress rule: {e}")
 
-def get_cognito_client_callback_urls(user_pool_name):
-    cognito_client = boto3.client('cognito-idp')
-    user_pool_id = None
-    response = cognito_client.list_user_pools(MaxResults=60)
-    for pool in response['UserPools']:
-        if pool['Name'] == user_pool_name:
-            user_pool_id = pool['Id']
-            break
-    if user_pool_id is None:
-        raise ValueError(f"User Pool with name '{user_pool_name}' not found")
-    response = cognito_client.list_user_pool_clients(UserPoolId=user_pool_id)
-    client_ids = [client['ClientId'] for client in response['UserPoolClients']]
-    callback_urls = {}
-    for client_id in client_ids:
-        client_info = cognito_client.describe_user_pool_client(
-            UserPoolId=user_pool_id,
-            ClientId=client_id
-        )
-        client_name = client_info['UserPoolClient']['ClientName']
-        callback_urls[client_name] = client_info['UserPoolClient'].get('CallbackURLs', [])
-    return callback_urls
+def get_token_from_event(event, context):
+    """Extract the token from the Lambda event"""
+    print("Attempting to extract token from event")
+
+    # Check Authorization header
+    headers = event.get('headers', {})
+    auth_header = headers.get('Authorization') or headers.get('authorization')
+    if auth_header:
+        print("Found Authorization header")
+        parts = auth_header.split()
+        if parts[0].lower() == 'bearer' and len(parts) == 2:
+            print("Bearer token found in Authorization header")
+            return parts[1]
+
+    # Check query parameters
+    query_params = event.get('queryStringParameters', {})
+    if query_params:
+        token = query_params.get('token')
+        if token:
+            print("Token found in query parameters")
+            return token
+
+    # Check form data or JSON body
+    body = event.get('body')
+    if body:
+        # Try to parse as JSON
+        try:
+            body_json = json.loads(body)
+            token = body_json.get('token')
+            if token:
+                print("Token found in JSON body")
+                return token
+        except json.JSONDecodeError:
+            # If not JSON, treat as form data
+            form_data = parse_qs(body)
+            token = form_data.get('token', [None])[0]
+            if token:
+                print("Token found in form data")
+                return token
+
+    print("No token found in event")
+    return None
+
+def logout_get_handler(event):
+    # Set up the response object
+    response = {
+        'statusCode': 200,
+        'headers': {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',  # Adjust this for your CORS settings
+            'Access-Control-Allow-Credentials': 'true'
+        },
+        'body': json.dumps({'message': 'Logged out successfully'}),
+        'isBase64Encoded': False
+    }
+
+    # Set the cookie to expire
+    expires = datetime.utcnow() - timedelta(days=1)
+    expires_str = expires.strftime("%a, %d %b %Y %H:%M:%S GMT")
+
+    # Add the Set-Cookie header to clear the token
+    response['headers']['Set-Cookie'] = f'token=; path=/; expires={expires_str}; Secure; HttpOnly; SameSite=Strict'
+
+    return response
 
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
@@ -331,8 +482,21 @@ HANDLERS = {
     ('/sg', 'GET'): sg_get_handler,
     ('/apps', 'GET'): apps_get_handler,
     ('/project-info', 'GET'): project_info_get_handler,
+    ('/logout', 'GET'): logout_get_handler,
+    ('/start-ec2', 'GET'): start_ec2_get_handler,
+    ('/stop-ec2', 'GET'): stop_ec2_get_handler,
     ('/hello', 'GET'): hello_get_handler
 }
+S3_CLIENT = boto3.client('s3')
+
+def parse_cookies(cookie_string):
+    def split_pair(pair):
+        if '=' in pair:
+            return pair.split('=', 1)
+        else:
+            return pair, ''  # or you could use (pair, None)
+
+    return {k: v for k, v in (split_pair(pair) for pair in cookie_string.split('; '))}
 
 def lambda_handler(event, context):
     try:
@@ -341,17 +505,32 @@ def lambda_handler(event, context):
         parameter_name = f'/{project_id}/info'
         project_info = get_project_info(parameter_name)
         auth_key = project_info['controller_auth_key']
+        # controller_token_bucket = project_info['controller_token_bucket']
+        # TODO: Generate it in tf and read from info
+        jwt_secret_key = '123123'
+
         apps = project_info['apps'] 
         print(project_info)
         print(auth_key)
         
-        data_bucket_name = get_data_bucket_name()
+        # data_controller_token_bucket = get_data_controller_token_bucket()
         security_group_id = 'NONE'
         
         # cookies = event.get('headers', {}).get('cookie', '')
         # token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
+        # cookies = event.get('headers', {}).get('cookie', '')
+        # token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
+
+        # token = get_token_from_event(event, context)
+
+        # Extract cookies from the event
         cookies = event.get('headers', {}).get('cookie', '')
-        token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
+
+        print(f'cookies = {cookies}')
+        # Parse cookies
+        cookie_dict = parse_cookies(cookies)
+        # Extract the auth token
+        token = cookie_dict.get('token')
 
         http_method = event['requestContext']['http']['method']
         path = event['rawPath']
@@ -362,7 +541,8 @@ def lambda_handler(event, context):
             if token:
                 # authenticated_paths = ['/ec2s', '/allow', '/sg', '/apps', '/project-info']
                 # if path in authenticated_paths:
-                if not token or not verify_token(token):
+                print(f'Verifying token: {token}')
+                if not verify_token(token, jwt_secret_key):
                     return {
                         'statusCode': 401,
                         'headers': {'Content-Type': 'application/json'},
@@ -370,18 +550,28 @@ def lambda_handler(event, context):
                     }            
                 else:
                     newPath = path
+            else:
+                print('Token not found!')
         
         handler = HANDLERS.get((newPath, http_method), default_handler)
+
+        print(f'Handling path: {newPath}, old path was {path}')
         
         # Pass the required arguments to the handler functions
         if handler == login_post_handler:
-            return handler(event, auth_key)
+            return handler(event, auth_key, jwt_secret_key)
         elif handler == sg_get_handler:
             return handler(event, security_group_id)
         elif handler == project_info_get_handler:
             return handler(event, project_info)
         elif handler == apps_get_handler:
             return handler(event, apps)
+        elif handler == start_ec2_get_handler:
+            instance_id = project_info['instanceId'] 
+            return handler(event, instance_id)
+        elif handler == stop_ec2_get_handler:
+            instance_id = project_info['instanceId'] 
+            return handler(event, instance_id)
         else:
             return handler(event)
     

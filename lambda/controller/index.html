@@ -22,45 +22,49 @@
 
   <script type="text/x-template" id="home-template">
     <v-container fluid>
-      <div class="text-h5">Applications</div>
-
-
-      <v-list>
-        <v-list-item
-          v-for="app in projectInfo.apps"
-          :key="app.name"
-          :href="'https://' + projectInfo.elasticIP + ':' + app.port"
-          target="_blank"
-        >
-          <v-list-item-title>{{ app.name }}</v-list-item-title>
-        </v-list-item>
-      </v-list>
-
-      <v-btn
-        color="success"
-        @click="startEc2"
-        class="mr-4"
-      >
-        <v-icon left>mdi-play</v-icon>
-        Start EC2
-      </v-btn>
-      
-      <v-btn
-        color="error"
-        @click="stopEc2"
-      >
-        <v-icon left>mdi-stop</v-icon>
-        Stop EC2
-      </v-btn>
-
-      <!-- <v-btn
-        color="success"
-        @click="allowIp"
-        :disabled="isLoading"
-        :loading="isLoading">
-        <v-icon left>mdi-door-open</v-icon>
-        Test
-      </v-btn>       -->
+      <v-row>
+        <v-col cols="12" md="6">
+          <v-card>
+            <v-card-title>Applications</v-card-title>
+            <v-card-text>
+              <v-list>
+                <v-list-item
+                  v-for="app in projectInfo.apps"
+                  :key="app.name"
+                  :href="'https://' + projectInfo.elasticIP + ':' + app.port"
+                  target="_blank"
+                >
+                  <v-list-item-title>{{ app.name }}</v-list-item-title>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-col>
+    
+        <v-col cols="12" md="6">
+          <v-card>
+            <v-card-title>EC2 Controls</v-card-title>
+            <v-card-text>
+              <v-btn
+                color="success"
+                @click="startEc2"
+                class="mr-4"
+              >
+                <v-icon left>mdi-play</v-icon>
+                Start EC2
+              </v-btn>
+              
+              <v-btn
+                color="error"
+                @click="stopEc2"
+              >
+                <v-icon left>mdi-stop</v-icon>
+                Stop EC2
+              </v-btn>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </v-container>
   </script>
 </head>
@@ -79,6 +83,14 @@
       <v-main>
         <router-view></router-view>
       </v-main>
+
+
+      <v-snackbar v-model="snackbar" :color="snackbarColor">
+        {{ snackbarText }}
+        <template v-slot:actions>
+          <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+        </template>
+      </v-snackbar>
     </v-app>
   </div>
 
@@ -93,10 +105,10 @@
     const { createRouter, createWebHashHistory } = VueRouter;
     const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
     let baseUrl = ''
-    if (isLocalhost) {
-      baseUrl = isLocalhost ? "https://c7ycmijcll6zisan7ozxpfoswq0tzgpq.lambda-url.us-east-1.on.aws" : ""; // Replace with your production URL if needed
+    if (!isLocalhost) {
+      baseUrl = `https://${window.location.hostname}`
       console.log(`Using base URL: ${baseUrl}`);
-    }
+    }    
 
     const store = {
       state: {}
@@ -114,8 +126,38 @@
       },
       methods: {
         async startEc2() {
+          try {
+            let response = await fetch(`${baseUrl}/start-ec2`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            let state = await response.json();
+            console.log({ state });
+
+            if (state.status) {
+              this.$root.showSnackbar(state.status, 'success');
+            }
+          } catch (error) {
+            console.error("Error starting EC2:", error);
+            this.$root.showSnackbar("Error starting EC2", 'error');
+          }
         },
         async stopEc2() {
+          try {
+            let response = await fetch(`${baseUrl}/stop-ec2`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            let state = await response.json();
+            console.log({ state });
+
+            if (state.status) {
+              this.$root.showSnackbar(state.status, 'success');
+            }
+          } catch (error) {
+            console.error("Error stopping EC2:", error);
+            this.$root.showSnackbar("Error stopping EC2", 'error');
+          }
         },
         async allowIp() {
           this.isLoading = true;
@@ -146,28 +188,27 @@
       async mounted() {
         console.log('Home mounted');
         try {
+          const cachedProjectInfo = localStorage.getItem('projectInfo');
 
-
-          let response = await fetch(`${baseUrl}/project-info`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          if (cachedProjectInfo) {
+            // If cached data exists, parse and use it
+            this.projectInfo = JSON.parse(cachedProjectInfo);
+            console.log('Using cached projectInfo');
+          } else {
+            // If no cached data, fetch from API
+            let response = await fetch(`${baseUrl}/project-info`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.projectInfo = await response.json();
+            console.log('Fetched projectInfo:', this.projectInfo);
+            
+            // Cache the fetched data
+            localStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
           }
-          this.projectInfo = await response.json();
-          console.log({ projectInfo: this.projectInfo });
-
-
-          // response = await fetch(`${baseUrl}/apps`);
-          // if (!response.ok) {
-          //   throw new Error(`HTTP error! status: ${response.status}`);
-          // }
-          // this.apps = await response.json();
-          // console.log({ apps: this.apps });
-
-
         } catch (error) {
           console.error("Could not fetch apps:", error);
         }
-
       },
       created() {
         console.log('Home created');
@@ -193,6 +234,22 @@
 
 
 
+    const snackbarMixin = {
+      data() {
+        return {
+          snackbar: false,
+          snackbarText: '',
+          snackbarColor: 'success',
+        }
+      },
+      methods: {
+        showSnackbar(text, color = 'success') {
+          this.snackbarText = text;
+          this.snackbarColor = color;
+          this.snackbar = true;
+        }
+      }
+    };
 
     const routes = [
       { path: '/', component: Home },
@@ -212,19 +269,24 @@
     // }    
 
     const app = createApp({
+      mixins: [snackbarMixin],
+
       data() {
         return {
         };
       },
-
-
       methods: {
-        logout() {
-          // Remove the token from localStorage
-          localStorage.removeItem('token');
-
-          // Redirect to the login page
-          window.location.href = '/login';
+        async logout() {
+          try {
+            let response = await fetch(`${baseUrl}/logout`);
+            if (response.ok) {
+              window.location.href = '/login';
+            } else {
+              console.error('Logout failed');
+            }           
+          } catch (error) {
+            console.error("Could not fetch apps:", error);
+          }
         }
       }
     });

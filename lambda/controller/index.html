@@ -22,7 +22,36 @@
 
   <script type="text/x-template" id="home-template">
     <v-container fluid>
-      <div class="text-h5">Welcome</div>
+      <div class="text-h5">Applications</div>
+
+
+      <v-list>
+        <v-list-item
+          v-for="app in projectInfo.apps"
+          :key="app.name"
+          :href="'https://' + projectInfo.elasticIP + ':' + app.port"
+          target="_blank"
+        >
+          <v-list-item-title>{{ app.name }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+
+      <v-btn
+        color="success"
+        @click="startEc2"
+        class="mr-4"
+      >
+        <v-icon left>mdi-play</v-icon>
+        Start EC2
+      </v-btn>
+      
+      <v-btn
+        color="error"
+        @click="stopEc2"
+      >
+        <v-icon left>mdi-stop</v-icon>
+        Stop EC2
+      </v-btn>
 
       <!-- <v-btn
         color="success"
@@ -78,10 +107,15 @@
         return {
           state: store.state,
           apps: [],
+          projectInfo: {},
           isLoading: false,
         }
       },
       methods: {
+        async startEc2() {
+        },
+        async stopEc2() {
+        },
         async allowIp() {
           this.isLoading = true;
           console.log('Allowing...');
@@ -111,12 +145,24 @@
       async mounted() {
         console.log('Home mounted');
         try {
-          const response = await fetch(`${baseUrl}/apps`);
+
+
+          let response = await fetch(`${baseUrl}/project-info`);
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          this.apps = await response.json();
-          console.log({ apps: this.apps });
+          this.projectInfo = await response.json();
+          console.log({ projectInfo: this.projectInfo });
+
+          
+          // response = await fetch(`${baseUrl}/apps`);
+          // if (!response.ok) {
+          //   throw new Error(`HTTP error! status: ${response.status}`);
+          // }
+          // this.apps = await response.json();
+          // console.log({ apps: this.apps });
+          
+          
         } catch (error) {
           console.error("Could not fetch apps:", error);
         }

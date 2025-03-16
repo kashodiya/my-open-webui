@@ -14,7 +14,12 @@ type %TERRAFORM_DIR%\set-tf-output-2-env-var.bat
 
 echo ===== Shortcuts =====
 doskey tfa=%SCRIPTS_DIR%\tf-apply.bat
+@REM doskey tfa=cd %TERRAFORM_DIR% $T echo "terraform apply" $T terraform apply  
 echo tfa = Terraform apply
+
+doskey tfd=%SCRIPTS_DIR%\tf-destroy.bat
+@REM doskey tfd=cd %TERRAFORM_DIR% $T terraform destroy
+echo tfd = Terraform destroy
 
 doskey cdd=cd %PROJECT_DIR%
 echo cdd = CD to project directory

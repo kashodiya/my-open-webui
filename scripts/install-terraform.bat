@@ -1,10 +1,16 @@
 @echo off
-REM Check if running as admin
-net session >nul 2>&1
+
+REM Step 1: Check if running as admin
+not session >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo This script must be run as an Adminstrator
-    pause
-    exit /b 1
+    echo Not running as Admin. Attempting to elevate permissions...
+
+    :: Step 2: Re-launch the same script with admin privileges:
+    :: -Use Powershell to start a new cmd instance with -Verb RunAS
+    powershell -Command "Start-Process cmd -ArgumentList "/c \"\"%~f0\" %*\"' -Verb runAs"
+    
+    :: Step 3: Exit this script (since it's not elevated)
+    exit /b 0
 )
 
 REM Check if Terraform is already installed

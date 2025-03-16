@@ -11,4 +11,3 @@ temp
 terraform/terraform.tfvars.json
 terraform/set-tf-output-2-env-var.bat
 launcher.bat
-scripts/Paste-bin.txt

@@ -109,3 +109,34 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Discuss these ideas with Open WebUI
 #### Challenge exercise 2
 - Without writing a single line of Python code, get the following things done just using Prompt Engineering:
+
+
+
+## LiteLLM Exercise
+### Use LiteLLM to talk to Bedrock
+- Open Jupyter Lab
+- Navigate to /home/ec2-user
+- Create new Notebook
+- Paste following code and replace your key on line 3.
+```python
+import requests
+
+url = "http://localhost:8105/v1/completions"
+litellm_key = "YOUR-KEY-HERE"
+headers = {"Authorization": f"Bearer {litellm_key}", "Content-Type": "application/json"}
+question = "What is the capital of India?"
+data = {
+    "model": "Claude 3 Haiku By Anthropic", 
+    "prompt": question,
+    "max_tokens": 50
+}
+
+response = requests.post(url, headers=headers, json=data)
+if response.status_code == 200:
+    response = response.json().get("choices", [{}])[0].get("text", "No response")
+    print(response)
+else:
+    print(f"Error: {response.status_code}, {response.text}")
+```
+- Run code
+- Review code

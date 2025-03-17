@@ -38,7 +38,17 @@
 
 
 ### Ask question to a web page
-
+- Open this page in the browser: https://en.wikipedia.org/wiki/Apollo_11
+- Copy URL
+- Open Open WebUI
+- Click New Chat
+- In question box enter #
+- Press Ctrl+V
+- Hit Enter
+- Type a Apollo 11 related question
+#### Challenge exercise
+- Use different models to try out same questions
+- Try out any other URLs
 
 ### A question with System Prompt
 - Open Open WebUI
@@ -116,10 +126,3 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 
 
 
-## Misc
-Write Jupyter Python code to run system command to copy "/var/lib/docker/volumes/open-webui_open-webui/_data/webui.db" file to "/tmp/webui.db" using sudo command.
-Open that copied Sqlite file. 
-Create Mermaid ERD diagram.
-
-List records form user table.
-List tables.

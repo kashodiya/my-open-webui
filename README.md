@@ -188,8 +188,12 @@ tail_setup_log
 - This should be the last line in the log:
 All installations completed.
 - Press Ctrl+C to exit.
-- To see complete user data script log:  
-sudo less +G /var/log/user-data.log
+- To see complete user data script log using less command:  
+```bash
+less_setup_log
+```
+- Press q to exit
+
 
 ### Set admin user password for Open WebUI
 - Use shortcut "open-webui" from launcher to start Open WebUI in the browser.

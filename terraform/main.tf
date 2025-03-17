@@ -6,6 +6,7 @@ variable "subnet_cidr" {}
 variable "project_id" {}
 variable "ami" {}
 variable "instance_type" {}
+variable "availability_zone" {}
 
 variable "jupyter_lab_token" {
   type        = string
@@ -65,8 +66,8 @@ data "aws_internet_gateway" "main" {
 resource "aws_subnet" "public" {
   vpc_id                  = var.vpc_id
   cidr_block              = var.subnet_cidr
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = false
   tags = {
     Name      = "${var.project_id}"
     CreatedBy = "terraform"
@@ -106,7 +107,8 @@ resource "aws_security_group" "allow_sources" {
   }
 
   ingress {
-    description = "All web apps"
+    # Do not change this description, it is used in controller lambda
+    description = "main-range"  
     from_port   = 7100
     to_port     = 7200
     protocol    = "tcp"
@@ -450,13 +452,15 @@ resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
   value = jsonencode({
-    elasticIP               = aws_eip.dev_ec2_eip.public_ip,
-    projectId               = var.project_id,
-    instanceId              = aws_instance.main_instance.id,
-    controllerUrl           = aws_lambda_function_url.controller_lambda_url.function_url,
-    dataBucketName          = aws_s3_bucket.data_bucket.id,
-    controller_auth_key     = var.controller_auth_key,
-    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result
+    elasticIP                 = aws_eip.dev_ec2_eip.public_ip,
+    projectId                 = var.project_id,
+    instanceId                = aws_instance.main_instance.id,
+    controllerUrl             = aws_lambda_function_url.controller_lambda_url.function_url,
+    dataBucketName            = aws_s3_bucket.data_bucket.id,
+    controller_auth_key       = var.controller_auth_key,
+    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result,
+    ec2SecurityGroupId        = aws_security_group.allow_sources.id,
+    ec2PublicDns              = aws_instance.main_instance.public_dns
   })
 
   # Ensure this resource is created after all other resources
@@ -476,8 +480,10 @@ resource "local_file" "outputs" {
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
 set PROJECT_ID=${var.project_id}
 set INSTANCE_ID=${aws_instance.main_instance.id}
+set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
+set EC2_SECURITY_GROUP_ID=${aws_security_group.allow_sources.id}
 EOT
 }
 # set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}

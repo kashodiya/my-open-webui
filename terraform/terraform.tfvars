@@ -1,4 +1,4 @@
-# Following 2 values will be over written by values from terraform\terraform.tfvars.json
+# DO NOT MODIFY THIS FILE, CREATE "terraform\terraform.tfvars.json" AND OVERWRITE ANY VALUES YOU WANT TO CHANGE
 vpc_id               = ""
 subnet_cidr          = ""
 allowed_source_ips   = []
@@ -10,4 +10,5 @@ litellm_api_key      = ""
 jupyter_lab_token    = ""
 controller_auth_key  = ""
 region               = "us-east-1"
+availability_zone    = "us-east-1a"
 

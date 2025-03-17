@@ -8,4 +8,6 @@ project_id           = "myowu"
 code_server_password = ""
 litellm_api_key      = ""
 jupyter_lab_token    = ""
+controller_auth_key  = ""
 region               = "us-east-1"
+

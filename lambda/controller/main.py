@@ -504,7 +504,8 @@ def lambda_handler(event, context):
         project_id = function_name.split('-')[0]
         parameter_name = f'/{project_id}/info'
         project_info = get_project_info(parameter_name)
-
+        apps = get_project_info(f'/{project_id}/apps')
+        project_info['apps'] = apps
 
 
         # Remove keys
@@ -515,7 +516,7 @@ def lambda_handler(event, context):
         # TODO: Generate it in tf and read from info
         jwt_secret_key = project_info['controller_jwt_secret_key']
 
-        apps = project_info['apps'] 
+        # apps = project_info['apps'] 
         print(project_info)
         print(auth_key)
         

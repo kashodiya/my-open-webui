@@ -140,3 +140,26 @@ else:
 ```
 - Run code
 - Review code
+
+
+### Use LangChain to talk to Bedrock via LiteLLM
+- Open Jupyter Lab
+- Navigate to /home/ec2-user
+- Create new Notebook
+- Run: pip install langchain langchain-community
+- Paste following code and replace your key on line 3.
+```python
+from langchain.llms import OpenAI
+
+llm = OpenAI(
+    openai_api_base="http://localhost:8105/v1",  # Your LiteLLM server
+    openai_api_key="YOUR-KEY-HERE",  # Required by LangChain but ignored by LiteLLM
+    model_name="Claude 3 Haiku By Anthropic"
+)
+question = "What is the capital of India?"
+response = llm.predict(question)
+print(response)
+
+```
+- Run code
+- Review code

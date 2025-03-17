@@ -113,6 +113,17 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 
 
 ## LiteLLM Exercise
+
+### Explore LiteLLM APIs
+- Open LiteLLM via Controller
+- Click Authorize
+- Enter your key
+- Try out /models API
+- Verify that you can see the list of models
+#### Challenge exercise
+- Explore other APIs
+
+
 ### Use LiteLLM to talk to Bedrock
 - Open Jupyter Lab
 - Navigate to /home/ec2-user
@@ -163,3 +174,9 @@ print(response)
 ```
 - Run code
 - Review code
+
+
+
+
+## TODOs
+- Add KB exercise

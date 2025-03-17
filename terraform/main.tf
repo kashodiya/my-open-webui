@@ -355,6 +355,7 @@ resource "aws_instance" "main_instance" {
   tags = {
     Name      = "${var.project_id}_main_server"
     CreatedBy = "terraform"
+    AutoStopStart = "True"
   }
 }
 
@@ -443,6 +444,110 @@ resource "aws_lambda_function_url" "controller_lambda_url" {
     max_age           = 86400
   }
 }
+
+
+
+
+
+
+
+
+
+
+# 
+# Data source to get the EC2 instance IDs based on a tag
+data "aws_instances" "tagged_instances" {
+  filter {
+    name   = "tag:AutoStopStart"
+    values = ["True"]
+  }
+  depends_on = [ aws_instance.main_instance ]
+}
+
+# IAM role for the EventBridge Scheduler
+resource "aws_iam_role" "scheduler_role" {
+  name = "${var.project_id}-ec2-scheduler-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "scheduler.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM policy to allow starting and stopping EC2 instances
+resource "aws_iam_role_policy" "scheduler_policy" {
+  name = "${var.project_id}-ec2-scheduler-policy"
+  role = aws_iam_role.scheduler_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:StartInstances",
+          "ec2:StopInstances"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Scheduler schedule to stop EC2 instances at 12 PM (midnight)
+resource "aws_scheduler_schedule" "stop_ec2" {
+  name       = "${var.project_id}-stop-ec2-schedule"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "cron(0 0 * * ? *)"
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:ec2:stopInstances"
+    role_arn = aws_iam_role.scheduler_role.arn
+
+    input = jsonencode({
+      InstanceIds = data.aws_instances.tagged_instances.ids
+    })
+  }
+}
+
+# Scheduler schedule to start EC2 instances at 4 AM
+resource "aws_scheduler_schedule" "start_ec2" {
+  name       = "${var.project_id}-start-ec2-schedule"
+  group_name = "default"
+
+  flexible_time_window {
+    mode = "OFF"
+  }
+
+  schedule_expression = "cron(0 4 * * ? *)"
+
+  target {
+    arn      = "arn:aws:scheduler:::aws-sdk:ec2:startInstances"
+    role_arn = aws_iam_role.scheduler_role.arn
+
+    input = jsonencode({
+      InstanceIds = data.aws_instances.tagged_instances.ids
+    })
+  }
+}
+# 
+
+
+
+
 
 
 

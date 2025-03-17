@@ -323,9 +323,9 @@ echo === LiteLLM Key ===
 echo To change this key, edit file: /home/ec2-user/docker/open-webui/docker-compose.yml 
 grep -E 'LITELLM_API_KEY=' /home/ec2-user/docker/open-webui/docker-compose.yml | sed 's/^[[:space:]]*//'
 echo
-echo === Controller Lambda key ===
-echo To change passwkeyord, see README.md section - How to update Controller Lambda key?
-aws lambda get-function-configuration --function-name $PROJECT_ID-controller --query "Environment.Variables.AUTH_KEY" --output text
+echo === Controller Lambda auth key ===
+echo To change this key edit the parameter store value "/$PROJECT_ID/info", update key "controller_auth_key"
+aws ssm get-parameter --name "/$PROJECT_ID/info" --with-decryption | jq -r '.Parameter.Value' | jq -r '.controller_auth_key'
 EOF
 
     chmod 755 /home/ec2-user/.local/bin/tail_setup_log
@@ -367,19 +367,19 @@ create_apps_json() {
         exit 1  # Exit the script with a non-zero status to indicate failure
     fi    
 
-    # Read the existing parameter
-    existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
+    # # Read the existing parameter
+    # existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
 
     # Read the apps.json file
     apps_value=$(cat apps.json)
 
-    # Combine the existing parameter with the new key-value pair
-    new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
+    # # Combine the existing parameter with the new key-value pair
+    # new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
 
     # Update the parameter
     aws ssm put-parameter \
-        --name "/$PROJECT_ID/info" \
-        --value "$new_param" \
+        --name "/$PROJECT_ID/apps" \
+        --value "$apps_value" \
         --type "String" \
         --overwrite    
 

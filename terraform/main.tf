@@ -17,10 +17,9 @@ variable "jupyter_lab_token" {
   }
 }
 
-
 variable "litellm_api_key" {
   type        = string
-  description = "Password for LiteLLM"
+  description = "Key for LiteLLM"
   sensitive   = true  # Changed to true for security
   validation {
     condition     = length(var.litellm_api_key) >= 8
@@ -38,6 +37,16 @@ variable "code_server_password" {
   }
 }
 
+
+variable "controller_auth_key" {
+  type        = string
+  description = "Key for Controller"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.controller_auth_key) >= 8
+    error_message = "The key cor Controller must be at least 8 characters long."
+  }
+}
 provider "aws" {
   region = var.region
 }
@@ -307,41 +316,14 @@ resource "random_string" "bucket_suffix" {
 # Create an S3 bucket
 resource "aws_s3_bucket" "data_bucket" {
   bucket = "${var.project_id}-data-${random_string.bucket_suffix.result}"  # Replace with your desired bucket name
+  force_destroy = true
 }
 
-
-
-
-# data "archive_file" "controller_lambda_zip" {
-#   type        = "zip"
-#   output_path = "${path.module}/../lambda/function.zip"
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/main.py")
-#     filename = "main.py"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/index.html")
-#     filename = "index.html"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/requirements.txt")
-#     filename = "requirements.txt"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/login.html")
-#     filename = "login.html"
-#   }
+# resource "random_string" "controller_auth_key" {
+#   length  = 8
+#   special = false
+#   upper   = false
 # }
-
-resource "random_string" "controller_auth_key" {
-  length  = 8
-  special = false
-  upper   = false
-}
 
 resource "random_string" "controller_jwt_secret_key" {
   length  = 24
@@ -464,38 +446,18 @@ output "bucket_name" {
 
 
 
-
-# Attempt to fetch the existing parameter value
-data "aws_ssm_parameter" "existing_info" {
-  name = "/${var.project_id}/info"
-  with_decryption = false
-}
-
-locals {
-  # Merge is needed to keep apps value in the JSON. "apps" value is added by user-data.sh. If the user do terraform apply after EC2 is generated, we want to keep apps and only update other values.
-  # Use an empty map if the parameter doesn't exist or can't be decoded
-  existing_info = try(jsondecode(data.aws_ssm_parameter.existing_info.value), {})
-
-  # New information to be added or updated
-  new_info = {
-    elasticIP = aws_eip.dev_ec2_eip.public_ip,
-    projectId = var.project_id,
-    instanceId = aws_instance.main_instance.id,
-    controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
-    dataBucketName = aws_s3_bucket.data_bucket.id,
-    controller_auth_key = random_string.controller_auth_key.result,
-    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result
-  }
-
-  # Merge existing and new information
-  merged_info = merge(local.existing_info, local.new_info)
-}
-
-# Create or update the parameter
 resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
-  value = jsonencode(local.merged_info)
+  value = jsonencode({
+    elasticIP               = aws_eip.dev_ec2_eip.public_ip,
+    projectId               = var.project_id,
+    instanceId              = aws_instance.main_instance.id,
+    controllerUrl           = aws_lambda_function_url.controller_lambda_url.function_url,
+    dataBucketName          = aws_s3_bucket.data_bucket.id,
+    controller_auth_key     = var.controller_auth_key,
+    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result
+  })
 
   # Ensure this resource is created after all other resources
   depends_on = [
@@ -503,12 +465,9 @@ resource "aws_ssm_parameter" "resource_ids" {
     aws_instance.main_instance,
     aws_lambda_function_url.controller_lambda_url,
     aws_s3_bucket.data_bucket,
-    random_string.controller_auth_key
+    random_string.controller_jwt_secret_key
   ]
 }
-
-
-
 
 # Local file resource to create the output file
 resource "local_file" "outputs" {

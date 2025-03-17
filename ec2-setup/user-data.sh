@@ -3,7 +3,7 @@
 # Redirect output to a log file
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
+# export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
 
 # Function to check if a command exists
 command_exists() {
@@ -13,7 +13,7 @@ command_exists() {
 # Function to update dnf
 update_dnf() {
     echo "Updating dnf..."
-    sudo dnf update -y
+    sudo dnf -q update -y
 }
 
 # Function to install Docker
@@ -56,7 +56,6 @@ start_containers() {
     echo "$LITELLM_CONFIG_CONTENT" > "$OPEN_WEBUI_DIR/litellm-config.yml"
     echo "LiteLLM config file created"
 
-    export LITELLM_API_KEY=$(openssl rand -base64 32)
     echo "$DOCKER_COMPOSE_CONTENT" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "$(eval "echo \"$DOCKER_COMPOSE_CONTENT\"")" > "$OPEN_WEBUI_DIR/docker-compose.yml"
     echo "Docker compose file created"
@@ -68,7 +67,7 @@ start_containers() {
 
     # docker-compose up -d
 
-    if ! docker_command "docker-compose up -d"; then
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
         log "Failed to start containers. Cleaning up and exiting."
         cleanup
         exit 1
@@ -198,7 +197,7 @@ install_code_server() {
         echo "code-server is already installed."
     else
         echo "Installing code-server..."
-        su - ec2-user -c '
+        su - ec2-user -c "
             curl -fsSL https://code-server.dev/install.sh | sh -s -- --version=4.96.2
 
             mkdir -p /home/ec2-user/.config/code-server
@@ -206,10 +205,10 @@ install_code_server() {
             cat << EOF > /home/ec2-user/.config/code-server/config.yaml
 bind-addr: 127.0.0.1:8104
 auth: password
-password: ce2d9ae4bdb79236c1e6f27f
+password: $CODE_SERVER_PASSWORD
 cert: false
 EOF
-        '
+        "
         sudo systemctl enable --now code-server@ec2-user
         
     fi
@@ -221,7 +220,7 @@ install_portainer() {
     mkdir -p $PORTAINER_DIR
     echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
     cd $PORTAINER_DIR
-    docker-compose up -d
+    docker-compose up -d --quiet-pull
     sudo chown -R ec2-user:ec2-user $PORTAINER_DIR
     echo "Portainer installed"
 }
@@ -253,7 +252,7 @@ install_jupyterlab() {
     else
         echo "Installing JupyterLab..."
         su - ec2-user -c '
-            $HOME/miniconda/bin/pip install jupyterlab
+            $HOME/miniconda/bin/pip install --quiet jupyterlab
             $HOME/miniconda/bin/jupyter --version
         '
     fi
@@ -310,6 +309,14 @@ create_utils() {
 sudo tail -f /var/log/user-data.log  
 EOF
 
+
+    cat << 'EOF' > /home/ec2-user/.local/bin/less_setup_log
+#!/bin/bash
+sudo less +G /var/log/user-data.log
+EOF
+
+
+
     cat << EOF > /home/ec2-user/.local/bin/show_passwords
 #!/bin/bash
 echo === Password for code-server ===
@@ -324,12 +331,13 @@ echo === LiteLLM Key ===
 echo To change this key, edit file: /home/ec2-user/docker/open-webui/docker-compose.yml 
 grep -E 'LITELLM_API_KEY=' /home/ec2-user/docker/open-webui/docker-compose.yml | sed 's/^[[:space:]]*//'
 echo
-echo === Controller Lambda key ===
-echo To change passwkeyord, see README.md section - How to update Controller Lambda key?
-aws lambda get-function-configuration --function-name $PROJECT_ID-controller --query "Environment.Variables.AUTH_KEY" --output text
+echo === Controller Lambda auth key ===
+echo To change this key edit the parameter store value "/$PROJECT_ID/info", update key "controller_auth_key"
+aws ssm get-parameter --name "/$PROJECT_ID/info" --with-decryption | jq -r '.Parameter.Value' | jq -r '.controller_auth_key'
 EOF
 
     chmod 755 /home/ec2-user/.local/bin/tail_setup_log
+    chmod 755 /home/ec2-user/.local/bin/less_setup_log
     chmod 755 /home/ec2-user/.local/bin/show_passwords
 
     chown -R ec2-user:ec2-user /home/ec2-user/.local
@@ -368,19 +376,19 @@ create_apps_json() {
         exit 1  # Exit the script with a non-zero status to indicate failure
     fi    
 
-    # Read the existing parameter
-    existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
+    # # Read the existing parameter
+    # existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
 
     # Read the apps.json file
     apps_value=$(cat apps.json)
 
-    # Combine the existing parameter with the new key-value pair
-    new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
+    # # Combine the existing parameter with the new key-value pair
+    # new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
 
     # Update the parameter
     aws ssm put-parameter \
-        --name "/$PROJECT_ID/info" \
-        --value "$new_param" \
+        --name "/$PROJECT_ID/apps" \
+        --value "$apps_value" \
         --type "String" \
         --overwrite    
 

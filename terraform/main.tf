@@ -6,7 +6,48 @@ variable "subnet_cidr" {}
 variable "project_id" {}
 variable "ami" {}
 variable "instance_type" {}
+variable "availability_zone" {}
 
+variable "jupyter_lab_token" {
+  type        = string
+  description = "Token for Jupyter Lab"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.jupyter_lab_token) >= 8
+    error_message = "The token for Jupyter Lab must be at least 8 characters long."
+  }
+}
+
+variable "litellm_api_key" {
+  type        = string
+  description = "Key for LiteLLM"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.litellm_api_key) >= 8
+    error_message = "The LiteLLm API key must be at least 8 characters long."
+  }
+}
+
+variable "code_server_password" {
+  type        = string
+  description = "Password for code-server"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.code_server_password) >= 8
+    error_message = "The code-server password password must be at least 8 characters long."
+  }
+}
+
+
+variable "controller_auth_key" {
+  type        = string
+  description = "Key for Controller"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.controller_auth_key) >= 8
+    error_message = "The key cor Controller must be at least 8 characters long."
+  }
+}
 provider "aws" {
   region = var.region
 }
@@ -25,8 +66,8 @@ data "aws_internet_gateway" "main" {
 resource "aws_subnet" "public" {
   vpc_id                  = var.vpc_id
   cidr_block              = var.subnet_cidr
-  availability_zone       = "us-east-1a"
-  map_public_ip_on_launch = true
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = false
   tags = {
     Name      = "${var.project_id}"
     CreatedBy = "terraform"
@@ -66,7 +107,8 @@ resource "aws_security_group" "allow_sources" {
   }
 
   ingress {
-    description = "All web apps"
+    # Do not change this description, it is used in controller lambda
+    description = "main-range"  
     from_port   = 7100
     to_port     = 7200
     protocol    = "tcp"
@@ -181,6 +223,9 @@ locals {
 #!/bin/bash
 
 PROJECT_ID=${var.project_id}
+CODE_SERVER_PASSWORD=${var.code_server_password}
+LITELLM_API_KEY=${var.litellm_api_key}
+JUPYTER_LAB_TOKEN=${var.jupyter_lab_token}
 
 read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
   ${local.litellm_config_yml}
@@ -273,37 +318,17 @@ resource "random_string" "bucket_suffix" {
 # Create an S3 bucket
 resource "aws_s3_bucket" "data_bucket" {
   bucket = "${var.project_id}-data-${random_string.bucket_suffix.result}"  # Replace with your desired bucket name
+  force_destroy = true
 }
 
-
-
-# data "archive_file" "controller_lambda_zip" {
-#   type        = "zip"
-#   output_path = "${path.module}/../lambda/function.zip"
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/main.py")
-#     filename = "main.py"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/index.html")
-#     filename = "index.html"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/requirements.txt")
-#     filename = "requirements.txt"
-#   }
-
-#   source {
-#     content  = file("${path.module}/../lambda/controller/login.html")
-#     filename = "login.html"
-#   }
+# resource "random_string" "controller_auth_key" {
+#   length  = 8
+#   special = false
+#   upper   = false
 # }
 
-resource "random_string" "controller_auth_key" {
-  length  = 8
+resource "random_string" "controller_jwt_secret_key" {
+  length  = 24
   special = false
   upper   = false
 }
@@ -421,17 +446,21 @@ output "bucket_name" {
   description = "The name of the S3 bucket"
 }
 
-# Create the parameter store item
+
+
 resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
   value = jsonencode({
-     elasticIP = aws_eip.dev_ec2_eip.public_ip,
-     projectId = var.project_id,
-     instanceId = aws_instance.main_instance.id,
-     controllerUrl = aws_lambda_function_url.controller_lambda_url.function_url,
-     dataBucketName = aws_s3_bucket.data_bucket.id,
-     controller_auth_key = random_string.controller_auth_key.result
+    elasticIP                 = aws_eip.dev_ec2_eip.public_ip,
+    projectId                 = var.project_id,
+    instanceId                = aws_instance.main_instance.id,
+    controllerUrl             = aws_lambda_function_url.controller_lambda_url.function_url,
+    dataBucketName            = aws_s3_bucket.data_bucket.id,
+    controller_auth_key       = var.controller_auth_key,
+    controller_jwt_secret_key = random_string.controller_jwt_secret_key.result,
+    ec2SecurityGroupId        = aws_security_group.allow_sources.id,
+    ec2PublicDns              = aws_instance.main_instance.public_dns
   })
 
   # Ensure this resource is created after all other resources
@@ -440,9 +469,8 @@ resource "aws_ssm_parameter" "resource_ids" {
     aws_instance.main_instance,
     aws_lambda_function_url.controller_lambda_url,
     aws_s3_bucket.data_bucket,
-    random_string.controller_auth_key
+    random_string.controller_jwt_secret_key
   ]
-
 }
 
 # Local file resource to create the output file
@@ -452,8 +480,11 @@ resource "local_file" "outputs" {
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
 set PROJECT_ID=${var.project_id}
 set INSTANCE_ID=${aws_instance.main_instance.id}
+set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
+set EC2_SECURITY_GROUP_ID=${aws_security_group.allow_sources.id}
 EOT
 }
 # set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
+# set TEST=${var.code_server_password}

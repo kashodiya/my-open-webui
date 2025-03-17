@@ -78,11 +78,15 @@ aws ec2 describe-vpcs
     "subnet_cidr": "10.0.2.0/26",
     "allowed_source_ips": [
         "replace.this.with.your-ip"
-    ]
+    ],
+    "code_server_password": "fill-me",
+    "litellm_api_key": "fill-me",
+    "jupyter_lab_token": "fill-me"
 }
 ```
 - All the values in "terraform.tfvars" are over-written by values in "terraform\terraform.tfvars" at runtime.
 - Update your VPC Id in vpc_id
+- Set passwrod, key and token - to whatever you want. Minimum 8 characters. 
 - The script will create a new subnet. You need to provide a CIDR range (with /32) for new subnet. Set a unused CIDR range "subnet_cidr" field. 
 - See tips section to find out how to find unused CIDR. 
 - Set "allowed_source_ips": 
@@ -184,8 +188,12 @@ tail_setup_log
 - This should be the last line in the log:
 All installations completed.
 - Press Ctrl+C to exit.
-- To see complete user data script log:  
-sudo less +G /var/log/user-data.log
+- To see complete user data script log using less command:  
+```bash
+less_setup_log
+```
+- Press q to exit
+
 
 ### Set admin user password for Open WebUI
 - Use shortcut "open-webui" from launcher to start Open WebUI in the browser.
@@ -207,6 +215,17 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 - Type a question and hit Enter. Ensure that you get the answer
 
 ### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+
+### If you want to install Controller (a Lambda bsed web utility that allow you to manage the env)
+- Install Python or Miniconda
+- Run following commands:
+```bat
+cd lambda\controller
+pip install -r requirements.txt -t package
+cd ..
+deploy.bat controller
+```
+- To open controller from Launcher run shortcut: controller
 
 ### Find auto-generated passwords and tokens
 - SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:

@@ -46,7 +46,7 @@
     <div class="login-container">
         <h2>Login</h2>
         <form id="loginForm">
-            <input type="password" id="key" placeholder="Enter your key">
+            <input type="password" id="key" placeholder="Enter your key" autofocus>
             <button type="submit">Login</button>
         </form>
     </div>
@@ -70,10 +70,18 @@
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    // Store the token in localStorage (or you could use cookies)
-                    localStorage.setItem('token', data.token);
-                    // Redirect to the main page or dashboard
-                    window.location.href = '/index';
+                    if(data['token']){
+                        // Store the token in localStorage (or you could use cookies)
+                        // localStorage.setItem('token', data.token);
+                        let token = data['token'];
+                        // localStorage.setItem('token', token);
+                        document.cookie = `token=${token}; path=/; SameSite=Strict`;
+                        console.log({data})
+                        // Redirect to the main page or dashboard
+                        window.location.href = '/index';
+                    }else{
+                        alert('Login failed');
+                    }
                 } else {
                     const errorData = await response.json();
                     alert(errorData.error || 'Login failed');

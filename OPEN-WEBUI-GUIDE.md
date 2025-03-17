@@ -1,41 +1,36 @@
 # Open WebUI Guide
-
-## Figureout yourself how to do:
+## Figure out yourself how to do:
 - Ask a question to a specific model.
-- Ask a followup question.
-- Regenerate an answer. How to view original answer?
-- Ask Open WebUI to continue the an answer.
+- Ask a follow-up question.
+- Regenerate an answer. How to view the original answer?
+- Ask Open WebUI to continue an answer.
 - Search a chat from chat history.
-- Open and close left navigation panel.
+- Open and close the left navigation panel.
 - Pin, Rename, Delete, Download a chat from history.
 
-
-
 ## Exercises to learn Open WebUI
-### Use more than one models simultaneoulsy
+### Use more than one model simultaneously
 - Open Open WebUI
 - Click New Chat
 - Click '+' sign next to the model name
 - Select another model
-- Ask a quetion
+- Ask a question
 - At the bottom right of the answers, click icon (Merge Response)
 - Verify results
 #### Challenge exercise
 - Come up with innovative ideas to use this feature
-- Discuss this ideas with Open WebUI
-
+- Discuss these ideas with Open WebUI
 ### Organize existing chats in custom folders
 - Hover over "Chats" on left navigation panel
 - Click '+' icon
 - Double click Untitled
 - Enter name of the folder, hit Enter
 - Drag and drop an existing chat in this folder
-#### Figureout yourself how to do:
+#### Figure out yourself how to do:
 - Move folders up or down
 - Move a folder under another 
 - Delete a folder
 - Rename a folder
-
 
 ### Ask question to a web page
 - Open this page in the browser: https://en.wikipedia.org/wiki/Apollo_11
@@ -45,11 +40,10 @@
 - In question box enter #
 - Press Ctrl+V
 - Hit Enter
-- Type a Apollo 11 related question
+- Type an Apollo 11 related question
 #### Challenge exercise
-- Use different models to try out same questions
+- Use different models to try out the same questions
 - Try out any other URLs
-
 ### A question with System Prompt
 - Open Open WebUI
 - Click New Chat
@@ -64,9 +58,7 @@
 - What is the importance of a System Prompt?
 - Chat with Open WebUI to explore more about System Prompt
 
-
 ## Cool experiments exercises
-
 ### Generate ERD diagram from DDL script
 - Go to: https://learndatamodeling.com/blog/ddl-scripts-from-a-data-model/
 - Copy DDL commands (text in yellow box)
@@ -79,10 +71,8 @@
 - Review the diagram
 - Explore how to interact with diagram: Zoom in, out, download, refresh, copy etc.
 #### Challenge exercise
-- Come up with the ideas on how to use this feature?
+- Come up with ideas on how to use this feature?
 - Chat with Open WebUI to explore more about your ideas
-
-
 
 ### Get insight from an ERD (Entity Relationship) diagram 
 - Open this image in new browser tab
@@ -91,15 +81,14 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Open Open WebUI
 - Select model: Claude 3 Haiku By Anthropic
 - New chat
-- Put your curser in question box
+- Put your cursor in question box
 - Press Ctrl+V
 - Type: Describe this ERD diagram:
 - Hit Enter
 - Review and verify the results.
 #### Challenge exercise
-- Come up with the ideas on how to use this feature?
+- Come up with ideas on how to use this feature?
 - Chat with Open WebUI to explore more about your ideas
-
 ### Understand how Python execution and interpretation works
 - Open Open WebUI
 - New chat
@@ -116,13 +105,7 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - This is the time on the server!
 - This code was executed on the Jupyter Lab running on the EC2 server!
 #### Challenge exercise
-- Come up with innovative ideas to use Pytyon code execution
-- Discuss this ideas with Open WebUI
+- Come up with innovative ideas to use Python code execution
+- Discuss these ideas with Open WebUI
 #### Challenge exercise 2
-- Without writing single line of Python code get following things done just using Prompt Engineering:
-
-
-
-
-
-
+- Without writing a single line of Python code, get the following things done just using Prompt Engineering:

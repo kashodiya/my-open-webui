@@ -372,7 +372,7 @@ def read_file_from_s3(controller_token_bucket, file_key):
             print(f"An error occurred: {e}")
         return None
 
-def allow_get_handler(event):
+def XXXallow_get_handler(event, ec2_security_group_id):
     query_params = event.get('queryStringParameters', {})
     allow_ip = query_params.get('ip')    
     ip_range = f'{allow_ip}/32'
@@ -381,6 +381,89 @@ def allow_get_handler(event):
         'statusCode': 200,
         'body': json.dumps({'result': f'Money transferred'}),
     }
+
+
+
+
+def allow_get_handler(event, ec2_security_group_id):
+    print(f"Event received: {event}")
+    print(f"EC2 Security Group ID: {ec2_security_group_id}")
+
+    query_params = event.get('queryStringParameters', {})
+    allow_ip = query_params.get('ip')    
+    ip_range = f'{allow_ip}/32'
+    print(f"IP to allow: {allow_ip}, IP range: {ip_range}")
+
+    try:
+        # Describe the security group
+        print(f"Describing security group: {ec2_security_group_id}")
+        response = ec2_client.describe_security_groups(GroupIds=[ec2_security_group_id])
+        print(f"Security group description response: {response}")
+        
+        # Get the security group
+        security_group = response['SecurityGroups'][0]
+        print(f"Security group details: {security_group}")
+        
+        # Find the ingress rule with description "main-range"
+        main_range_rule = None
+        for rule in security_group['IpPermissions']:
+            print(f"Checking rule: {rule}")
+            if 'IpRanges' in rule and rule['IpRanges'] and 'Description' in rule['IpRanges'][0] and rule['IpRanges'][0]['Description'] == 'main-range':
+                main_range_rule = rule
+                print(f"Found main-range rule: {main_range_rule}")
+                break
+                    
+        if main_range_rule:
+            # Extract the port information from the main-range rule
+            from_port = main_range_rule['FromPort']
+            to_port = main_range_rule['ToPort']
+            ip_protocol = main_range_rule['IpProtocol']
+            print(f"Main range rule details - From Port: {from_port}, To Port: {to_port}, IP Protocol: {ip_protocol}")
+            
+            # Generate the description with current timestamp
+            current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+            new_description = f"added-on-{current_time}" 
+            print(f"New rule description: {new_description}")
+
+            # Create a new ingress rule with the same port and new IP range
+            print(f"Adding new ingress rule for IP range: {ip_range}")
+            ec2_client.authorize_security_group_ingress(
+                GroupId=ec2_security_group_id,
+                IpPermissions=[
+                    {
+                        'IpProtocol': ip_protocol,
+                        'FromPort': from_port,
+                        'ToPort': to_port,
+                        'IpRanges': [{'CidrIp': ip_range, 'Description': new_description}]
+                    }
+                ]
+            )
+            
+            print(f"New ingress rule added successfully with IP range: {ip_range}")
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'result': 'All ok'}),
+            }
+        else:
+            print("No ingress rule found with description 'main-range'")
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': 'Not able to find main range',
+                    'error': True
+                })
+            }
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({
+                'message': 'Failed to allow',
+                'error': str(e)
+            })
+        }
+
+
 
 def add_ingress_rule(ip_range):
     sg = get_sg('NONE')
@@ -507,7 +590,6 @@ def lambda_handler(event, context):
         apps = get_project_info(f'/{project_id}/apps')
         project_info['apps'] = apps
 
-
         # Remove keys
         keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key']  # Replace with the actual keys you want to remove
         safe_project_info = {k: v for k, v in project_info.items() if k not in keys_to_remove}
@@ -573,6 +655,9 @@ def lambda_handler(event, context):
             return handler(event, safe_project_info)
         elif handler == apps_get_handler:
             return handler(event, apps)
+        elif handler == allow_get_handler:
+            ec2_security_group_id = project_info['ec2SecurityGroupId'] 
+            return handler(event, ec2_security_group_id)
         elif handler == start_ec2_get_handler:
             instance_id = project_info['instanceId'] 
             return handler(event, instance_id)

@@ -455,9 +455,11 @@ deploy.bat controller
 ```
 
 
+
+
 ## TODO:
-How to change passwords
-How to restart portainer when timed out
+Set home folder to ec2-user home for Jupyter Lab
+
 Telll them open webui is contained and your data is not shread
 Add model, restart litellm
 Mention that your data is contained

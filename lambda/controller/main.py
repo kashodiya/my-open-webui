@@ -18,6 +18,8 @@ import jwt
 ec2_client = boto3.client('ec2')
 user_pool_name = 'myllm-user-pool'
 s3_client = boto3.client('s3')
+scheduler = boto3.client('scheduler')
+
 
 def get_project_info(parameter_name):
     ssm_client = boto3.client('ssm')
@@ -462,8 +464,118 @@ def allow_get_handler(event, ec2_security_group_id):
                 'error': str(e)
             })
         }
+    
 
 
+def ec2_schedular_info_get_handler(event, project_id):
+    try:
+        start_name = f'{project_id}-start-ec2-schedule'
+        stop_name = f'{project_id}-stop-ec2-schedule'
+
+        start_info = get_scheduler_info(start_name)
+        stop_info = get_scheduler_info(stop_name)
+
+
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({"start": start_info, "stop": stop_info}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
+
+def get_scheduler_info(scheduler_name):
+    try:
+        # Get the scheduler details
+        response = scheduler.get_schedule(Name=scheduler_name)
+        
+        # Extract relevant information
+        schedule_expression = response.get('ScheduleExpression', 'N/A')
+        state = response.get('State', 'N/A')
+        is_disabled = state.lower() == 'disabled'
+        
+        # Get the target information
+        target = response.get('Target', {})
+        target_arn = target.get('Arn', 'N/A')
+        
+        # Print the scheduler information
+        print(f"Scheduler Name: {scheduler_name}")
+        print(f"Schedule Expression: {schedule_expression}")
+        print(f"State: {state}")
+        print(f"Is Disabled: {is_disabled}")
+        print(f"Target ARN: {target_arn}")
+
+        return {"isDisabled": is_disabled, "time": schedule_expression}
+        
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'ResourceNotFoundException':
+            print(f"Scheduler '{scheduler_name}' not found.")
+        else:
+            print(f"An error occurred: {e}")
+
+def ensble_disable_start_stop_ec2_schedular_get_handler(event, project_id):
+    try:
+        query_params = event.get('queryStringParameters', {})
+        action = query_params.get('action')    
+
+        start_name = f'{project_id}-start-ec2-schedule'
+        stop_name = f'{project_id}-stop-ec2-schedule'
+
+        # Apply action on start and stop scheduler
+        toggle_start_stop_ec2_schedule(start_name, action)
+        toggle_start_stop_ec2_schedule(stop_name, action)
+
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({'result': f'EC2 start and stop schdeuler are {action}'}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
+def toggle_start_stop_ec2_schedule(schedule_name, state):
+    try:
+        if state == 'DISABLED':
+            # Disable the schedule
+            response = scheduler.update_schedule(
+                Name=schedule_name,
+                State='DISABLED'
+            )
+            print(f"Schedule {schedule_name} has been disabled.")
+        elif state == 'ENABLED':
+            # Enable the schedule
+            response = scheduler.update_schedule(
+                Name=schedule_name,
+                State='ENABLED'
+            )
+            print(f"Schedule {schedule_name} has been enabled.")
+        else:
+            print("Invalid state. Use 'DISABLED' or 'ENABLED'.")
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
 def add_ingress_rule(ip_range):
     sg = get_sg('NONE')
@@ -568,6 +680,8 @@ HANDLERS = {
     ('/logout', 'GET'): logout_get_handler,
     ('/start-ec2', 'GET'): start_ec2_get_handler,
     ('/stop-ec2', 'GET'): stop_ec2_get_handler,
+    ('/ec2-schedular-info', 'GET'): ec2_schedular_info_get_handler,
+    ('/ensble-disable-start-stop-ec2-schedular', 'GET'): ensble_disable_start_stop_ec2_schedular_get_handler,
     ('/hello', 'GET'): hello_get_handler
 }
 S3_CLIENT = boto3.client('s3')
@@ -664,6 +778,10 @@ def lambda_handler(event, context):
         elif handler == stop_ec2_get_handler:
             instance_id = project_info['instanceId'] 
             return handler(event, instance_id)
+        elif handler == ensble_disable_start_stop_ec2_schedular_get_handler:
+            return handler(event, project_id)
+        elif handler == ec2_schedular_info_get_handler:
+            return handler(event, project_id)
         else:
             return handler(event)
     

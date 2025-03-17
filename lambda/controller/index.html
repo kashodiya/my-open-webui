@@ -7,7 +7,9 @@
   <title>Controller</title>
   <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.css" rel="stylesheet">
+
   <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/editor/editor.main.css"> -->
 
   <style>
@@ -23,7 +25,7 @@
   <script type="text/x-template" id="home-template">
     <v-container fluid>
       <v-row>
-        <v-col cols="12" md="6">
+        <v-col cols="4">
           <v-card>
             <v-card-title>Application Links</v-card-title>
             <v-card-text>
@@ -41,7 +43,7 @@
           </v-card>
         </v-col>
     
-        <v-col cols="12" md="6">
+        <v-col cols="4">
           <v-card>
             <v-card-title>EC2 Controls</v-card-title>
             <v-card-text>
@@ -65,6 +67,52 @@
           </v-card>
         </v-col>
       </v-row>
+
+      <v-row>
+    
+        <v-col cols="4">
+          <v-card>
+            <v-card-title>EC2 Audo Start Stop Scheduler Settings</v-card-title>
+            <v-card-text>
+              <!-- Start EC2 Scheduler -->
+              <v-switch
+                v-model="startSchedulerEnabled"
+                label="Enable Start EC2 Scheduler"
+              ></v-switch>
+              <v-row v-if="startSchedulerEnabled">
+                <v-col cols="12" sm="6">
+                  <v-time-picker
+                    v-model="startTime"
+                    format="24hr"
+                    :disabled="!startSchedulerEnabled"
+                  ></v-time-picker>
+                </v-col>
+              </v-row>
+      
+              <!-- Stop EC2 Scheduler -->
+              <v-switch
+                v-model="stopSchedulerEnabled"
+                label="Enable Stop EC2 Scheduler"
+              ></v-switch>
+              <v-row v-if="stopSchedulerEnabled">
+                <v-col cols="12" sm="6">
+                  <v-time-picker
+                    v-model="stopTime"
+                    format="24hr"
+                    :disabled="!stopSchedulerEnabled"
+                  ></v-time-picker>
+                </v-col>
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="saveSettings">Save Settings</v-btn>
+            </v-card-actions>
+          </v-card>        
+
+        </v-col>
+      </v-row>
+
     </v-container>
   </script>
 </head>
@@ -95,8 +143,8 @@
   </div>
 
   <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.3.15/dist/vuetify-labs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.js"></script>
   <script src="https://unpkg.com/vue-router@4.2.4/dist/vue-router.global.js"></script>
   <!-- <script src="https://cdn.jsdelivr.net/npm/monaco-editor@latest/min/vs/loader.js"></script> -->
   <script>
@@ -121,10 +169,23 @@
           state: store.state,
           apps: [],
           projectInfo: {},
+          startSchedulerEnabled: false,
+          stopSchedulerEnabled: false,
+          startTime: null,
+          stopTime: null,
           isLoading: false,
+          ec2SchedularInfo: {}
         }
       },
       methods: {
+        saveSettings() {
+          // Here you would implement the logic to save the settings
+          console.log('Start Scheduler:', this.startSchedulerEnabled);
+          console.log('Start Time:', this.startTime);
+          console.log('Stop Scheduler:', this.stopSchedulerEnabled);
+          console.log('Stop Time:', this.stopTime);
+          // You can send this data to your backend or handle it as needed
+        },
         async startEc2() {
           try {
             let response = await fetch(`${baseUrl}/start-ec2`);
@@ -189,6 +250,7 @@
       async mounted() {
         console.log('Home mounted');
         try {
+          let response= null;
           const cachedProjectInfo = sessionStorage.getItem('projectInfo');
           if (cachedProjectInfo) {
             // If cached data exists, parse and use it
@@ -196,7 +258,7 @@
             console.log('Using cached projectInfo');
           } else {
             // If no cached data, fetch from API
-            let response = await fetch(`${baseUrl}/project-info`);
+            response = await fetch(`${baseUrl}/project-info`);
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -206,8 +268,16 @@
             // Cache the fetched data
             sessionStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
           }
+          
+          response = await fetch(`${baseUrl}/ec2-schedular-info`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          this.ec2SchedularInfo = await response.json();
+          console.log('Fetched ec2-schedular-info:', this.ec2SchedularInfo);
+
         } catch (error) {
-          console.error("Could not fetch apps:", error);
+          console.error("Could not get project info:", error);
         }
       },
       created() {
@@ -261,12 +331,8 @@
       routes
     });
 
+
     const vuetify = createVuetify();
-    // {
-    //   components: {
-    //     VDataTable: vuetify.labs
-    //   }
-    // }    
 
     const app = createApp({
       mixins: [snackbarMixin],

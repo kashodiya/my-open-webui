@@ -80,11 +80,11 @@ terraform apply
 - Use the key that you set in terraform.tfvars.json in controller_auth_key
 - You may have to wait for few min before you can start accessing the applications.
 - Try accessing following applications:
-open-webui
-portainer
-jupyter-lab
-code-server
-litellm
+  - open-webui  
+  - portainer  
+  - jupyter-lab  
+  - code-server  
+  - litellm  
 
 ### Set admin user password for Open WebUI
 - Open open-webui from the Controller

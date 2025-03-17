@@ -52,62 +52,17 @@ cd my-open-webui
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
 
-
-### Check if you have VPC
-- From cmd window, run
-```bat
-aws ec2 describe-vpcs
-```
-- If you see your VPC, note down VPC ID
-- If you do not see VPC, please create one
-- From cmd window, run
-```bat
-aws ec2 create-vpc --cidr-block 10.0.0.0/16
-```
-
-### Set your VPC ID for terraform
-- Find out your VPC Id using this command 
-```bat
-aws ec2 describe-vpcs  
-```
-- Create new file: terraform\terraform.tfvars.json
-- Here is a sample:
+### Create passwords for various apps
+- Create new file: terraform\terraform.tfvars.json, and add this content
 ```json
 {
-    "vpc_id": "vpc-your-vpc-id-here",
-    "subnet_cidr": "10.0.2.0/26",
-    "allowed_source_ips": [
-        "replace.this.with.your-ip"
-    ],
     "code_server_password": "fill-me",
     "litellm_api_key": "fill-me",
-    "jupyter_lab_token": "fill-me"
+    "jupyter_lab_token": "fill-me",
+    "controller_auth_key": "fill-me"
 }
 ```
-- All the values in "terraform.tfvars" are over-written by values in "terraform\terraform.tfvars" at runtime.
-- Update your VPC Id in vpc_id
-- Set passwrod, key and token - to whatever you want. Minimum 8 characters. 
-- The script will create a new subnet. You need to provide a CIDR range (with /32) for new subnet. Set a unused CIDR range "subnet_cidr" field. 
-- See tips section to find out how to find unused CIDR. 
-- Set "allowed_source_ips": 
-    - Go to and copy IPv4: https://whatismyipaddress.com/
-    - Add '/32' after the IP
-    - Set that ip range in "allowed_source_ips"
-    - The EC2 will allow traffic coming in from only these IP addresses. 
-
-### Ensure you have Internet Gateway associated with VPC
-- Check if you already have Internet Gateway using this command:  
-```bat
-aws ec2 describe-internet-gateways
-```
-- If you do not have Internet Gatewy, create one using:  
-```bat
-aws ec2 create-internet-gateway  
-```
-- Note down internet gateway id and associate it to the VPC using this command:  
-```bat
-aws ec2 attach-internet-gateway --internet-gateway-id igw-xxxxxxxx --vpc-id vpc-xxxxxxxx
-```
+- Update password, token, and keys - Min length must be 8
 
 ### Init and apply terraform
 ```bat
@@ -117,9 +72,43 @@ terraform apply
 ```
 - Check the plan and when ask for Enter a value, enter yes, hit Enter key
 - This may take a few min when you run first time
+- Note down controller_url from the output. 
+
+### Open Controller
+- Open browser
+- Navigate to controller_url (the url you noted from the previous step)
+- Use the key that you set in terraform.tfvars.json in controller_auth_key
+- You may have to wait for few min before you can start accessing the applications.
+- Try accessing following applications:
+open-webui
+portainer
+jupyter-lab
+code-server
+litellm
+
+### Set admin user password for Open WebUI
+- Open open-webui from the Controller
+- Since we are using self-signed certificates, bypass the warning by clicking Advance and then Continue. 
+- Click on "Get started"
+- Register yourself with name, email and password. You can use fake email.
+
+### Request access to bedrock models
+- Open docker\open-webui\litellm-config.yml and request model access for each models mentioned in the config.
+- Login to AWS Console
+- Request models access by going to:  
+    - TIP: You only pay for what you use. You can request access to all the models. Click checkbox at the top on the model selection page. 
+https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
+
+### Test model access from Open WebUI
+- Open open-webui from the Controller
+- Ensure that you can see approved models at top left
+- Select a model 
+- Type a question and hit Enter. Ensure that you get the answer.
 
 
-### Create Launcher
+### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+
+### Optional: If you like command line, create the Launcher
 - Open cmd window, if not already open.
 - Make sure you do one of the following:
     - Set AWS_DEFAULT_PROFILE
@@ -132,39 +121,8 @@ scripts\create-launcher.bat
 - "launcher.bat" file is created in local folder.
 - Windows Explorer is opened.
 - Double click "launcher.bat" file.
-- All the following instructions must be executed from the launcher.
 - NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.
 
-### OLD Create Launcher - DELETE THIS
-- Create a bat file (launch.bat or whatever you like) on your desktop with following content. Do not forget to replace place holder values, profile and path:  
-```bat
-@echo off  
-set AWS_DEFAULT_PROFILE=your-aws-profile  
-start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
-```
-- If you are not using profile and want to cut-paste credentials, your launch should look like this. Do not forget to replace the place holders:
-```bat
-@echo off  
-SET AWS_ACCESS_KEY_ID=access-key-id-here
-SET AWS_SECRET_ACCESS_KEY=secret-access-key-here
-SET AWS_SESSION_TOKEN=very-long-token-string-here
-start cmd /k "cd /d D:\Users\full-path-to-project-code && call scripts\start-dev.bat"  
-```
-
-- Whenever you want to start working on this project, just double click this bat file!  
-- Read the info presented in the cmd window!  
-- It offers following shortcuts:  
-```ini
-tfa = Terraform apply  
-sshe = SSH into EC2  
-ec2 = Start EC2  
-ec2x = Stop EC2  
-open-webui = Opens Open WebUI in Browser  
-portainer = Opens Portainer in Browser  
-code-server = Opens code-server in Browser  
-litellm = Opens LiteLLM in Browser  
-rkh = Remove known SSH host  
-```
 
 ### SSH into EC2 (easy way)
 - Run scripts\start-dev.bat
@@ -194,46 +152,12 @@ less_setup_log
 ```
 - Press q to exit
 
-
-### Set admin user password for Open WebUI
-- Use shortcut "open-webui" from launcher to start Open WebUI in the browser.
-- Since we are using self-signed certificates, bypass the warning by clicking Advance and then Continue. 
-- Sign up for admin user
-
-### Request access to bedrock models
-- Open docker\open-webui\litellm-config.yml and request model access for each models mentioned in the config.
-- Login to AWS Console
-- Request models access by going to:  
-    - TIP: You only pay for what you use. You can request access to all the models. Click checkbox at the top on the model selection page. 
-https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
-
-### Use Open WebUI
-- Open open-webui in browser using shortcut: open-webui  
-- Click on "Get started"
-- Register yourself with name, email and password. You can use fake email.
-- Ensure that you can see models at top left
-- Type a question and hit Enter. Ensure that you get the answer
-
-### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
-
-### If you want to install Controller (a Lambda bsed web utility that allow you to manage the env)
-- Install Python or Miniconda
-- Run following commands:
-```bat
-cd lambda\controller
-pip install -r requirements.txt -t package
-cd ..
-deploy.bat controller
-```
-- To open controller from Launcher run shortcut: controller
-
 ### Find auto-generated passwords and tokens
 - SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
 ```bash
 show_passwords
 ```
 - Note down passwords and token to be used with Jupyter Lab and Code-server
-
 
 ### Use code server (VSCode to EC2 server in your Browser!)
 - To open code-server, use shortcut command: code-server
@@ -244,7 +168,6 @@ show_passwords
 ### Use Portainer (if you want to work with Docker using UI)
 - To open Portainer, use shortcut command: portainer
 - When you access it for first time, it was ask you to register as admin, follow the instructions.
-
 
 
 ## Maintenance and operations

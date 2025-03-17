@@ -2,7 +2,7 @@
 
 ## Figureout yourself how to do:
 - Ask a question to a specific model.
-- Ask a followup quetion.
+- Ask a followup question.
 - Regenerate an answer. How to view original answer?
 - Ask Open WebUI to continue the an answer.
 - Search a chat from chat history.

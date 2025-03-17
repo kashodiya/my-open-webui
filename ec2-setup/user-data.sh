@@ -13,7 +13,7 @@ command_exists() {
 # Function to update dnf
 update_dnf() {
     echo "Updating dnf..."
-    sudo dnf update -y
+    sudo dnf -q update -y
 }
 
 # Function to install Docker
@@ -67,7 +67,7 @@ start_containers() {
 
     # docker-compose up -d
 
-    if ! docker_command "docker-compose up -d"; then
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
         log "Failed to start containers. Cleaning up and exiting."
         cleanup
         exit 1
@@ -220,7 +220,7 @@ install_portainer() {
     mkdir -p $PORTAINER_DIR
     echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
     cd $PORTAINER_DIR
-    docker-compose up -d
+    docker-compose up -d --quiet-pull
     sudo chown -R ec2-user:ec2-user $PORTAINER_DIR
     echo "Portainer installed"
 }
@@ -252,7 +252,7 @@ install_jupyterlab() {
     else
         echo "Installing JupyterLab..."
         su - ec2-user -c '
-            $HOME/miniconda/bin/pip install jupyterlab
+            $HOME/miniconda/bin/pip install --quiet jupyterlab
             $HOME/miniconda/bin/jupyter --version
         '
     fi
@@ -309,6 +309,14 @@ create_utils() {
 sudo tail -f /var/log/user-data.log  
 EOF
 
+
+    cat << 'EOF' > /home/ec2-user/.local/bin/less_setup_log
+#!/bin/bash
+sudo less +G /var/log/user-data.log
+EOF
+
+
+
     cat << EOF > /home/ec2-user/.local/bin/show_passwords
 #!/bin/bash
 echo === Password for code-server ===
@@ -329,6 +337,7 @@ aws ssm get-parameter --name "/$PROJECT_ID/info" --with-decryption | jq -r '.Par
 EOF
 
     chmod 755 /home/ec2-user/.local/bin/tail_setup_log
+    chmod 755 /home/ec2-user/.local/bin/less_setup_log
     chmod 755 /home/ec2-user/.local/bin/show_passwords
 
     chown -R ec2-user:ec2-user /home/ec2-user/.local

@@ -441,6 +441,10 @@ terraform taint aws_lambda_function_url.controller_lambda_url
 cd lambda
 deploy controller
 ```
+- If you add a package, ensure that you update erquirements.txt and run this form controller folder:
+```bat
+pip install -r requirements.txt -t package
+```
 
 ### How to update Controller Lambda key?
 - Open launcher, and run this commands:

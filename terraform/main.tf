@@ -1,8 +1,8 @@
 variable "region" {}
 # variable "public_key_file_path" {}
 variable "allowed_source_ips" {}
-variable "vpc_id" {}
-variable "subnet_cidr" {}
+# variable "vpc_id" {}
+# variable "subnet_cidr" {}
 variable "project_id" {}
 variable "ami" {}
 variable "instance_type" {}
@@ -55,64 +55,136 @@ provider "aws" {
 data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_availability_zones" "available" {}
-data "aws_internet_gateway" "main" {
-  filter {
-    name   = "attachment.vpc-id"
-    values = [var.vpc_id]
-  }
-}
+
+# data "aws_internet_gateway" "main" {
+#   filter {
+#     name   = "attachment.vpc-id"
+#     values = [aws_vpc.main.id]
+#   }
+# }
 
 
-resource "aws_subnet" "public" {
-  vpc_id                  = var.vpc_id
-  cidr_block              = var.subnet_cidr
-  availability_zone       = var.availability_zone
-  map_public_ip_on_launch = false
+# Create a VPC
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
   tags = {
-    Name      = "${var.project_id}"
-    CreatedBy = "terraform"
+    Name = "${var.project_id}-main-vpc"
   }
 }
 
+# Create a public subnet
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = var.availability_zone
+
+  tags = {
+    Name = "${var.project_id}-public-subnet"
+  }
+}
+
+# Create an Internet Gateway
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.project_id}-main-igw"
+  }
+}
+
+
+data "http" "my_public_ip" {
+  url = "https://api.ipify.org"
+
+  # Optional: add a custom request header
+  request_headers = {
+    Accept = "application/text"
+  }
+}
+
+# resource "aws_subnet" "public" {
+#   vpc_id                  = aws_vpc.main.id
+#   cidr_block              = var.subnet_cidr
+#   availability_zone       = var.availability_zone
+#   map_public_ip_on_launch = false
+#   tags = {
+#     Name      = "${var.project_id}"
+#     CreatedBy = "terraform"
+#   }
+# }
+
+# resource "aws_route_table" "public_rt" {
+#   vpc_id = aws_vpc.main.id
+
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = data.aws_internet_gateway.main.id
+#   }
+#   tags = {
+#     Name      = "${var.project_id}"
+#     CreatedBy = "terraform"
+#   }
+# }
+
+# Create a route table
 resource "aws_route_table" "public_rt" {
-  vpc_id = var.vpc_id
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = data.aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.main.id
   }
+
   tags = {
-    Name      = "${var.project_id}"
-    CreatedBy = "terraform"
+    Name = "public-route-table"
   }
 }
 
+# Associate the public subnet with the route table
 resource "aws_route_table_association" "public_assoc" {
   subnet_id      = aws_subnet.public.id
   route_table_id = aws_route_table.public_rt.id
 }
 
+# Add my laptop public facing ip to the allowed_source_ips
+locals {
+  my_ip = "${chomp(data.http.my_public_ip.response_body)}/32"
+  all_allowed_ips = concat(var.allowed_source_ips, [local.my_ip])
+}
 
 resource "aws_security_group" "allow_sources" {
   name        = "${var.project_id}_allow_sources"
   description = "Allow SSH, Jupyter inbound traffic"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "SSH from VPC"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = var.allowed_source_ips
+    cidr_blocks = local.all_allowed_ips
   }
+
+  # ingress {
+  #   # Do not change this description, it is used in controller lambda
+  #   description = "main-range"  
+  #   from_port   = 7100
+  #   to_port     = 7200
+  #   protocol    = "tcp"
+  #   cidr_blocks = local.all_allowed_ips
+  # }
 
   ingress {
     # Do not change this description, it is used in controller lambda
-    description = "main-range"  
-    from_port   = 7100
-    to_port     = 7200
+    description = "main-range"
+    from_port   = 0
+    to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = var.allowed_source_ips
+    cidr_blocks = local.all_allowed_ips
   }
 
   egress {
@@ -435,16 +507,33 @@ output "PROJECT_ID" {
   value = var.project_id
 }
 
-
-output "controller_url" {
-  value = aws_lambda_function_url.controller_lambda_url.function_url
-}
-
 # Output the bucket name
 output "bucket_name" {
   value       = aws_s3_bucket.data_bucket.id
   description = "The name of the S3 bucket"
 }
+
+output "my_public_ip" {
+  value = data.http.my_public_ip.response_body
+  description = "My public IP address"
+}
+
+output "controller_url" {
+  value = aws_lambda_function_url.controller_lambda_url.function_url
+}
+
+
+output "vpc_id" {
+  description = "The ID of the VPC"
+  value       = aws_vpc.main.id
+}
+
+
+
+
+
+
+
 
 
 

@@ -22,6 +22,53 @@
     </v-container>
   </script>
 
+  <script type="text/x-template" id="schedule-template">
+    <v-container fluid>
+      <v-row>
+        <v-col cols="8">
+          <v-card>
+            <v-card-title>EC2 Audo Start Stop Scheduler Settings</v-card-title>
+            <v-card-text>
+              <!-- Start EC2 Scheduler -->
+              <v-switch
+                v-model="startSchedulerEnabled"
+                label="Enable Start EC2 Scheduler"
+              ></v-switch>
+              <v-row v-if="startSchedulerEnabled">
+                <v-col cols="12" sm="6">
+                  <v-time-picker
+                    v-model="startTime"
+                    format="24hr"
+                    :disabled="!startSchedulerEnabled"
+                  ></v-time-picker>
+                </v-col>
+              </v-row>
+      
+              <!-- Stop EC2 Scheduler -->
+              <v-switch
+                v-model="stopSchedulerEnabled"
+                label="Enable Stop EC2 Scheduler"
+              ></v-switch>
+              <v-row v-if="stopSchedulerEnabled">
+                <v-col cols="12" sm="6">
+                  <v-time-picker
+                    v-model="stopTime"
+                    format="24hr"
+                    :disabled="!stopSchedulerEnabled"
+                  ></v-time-picker>
+                </v-col>
+              </v-row>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="saveSettings">Save Settings</v-btn>
+            </v-card-actions>
+          </v-card>        
+        </v-col>
+      </v-row>
+    </v-container>
+  </script>
+
   <script type="text/x-template" id="home-template">
     <v-container fluid>
       <v-row>
@@ -68,50 +115,6 @@
         </v-col>
       </v-row>
 
-      <v-row>
-    
-        <v-col cols="4">
-          <v-card>
-            <v-card-title>EC2 Audo Start Stop Scheduler Settings</v-card-title>
-            <v-card-text>
-              <!-- Start EC2 Scheduler -->
-              <v-switch
-                v-model="startSchedulerEnabled"
-                label="Enable Start EC2 Scheduler"
-              ></v-switch>
-              <v-row v-if="startSchedulerEnabled">
-                <v-col cols="12" sm="6">
-                  <v-time-picker
-                    v-model="startTime"
-                    format="24hr"
-                    :disabled="!startSchedulerEnabled"
-                  ></v-time-picker>
-                </v-col>
-              </v-row>
-      
-              <!-- Stop EC2 Scheduler -->
-              <v-switch
-                v-model="stopSchedulerEnabled"
-                label="Enable Stop EC2 Scheduler"
-              ></v-switch>
-              <v-row v-if="stopSchedulerEnabled">
-                <v-col cols="12" sm="6">
-                  <v-time-picker
-                    v-model="stopTime"
-                    format="24hr"
-                    :disabled="!stopSchedulerEnabled"
-                  ></v-time-picker>
-                </v-col>
-              </v-row>
-            </v-card-text>
-            <v-card-actions>
-              <v-spacer></v-spacer>
-              <v-btn color="primary" @click="saveSettings">Save Settings</v-btn>
-            </v-card-actions>
-          </v-card>        
-
-        </v-col>
-      </v-row>
 
     </v-container>
   </script>
@@ -124,6 +127,7 @@
         <v-app-bar-title>Controller</v-app-bar-title>
         <v-spacer></v-spacer>
         <v-btn to="/">Home</v-btn>
+        <!-- <v-btn to="/schedule">Schedule</v-btn> -->
         <v-btn to="/about">About</v-btn>
         <v-btn @click="logout">Logout</v-btn>
       </v-app-bar>
@@ -169,23 +173,10 @@
           state: store.state,
           apps: [],
           projectInfo: {},
-          startSchedulerEnabled: false,
-          stopSchedulerEnabled: false,
-          startTime: null,
-          stopTime: null,
-          isLoading: false,
-          ec2SchedularInfo: {}
+          isLoading: false
         }
       },
       methods: {
-        saveSettings() {
-          // Here you would implement the logic to save the settings
-          console.log('Start Scheduler:', this.startSchedulerEnabled);
-          console.log('Start Time:', this.startTime);
-          console.log('Stop Scheduler:', this.stopSchedulerEnabled);
-          console.log('Stop Time:', this.stopTime);
-          // You can send this data to your backend or handle it as needed
-        },
         async startEc2() {
           try {
             let response = await fetch(`${baseUrl}/start-ec2`);
@@ -268,13 +259,7 @@
             // Cache the fetched data
             sessionStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
           }
-          
-          response = await fetch(`${baseUrl}/ec2-schedular-info`);
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          this.ec2SchedularInfo = await response.json();
-          console.log('Fetched ec2-schedular-info:', this.ec2SchedularInfo);
+
 
         } catch (error) {
           console.error("Could not get project info:", error);
@@ -284,6 +269,44 @@
         console.log('Home created');
       }
     }
+
+    const Schedule = {
+      template: '#schedule-template',
+      data: function () {
+        return {
+          state: store.state,
+          startSchedulerEnabled: false,
+          stopSchedulerEnabled: false,
+          startTime: null,
+          stopTime: null,
+          ec2SchedularInfo: {}
+        }
+      },
+      methods: {
+        saveSettings() {
+          // Here you would implement the logic to save the settings
+          console.log('Start Scheduler:', this.startSchedulerEnabled);
+          console.log('Start Time:', this.startTime);
+          console.log('Stop Scheduler:', this.stopSchedulerEnabled);
+          console.log('Stop Time:', this.stopTime);
+          // You can send this data to your backend or handle it as needed
+        },
+      },
+      mounted() {
+        console.log('Schedule mounted');
+      },
+      async created() {
+        let response = await fetch(`${baseUrl}/ec2-schedular-info`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          this.ec2SchedularInfo = await response.json();
+          console.log('Fetched ec2-schedular-info:', this.ec2SchedularInfo);
+
+        console.log('Schedule created');
+      }
+    }
+
 
     const About = {
       template: '#about-template',
@@ -322,8 +345,9 @@
     };
 
     const routes = [
-      { path: '/', component: Home },
-      { path: '/about', component: About }
+    { path: '/', component: Home },
+    { path: '/schedule', component: Schedule },
+    { path: '/about', component: About }
     ];
 
     const router = createRouter({

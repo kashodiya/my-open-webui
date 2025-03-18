@@ -20,6 +20,7 @@ Install your own instance of Open WebUI for personal use along with a simple but
     - LiteLLM (Gateway to Bedrock)
     - Jupyter Lab
     - Caddy (reverse proxy and authetication server)
+    - Controller (Custom web based tool to launch other apps and control EC2)
 
 ## Why should I use this?
 - Enjoy full privacy. All your chats private. Bedrock does not store your chats and does not use it for retraining.
@@ -76,7 +77,8 @@ terraform apply
 
 ### Open Controller
 - Open browser
-- Navigate to controller_url (the url you noted from the previous step)
+- Navigate to controller_url (the URL you noted from the previous step)
+    - You can also get URL from terraform\set-tf-output-2-env-var.bat file.
 - Use the key that you set in terraform.tfvars.json in controller_auth_key
 - You may have to wait for few min before you can start accessing the applications.
 - Try accessing following applications:
@@ -205,7 +207,7 @@ docker-compose up -d
 ### How to add more Bedrock models?
 - Make sure that you have requested access to the model
 - SSH into EC2 server
-- Edit docker/litellm-config.yml
+- Edit docker\open-webui\litellm-config.yml
     - Add a model in the model list
 - Restart LiteLLM container  
 ```bash
@@ -338,6 +340,14 @@ rkh = Remove known SSH host
 - Ask your user to login or refresh their page
 
 
+### How to upgrade Open WebUI to new version
+- SSH into EC2, and run:
+```bash
+cd docker/open-webui
+docker-compose down
+docker-compose down --rmi all
+docker-compose up -d
+```
 
 ## Resources and references
 ### Open WebUI
@@ -371,7 +381,7 @@ rkh = Remove known SSH host
 ### When doing terraform apply: Error: No matching Internet Gateway found
 - You should create Internet gatewat and attach to your VPC (see the instructions above)
 
-### When I go to portainer using browser, I get error: New Portainer installation Your Portainer instance timed out for security purposes. To re-enable your Portainer instance, you will need to restart Portainer.
+### Using my browser, when I go to Portainer, I get the following error New Portainer installation Your Portainer instance timed out for security purposes. To re-enable your Portainer instance, you will need to restart Portainer.
 - To resolve this, SSH into EC2 server
 - Run this command
 ```bash
@@ -380,6 +390,10 @@ docker restart portainer
 - Refresh browser
 - Set password (min length 12 characters)
 
+
+### When I ssh in EC2 I get error: The authenticity of host can't be established.
+- From launcher run: rkh
+- Then run: sshe
 
 
 ## Internal design/architecture
@@ -455,9 +469,11 @@ deploy.bat controller
 ```
 
 
+
+
 ## TODO:
-How to change passwords
-How to restart portainer when timed out
+Set home folder to ec2-user home for Jupyter Lab
+
 Telll them open webui is contained and your data is not shread
 Add model, restart litellm
 Mention that your data is contained

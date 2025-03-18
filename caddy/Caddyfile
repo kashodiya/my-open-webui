@@ -16,13 +16,13 @@
     respond "Hello from my server!"
 }
 
-# open-webui
+# Open-WebUI
 :7101 {
     import common
     reverse_proxy localhost:8101
 }
 
-# portainer
+# Portainer
 :7102 {
     import common
     reverse_proxy https://localhost:8102 {
@@ -32,19 +32,19 @@
     }    
 }
 
-# jupyter-lab
+# Jupyter Lab
 :7103 {
     import common
     reverse_proxy localhost:8103
 }
 
-# code-server
+# Code Server
 :7104 {
     import common
     reverse_proxy localhost:8104
 }
 
-# litellm
+# LiteLLM
 :7105 {
     import common
     reverse_proxy localhost:8105

@@ -77,7 +77,8 @@ terraform apply
 
 ### Open Controller
 - Open browser
-- Navigate to controller_url (the url you noted from the previous step)
+- Navigate to controller_url (the URL you noted from the previous step)
+    - You can also get URL from terraform\set-tf-output-2-env-var.bat file.
 - Use the key that you set in terraform.tfvars.json in controller_auth_key
 - You may have to wait for few min before you can start accessing the applications.
 - Try accessing following applications:

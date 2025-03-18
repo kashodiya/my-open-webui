@@ -79,7 +79,10 @@ terraform apply
 - Open browser
 - Navigate to controller_url (the URL you noted from the previous step)
     - You can also get URL from terraform\set-tf-output-2-env-var.bat file.
-- Use the key that you set in terraform.tfvars.json in controller_auth_key
+- Use the key that you set in terraform.tfvars.json in controller_auth_key  
+
+<img src="docs/images/controller-login-screen.png" width="50%" alt="Controller login screen">
+<!-- docs\images\controller-home-page.png -->
 - You may have to wait for few min before you can start accessing the applications.
 - Try accessing following applications:
   - open-webui  
@@ -88,11 +91,19 @@ terraform apply
   - code-server  
   - litellm  
 
+<img src="docs/images/controller-home-page.png" width="100%" alt="Controller home page">
+
+
 ### Set admin user password for Open WebUI
 - Open open-webui from the Controller
 - Since we are using self-signed certificates, bypass the warning by clicking Advance and then Continue. 
 - Click on "Get started"
+
+<img src="docs/images/open-webui-first-screen.png" width="100%" alt="Open WebUI first screen">
+
 - Register yourself with name, email and password. You can use fake email.
+
+<img src="docs/images/open-webui-create-account.png" width="100%" alt="Open WebUI create account">
 
 ### Request access to bedrock models
 - Open docker\open-webui\litellm-config.yml and request model access for each models mentioned in the config.
@@ -100,6 +111,14 @@ terraform apply
 - Request models access by going to:  
     - TIP: You only pay for what you use. You can request access to all the models. Click checkbox at the top on the model selection page. 
 https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelaccess
+
+<img src="docs/images/bedrock-model-access.png" width="100%" alt="Bedrock model access">
+
+- Click Modify model access button
+
+<img src="docs/images/bedrock-edit-model-access.png" width="100%" alt="Bedrock edit model access">
+
+- Select all models, click Next, and follow remaining steps
 
 ### Test model access from Open WebUI
 - Open open-webui from the Controller
@@ -123,7 +142,11 @@ scripts\create-launcher.bat
 - "launcher.bat" file is created in local folder.
 - Windows Explorer is opened.
 - Double click "launcher.bat" file.
-- NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.
+- NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.  
+
+
+<img src="docs/images/launcher-cmd-window.png" width="100%" alt="Launcher cmd window">
+
 
 
 ### SSH into EC2 (easy way)
@@ -163,25 +186,43 @@ show_passwords
 
 ### Use code server (VSCode to EC2 server in your Browser!)
 - To open code-server, use shortcut command: code-server
+- Use Controller to open code-server
 
 ### Use Jupyter Lab
 - To open Jupyter Lab, use shortcut command: jupyterlab
+- Use Controller to open Jupyter Lab
 
 ### Use Portainer (if you want to work with Docker using UI)
 - To open Portainer, use shortcut command: portainer
-- When you access it for first time, it was ask you to register as admin, follow the instructions.
+- Use Controller to open Portainer
+- If you see a timed out screen:
+    - SSH into the server and execute: docker restart portainer
+    - Refresh the web page
+
 
 
 ## Maintenance and operations
 
 ### Stop EC2 server
-aws ec2 stop-instances --instance-ids %INSTANCE_ID%
+- Direct command
+    - aws ec2 stop-instances --instance-ids %INSTANCE_ID%
+- From Launcher
+    - ec2x
+- From Controller
+    - Click button Stop EC2
+
 
 ### Start EC2 server
-aws ec2 start-instances --instance-ids %INSTANCE_ID%
+- Direct command
+    - aws ec2 start-instances --instance-ids %INSTANCE_ID%
+- From Launcher
+    - ec2
+- From Controller
+    - Click button Start EC2
 
 ### Delete everything on AWS that was created via this project
-```bat
+- WARNING: This will delete everything that was created!
+ ```bat
 cd terraform  
 terraform destroy  
 ```
@@ -469,10 +510,44 @@ deploy.bat controller
 ```
 
 
-
+## Q&A
+1. Q: What is OpenWebUI?  
+   A: OpenWebUI is an open-source web interface for interacting with large language models (LLMs). It provides a user-friendly way to communicate with various AI models and can be customized to suit different needs.
+ 
+2. Q: How does LiteLLM work?  
+   A: LiteLLM is a lightweight library that provides a unified interface for different LLM providers. It simplifies the process of integrating and switching between various AI models, making it easier to work with multiple LLMs in your applications.
+ 
+3. Q: What are the benefits of using Portainer?  
+   A: Portainer is a lightweight management UI for Docker environments. It simplifies container management, allows for easy deployment and monitoring of applications, and provides a user-friendly interface for managing Docker resources without needing extensive command-line knowledge.
+ 
+4. Q: Is Caddy difficult to set up?  
+   A: No, Caddy is designed to be simple to set up and use. It's a web server that automatically handles HTTPS configuration, making it easier to secure your web applications. Its configuration file is human-readable and straightforward.
+ 
+5. Q: Can I use Code-Server to develop remotely?  
+   A: Yes, Code-Server allows you to run VS Code on a remote server and access it through a web browser. This enables remote development from any device with a web browser, making it ideal for cloud-based development environments.
+ 
+6. Q: How does OpenWebUI integrate with different LLM providers?  
+   A: OpenWebUI can integrate with various LLM providers through APIs. It often uses libraries like LiteLLM to facilitate these connections, allowing users to interact with different AI models through a single interface.
+ 
+7. Q: What are the main features of Portainer?  
+   A: Portainer features include container management, image management, network configuration, volume management, and user access control. It also provides a dashboard for monitoring container health and resource usage.
+ 
+8. Q: Can Caddy handle load balancing?  
+   A: Yes, Caddy can handle load balancing. It includes built-in features for distributing traffic across multiple backend servers, making it useful for improving the performance and reliability of web applications.
+ 
+9. Q: Is Code-Server secure to use?  
+   A: Code-Server can be secured by implementing proper authentication, using HTTPS, and following best practices for server security. It's important to configure it correctly to ensure the security of your development environment.
+ 
+10. Q: Can LiteLLM work with custom or fine-tuned models?  
+    A: Yes, LiteLLM can work with custom or fine-tuned models. It supports a wide range of models and providers, and you can often integrate custom models by following the library's documentation for adding new model support.
+ 
+11. Q: How does Portainer handle Docker Swarm or Kubernetes environments?  
+    A: Portainer provides support for both Docker Swarm and Kubernetes environments. It offers features for managing clusters, deploying stacks, and monitoring distributed systems, making it valuable for more complex container orchestration scenarios.
+ 
+12. Q: Can OpenWebUI be customized for specific use cases?  
+    A: Yes, OpenWebUI is designed to be customizable. Users can often modify the interface, add new features, or integrate it with other tools to suit their specific requirements or organizational needs.
 
 ## TODO:
-Set home folder to ec2-user home for Jupyter Lab
 
 Telll them open webui is contained and your data is not shread
 Add model, restart litellm

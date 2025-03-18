@@ -20,6 +20,7 @@ Install your own instance of Open WebUI for personal use along with a simple but
     - LiteLLM (Gateway to Bedrock)
     - Jupyter Lab
     - Caddy (reverse proxy and authetication server)
+    - Controller (Custom web based tool to launch other apps and control EC2)
 
 ## Why should I use this?
 - Enjoy full privacy. All your chats private. Bedrock does not store your chats and does not use it for retraining.
@@ -205,7 +206,7 @@ docker-compose up -d
 ### How to add more Bedrock models?
 - Make sure that you have requested access to the model
 - SSH into EC2 server
-- Edit docker/litellm-config.yml
+- Edit docker\open-webui\litellm-config.yml
     - Add a model in the model list
 - Restart LiteLLM container  
 ```bash
@@ -379,7 +380,7 @@ docker-compose up -d
 ### When doing terraform apply: Error: No matching Internet Gateway found
 - You should create Internet gatewat and attach to your VPC (see the instructions above)
 
-### When I go to portainer using browser, I get error: New Portainer installation Your Portainer instance timed out for security purposes. To re-enable your Portainer instance, you will need to restart Portainer.
+### Using my browser, when I go to Portainer, I get the following error New Portainer installation Your Portainer instance timed out for security purposes. To re-enable your Portainer instance, you will need to restart Portainer.
 - To resolve this, SSH into EC2 server
 - Run this command
 ```bash

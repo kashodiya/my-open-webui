@@ -229,5 +229,5 @@ print(response)
 - Authentication server
 
 ## TODOs
-- Add KB exercise
+- Add RAG exercise
 - Show Ollama?

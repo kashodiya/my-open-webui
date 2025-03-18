@@ -136,6 +136,25 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Scroll down and explore some community tool
 - Get inspired and create your own tool
 
+## Use Ollama via Open WebUI
+- Ollama is a server which can serve local LLM models
+- You can also use Haggingface models
+### Download and use Ollama model
+- Open WebUI
+- Go to top right icon -> Settings -> Admin Settings -> Connections
+- In Manage Ollama API Connections section click Manage icon on the right side
+- Enter model tag: mistral:7b
+- Once donloaded, close the box
+- New chat
+- Select mistral:7b model
+- Ask question
+#### Challenge exercise
+- Ask google and find other Ollam models
+- Download a model
+- Use it
+- What difference you find?
+- Why the model response is slow? 
+
 
 ## LiteLLM Exercise
 

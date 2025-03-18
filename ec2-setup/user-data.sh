@@ -267,6 +267,7 @@ c.ServerApp.ip = "0.0.0.0"
 c.ServerApp.allow_origin = "*"
 c.ServerApp.open_browser = False
 c.ServerApp.disable_check_xsrf = True
+c.ServerApp.root_dir = '/home/ec2-user'
 c.ServerApp.token = "$JUPYTER_LAB_TOKEN"
 EOF
 

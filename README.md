@@ -1,5 +1,5 @@
-# my-open-webui
-Install your own instance of Open WebUI for personal use along with a simple but effective and powerful workbench to do explore GenAI. 
+# my-open-webui: GenAI Workbench
+Personal AI Exploration Platform on AWS Deploy a privacy-focused GenAI environment for individual use and rapid experimentation. Includes Open WebUI and essential tools like Portainer, VSCode, LiteLLM, and Jupyter Lab. Perfect for AI enthusiasts seeking a quick, secure personal sandbox.
 
 ## Assumptions and pre-requisites
 - You are using Windows machine

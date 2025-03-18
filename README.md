@@ -338,6 +338,14 @@ rkh = Remove known SSH host
 - Ask your user to login or refresh their page
 
 
+### How to upgrade Open WebUI to new version
+- SSH into EC2, and run:
+```bash
+cd docker/open-webui
+docker-compose down
+docker-compose down --rmi all
+docker-compose up -d
+```
 
 ## Resources and references
 ### Open WebUI
@@ -380,6 +388,10 @@ docker restart portainer
 - Refresh browser
 - Set password (min length 12 characters)
 
+
+### When I ssh in EC2 I get error: The authenticity of host can't be established.
+- From launcher run: rkh
+- Then run: sshe
 
 
 ## Internal design/architecture

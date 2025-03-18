@@ -7,6 +7,13 @@
 - Search a chat from chat history.
 - Open and close the left navigation panel.
 - Pin, Rename, Delete, Download a chat from history.
+- How to set System Prompt for a chat? (Controls icon top right)
+- How to set System Prompt (Settings->General)
+- How to set model specific System Prompt (Settings->Admin Settings->Models->edit a model)
+- Change theme (Settings->General)
+- Create shortcut prompts. (Workspace->Prompts->Click '+')
+- How to download a chat conversation? (top right ... icon)
+
 
 ## Exercises to learn Open WebUI
 ### Use more than one model simultaneously
@@ -111,6 +118,24 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Without writing a single line of Python code, get the following things done just using Prompt Engineering:
 
 
+## Advance Open WebUI features
+### Tools
+- Click Workspaces->Tools
+- Click '+' icon on the top right
+- Tool Name: My Tools
+- Description: My tools
+- Click Save
+- Start new chat
+- Click + sign in text box
+- Switch on: My Tools
+- Ask: What is my user name
+- Ask: What is current user's email
+#### Challenge exercise
+- Click Workspaces->Tools
+- Click Discover a tool
+- Scroll down and explore some community tool
+- Get inspired and create your own tool
+
 
 ## LiteLLM Exercise
 
@@ -177,6 +202,32 @@ print(response)
 
 
 
+## EC2 and other tools guide
+### Code-server
+- File editor - VSCode
+- Extensions
+- Mutiple terminals
+- Proxy server
+
+### Jupyter
+- Python development
+- Terminal
+- Extensions
+- Open WebUI Python execution environment
+
+### Portainer
+- Manage docker containers, images, volumes remotely using GUI 
+- Ease of trying out any Docker based solutions
+
+### LiteLLM
+- Explore and learn APIs
+- Try API using key
+
+### Caddy
+- Reverse proxy
+- HTTPS
+- Authentication server
 
 ## TODOs
 - Add KB exercise
+- Show Ollama?

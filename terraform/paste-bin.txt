@@ -1,0 +1,2 @@
+vpc_id = vpc-0765d9dba073c5bbd
+InternetGatewayId: igw-0c06911ff708a0124

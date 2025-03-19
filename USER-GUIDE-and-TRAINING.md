@@ -13,6 +13,7 @@
 - Change theme (Settings->General)
 - Create shortcut prompts. (Workspace->Prompts->Click '+')
 - How to download a chat conversation? (top right ... icon)
+- How to read aloud (text to audio) a answer?
 
 
 ## Exercises to learn Open WebUI

@@ -295,9 +295,9 @@ locals {
 #!/bin/bash
 
 PROJECT_ID=${var.project_id}
-CODE_SERVER_PASSWORD=${var.code_server_password}
-LITELLM_API_KEY=${var.litellm_api_key}
-JUPYTER_LAB_TOKEN=${var.jupyter_lab_token}
+CODE_SERVER_PASSWORD="${var.code_server_password}"
+LITELLM_API_KEY="${var.litellm_api_key}"
+JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
 
 read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
   ${local.litellm_config_yml}

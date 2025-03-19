@@ -63,7 +63,7 @@ cd my-open-webui
     "controller_auth_key": "fill-me"
 }
 ```
-- Update password, token, and keys - Min length must be 8
+- Create your own password, token, and keys - Min length must be 8
 
 ### Init and apply terraform
 ```bat

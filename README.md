@@ -64,6 +64,7 @@ cd my-open-webui
 <img src="docs/images/aws-login-creds-option1.PNG" width="100%" alt="AWS keys windows tab">
 
 - Go back to the cmd window and paste it and hit Enter.
+- Better way to login is to use AWS Profile. See guide here: https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html
 
 
 ### Create passwords for various apps

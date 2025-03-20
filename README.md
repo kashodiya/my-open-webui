@@ -52,6 +52,19 @@ cd my-open-webui
 - Either set the AWS credentials env vars
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
+#### How to get credentials:
+- If you are using AWS Access Portal, after login, you will see screen like (Click on your name):  
+<img src="docs/images/aws-login.PNG" width="100%" alt="Screen after AWS login">
+- Click on "Acces keys", then go to Windows tab:  
+
+<img src="docs/images/aws-login-creds-windows-tab.PNG" width="100%" alt="AWS keys windows tab">
+
+- Go to Options 1 and copy credentials by clicking the blue icon on the right: 
+
+<img src="docs/images/aws-login-creds-option1.PNG" width="100%" alt="AWS keys windows tab">
+
+- Go back to the cmd window and paste it and hit Enter.
+
 
 ### Create passwords for various apps
 - Create new file: terraform\terraform.tfvars.json, and add this content
@@ -548,12 +561,6 @@ deploy.bat controller
 
 ## TODO:
 
-Telll them open webui is contained and your data is not shread
-Add model, restart litellm
-Mention that your data is contained
+Disble the scheduler that starts EC2, only keep stop
+Create shortcuts to enable disable schedular
 
-Remove 
-set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
-from main.tf
-
-When tfa is done again , lambda auth key is overwrittend (it it was changed manually by lambda update) - in lambda update update the tf state?

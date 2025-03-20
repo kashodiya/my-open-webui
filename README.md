@@ -82,8 +82,7 @@ terraform apply
 - Use the key that you set in terraform.tfvars.json in controller_auth_key  
 
 <img src="docs/images/controller-login-screen.png" width="50%" alt="Controller login screen">
-<!-- docs\images\controller-home-page.png -->
-- You may have to wait for few min before you can start accessing the applications.
+- "I DO NOT SEE APPLICATIONS LISTED" - wait for 5 min and then refresh. It takes few min for applications to get installed on EC2.
 - Try accessing following applications:
   - open-webui  
   - portainer  

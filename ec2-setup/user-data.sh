@@ -332,7 +332,7 @@ install_jupyterlab() {
     else
         echo "Installing JupyterLab..."
         su - ec2-user -c '
-            $HOME/miniconda/bin/pip install --quiet jupyterlab
+            $HOME/miniconda/bin/pip install --quiet jupyterlab boto3
             $HOME/miniconda/bin/jupyter --version
         '
     fi
@@ -445,30 +445,30 @@ create_apps_json() {
         python generate-app-urls.py
     '
 
-    echo Contents of apps.json
-    cat apps.json
+    # echo Contents of apps.json
+    # cat apps.json
 
-    echo "Copying apps.json to s3://$DATA_BUCKET_NAME"
+    # echo "Copying apps.json to s3://$DATA_BUCKET_NAME"
 
-    aws s3 cp apps.json s3://$DATA_BUCKET_NAME/
+    # aws s3 cp apps.json s3://$DATA_BUCKET_NAME/
 
-    if [ $? -eq 0 ]; then
-        echo "File uploaded successfully to s3"
-    else
-        echo "Error uploading file"
-        exit 1  
-    fi    
+    # if [ $? -eq 0 ]; then
+    #     echo "File uploaded successfully to s3"
+    # else
+    #     echo "Error uploading file"
+    #     exit 1  
+    # fi    
 
-    apps_value=$(cat apps.json)
+    # apps_value=$(cat apps.json)
 
-    aws ssm put-parameter \
-        --name "/$PROJECT_ID/apps" \
-        --value "$apps_value" \
-        --type "String" \
-        --overwrite    
+    # aws ssm put-parameter \
+    #     --name "/$PROJECT_ID/apps" \
+    #     --value "$apps_value" \
+    #     --type "String" \
+    #     --overwrite    
 
-    # rm Caddyfile
-    # rm apps.json
+    # # rm Caddyfile
+    # # rm apps.json
 
     echo "apps.json has been generated."
 }

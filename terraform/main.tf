@@ -45,9 +45,21 @@ variable "controller_auth_key" {
   sensitive   = true  # Changed to true for security
   validation {
     condition     = length(var.controller_auth_key) >= 8
-    error_message = "The key cor Controller must be at least 8 characters long."
+    error_message = "The key for Controller must be at least 8 characters long."
   }
 }
+
+
+variable "bedrock_gateway_api_key" {
+  type        = string
+  description = "Key for Bedrock Gateway"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.bedrock_gateway_api_key) >= 8
+    error_message = "The key for Bedrock Gateway must be at least 8 characters long."
+  }
+}
+
 provider "aws" {
   region = var.region
 }
@@ -169,23 +181,23 @@ resource "aws_security_group" "allow_sources" {
     cidr_blocks = local.all_allowed_ips
   }
 
-  # ingress {
-  #   # Do not change this description, it is used in controller lambda
-  #   description = "main-range"  
-  #   from_port   = 7100
-  #   to_port     = 7200
-  #   protocol    = "tcp"
-  #   cidr_blocks = local.all_allowed_ips
-  # }
-
   ingress {
     # Do not change this description, it is used in controller lambda
-    description = "main-range"
-    from_port   = 0
-    to_port     = 65535
+    description = "main-range"  
+    from_port   = 7000
+    to_port     = 7999
     protocol    = "tcp"
     cidr_blocks = local.all_allowed_ips
   }
+
+  # ingress {
+  #   # Do not change this description, it is used in controller lambda
+  #   description = "main-range"
+  #   from_port   = 0
+  #   to_port     = 65535
+  #   protocol    = "tcp"
+  #   cidr_blocks = local.all_allowed_ips
+  # }
 
   egress {
     from_port   = 0
@@ -284,48 +296,127 @@ resource "aws_key_pair" "main_key" {
   }
 }
 
+# data "archive_file" "code_zip" {
+#   type        = "zip"
+#   output_path = "${path.module}/../code.zip"
+
+#   source {
+#     content  = "${path.module}/../caddy"
+#     filename = "caddy"
+#   }
+#   source {
+#     content  = "${path.module}/../docker"
+#     filename = "docker"
+#   }
+#   source {
+#     content  = "${path.module}/../scripts"
+#     filename = "scripts"
+#   }
+#   source {
+#     content  = "${path.module}/../ec2-setup"
+#     filename = "ec2-setup"
+#   }
+
+# }
+
+# # Upload the zip content directly to the S3 bucket
+# resource "aws_s3_object" "code_zip_upload" {
+#   bucket  = aws_s3_bucket.data_bucket.id
+#   key     = "code.zip"
+#   content_type = "application/zip"
+#   source = data.archive_file.code_zip.output_path
+
+#   # Ensure the object is re-uploaded if the zip content changes
+#   etag = data.archive_file.caddy_zip.output_md5
+# }
+
+# # Create an in-memory zip archive
+# data "archive_file" "caddy_zip" {
+#   type        = "zip"
+#   source_dir  = local.caddy_folder
+#   output_path = "${path.module}/../caddy.zip"
+# }
+
+# # Upload the zip content directly to the S3 bucket
+# resource "aws_s3_object" "caddy_zip_upload" {
+#   bucket  = aws_s3_bucket.data_bucket.id
+#   key     = "caddy.zip"
+#   # content = data.archive_file.caddy_zip.output_base64sha256  # This is the in-memory zip content
+#   content_type = "application/zip"
+#   source = data.archive_file.caddy_zip.output_path
+
+#   # Ensure the object is re-uploaded if the zip content changes
+#   etag = data.archive_file.caddy_zip.output_md5
+# }
+
+
+module "caddy_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "caddy"
+  source_dir      = "${path.module}/../caddy"
+  output_filename = "caddy.zip"
+}
+
+module "docker_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "docker"
+  source_dir      = "${path.module}/../docker"
+  output_filename = "docker.zip"
+}
+
+module "scripts_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "scripts"
+  source_dir      = "${path.module}/../scripts"
+  output_filename = "scripts.zip"
+}
+
+module "ec2-setup_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "ec2-setup"
+  source_dir      = "${path.module}/../ec2-setup"
+  output_filename = "ec2-setup.zip"
+}
+
+
+
 locals {
-  litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
-  docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
-  portainer_compose_yml = file("${path.module}/../docker/portainer/docker-compose.yml")
-  generate_app_urls_py = file("${path.module}/../scripts/generate-app-urls.py")
-  caddyfile = file("${path.module}/../caddy/Caddyfile")
+  # caddy_folder = "${path.module}/../caddy"
+
+  # litellm_config_yml = file("${path.module}/../docker/open-webui/litellm-config.yml")
+  # docker_compose_yml = file("${path.module}/../docker/open-webui/docker-compose.yml")
+  # portainer_compose_yml = file("${path.module}/../docker/portainer/docker-compose.yml")
+  # bedrock_gateway_compose_yml = file("${path.module}/../docker/bedrock-gateway/docker-compose.yml")
+  # generate_app_urls_py = file("${path.module}/../scripts/generate-app-urls.py")
+  # caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
   ec2_user_data = <<-EOT
 #!/bin/bash
 
-PROJECT_ID=${var.project_id}
-CODE_SERVER_PASSWORD="${var.code_server_password}"
-LITELLM_API_KEY="${var.litellm_api_key}"
-JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
-
-read -r -d '' LITELLM_CONFIG_CONTENT << 'EOF'
-  ${local.litellm_config_yml}
-EOF
-
-read -r -d '' DOCKER_COMPOSE_CONTENT << 'EOF'
-  ${local.docker_compose_yml}
-EOF
-
-read -r -d '' PORTAINER_COMPOSE_CONTENT << 'EOF'
-  ${local.portainer_compose_yml}
-EOF
-
-read -r -d '' CADDYFILE_CONTENT << 'EOF'
-  ${local.caddyfile}
-EOF
-
-DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
-
-read -r -d '' GENERATE_APP_URLS_PY_CONTENT << 'EOF'
-  ${local.generate_app_urls_py}
-EOF
-
+export PROJECT_ID=${var.project_id}
+export AWS_REGION=${data.aws_region.current.name}
+export CODE_SERVER_PASSWORD="${var.code_server_password}"
+export LITELLM_API_KEY="${var.litellm_api_key}"
+export BEDROCK_GATEWAY_API_KEY="${var.bedrock_gateway_api_key}"
+export JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
+export DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 
 ${local.user_data_script}
 
 EOT 
 
+}
+
+resource "aws_s3_object" "ec2_setup_script" {
+  bucket  = aws_s3_bucket.data_bucket.id
+  key     = "ec2-setup.sh"
+  content = local.ec2_user_data
+  # content_type = "text/x-sh"
+  content_type = "text/x-shellscript"  
 }
 
 resource "aws_instance" "main_instance" {
@@ -337,7 +428,15 @@ resource "aws_instance" "main_instance" {
   vpc_security_group_ids      = [aws_security_group.allow_sources.id]
   associate_public_ip_address = true # Ensure public IP is associated
 
-  user_data = local.ec2_user_data
+  # user_data = local.ec2_user_data
+  user_data = <<-EOF
+#!/bin/bash
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/ec2-setup.sh /tmp/
+chmod +x /tmp/ec2-setup.sh
+sudo yum install dos2unix -y
+dos2unix /tmp/ec2-setup.sh
+/tmp/ec2-setup.sh
+EOF
 
   root_block_device {
     volume_type = "gp3"
@@ -350,7 +449,15 @@ resource "aws_instance" "main_instance" {
     create_before_destroy = true
   }
 
-  depends_on = [aws_s3_bucket.data_bucket]
+  depends_on = [
+    aws_s3_bucket.data_bucket,
+    aws_s3_object.ec2_setup_script
+  ]
+
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2 # Increase this value as needed for docker container
+  }
 
   tags = {
     Name      = "${var.project_id}_main_server"
@@ -527,6 +634,7 @@ resource "aws_scheduler_schedule" "stop_ec2" {
 resource "aws_scheduler_schedule" "start_ec2" {
   name       = "${var.project_id}-start-ec2-schedule"
   group_name = "default"
+  state      = "DISABLED"  # This line ensures the scheduler is created in a disabled state
 
   flexible_time_window {
     mode = "OFF"
@@ -634,14 +742,6 @@ output "vpc_id" {
 }
 
 
-
-
-
-
-
-
-
-
 resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
@@ -651,10 +751,15 @@ resource "aws_ssm_parameter" "resource_ids" {
     instanceId                = aws_instance.main_instance.id,
     controllerUrl             = aws_lambda_function_url.controller_lambda_url.function_url,
     dataBucketName            = aws_s3_bucket.data_bucket.id,
+    codeServerPassword        = var.code_server_password,
+    liteLLMApiKey             = var.litellm_api_key,
+    jupyterLabToken           = var.jupyter_lab_token,
+    bedrockGatewayApiKey      = var.bedrock_gateway_api_key,
     controller_auth_key       = var.controller_auth_key,
     controller_jwt_secret_key = random_string.controller_jwt_secret_key.result,
     ec2SecurityGroupId        = aws_security_group.allow_sources.id,
-    ec2PublicDns              = aws_instance.main_instance.public_dns
+    ec2PublicDns              = aws_instance.main_instance.public_dns,
+    eipPublicDns              = aws_eip.dev_ec2_eip.public_dns
   })
 
   # Ensure this resource is created after all other resources
@@ -671,9 +776,11 @@ resource "aws_ssm_parameter" "resource_ids" {
 resource "local_file" "outputs" {
   filename = "${path.module}/set-tf-output-2-env-var.bat"
   content  = <<-EOT
+set AWS_REGION=${data.aws_region.current.name}
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
 set PROJECT_ID=${var.project_id}
 set INSTANCE_ID=${aws_instance.main_instance.id}
+set EIP_PUBLIC_DNS=${aws_eip.dev_ec2_eip.public_dns}
 set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}

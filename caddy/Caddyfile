@@ -12,40 +12,9 @@
     request_header X-Authenticated-User {http.auth.user.id}
 }
 
+# Just for test
 :7100 {
     respond "Hello from my server!"
 }
 
-# Open-WebUI
-:7101 {
-    import common
-    reverse_proxy localhost:8101
-}
-
-# Portainer
-:7102 {
-    import common
-    reverse_proxy https://localhost:8102 {
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }    
-}
-
-# Jupyter Lab
-:7103 {
-    import common
-    reverse_proxy localhost:8103
-}
-
-# Code Server
-:7104 {
-    import common
-    reverse_proxy localhost:8104
-}
-
-# LiteLLM
-:7105 {
-    import common
-    reverse_proxy localhost:8105
-}
+import apps/*.Caddyfile

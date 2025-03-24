@@ -51,6 +51,10 @@ echo litellm = Opens LiteLLM in Browser
 doskey controller=start %CONTROLLER_URL%
 echo controller = Opens Controller in Browser
 
+doskey esl=%SCRIPTS_DIR%\ec2-setup-logs.bat
+echo esl = See EC2 setup logs
+
+
 doskey controller-tail=aws logs tail /aws/lambda/myowu-controller --follow
 echo controller-tail = Opens Controller in Browser
 

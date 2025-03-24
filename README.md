@@ -142,7 +142,7 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 - Type a question and hit Enter. Ensure that you get the answer.
 
 
-### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+### CONGRATULATIONS! At this point the setup is done. Follow remaining instructions if you want to do more with your EC2.
 
 ### Optional: If you like command line, create the Launcher
 - Open cmd window, if not already open.
@@ -159,10 +159,25 @@ scripts\create-launcher.bat
 - Double click "launcher.bat" file.
 - NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.  
 
-
 <img src="docs/images/launcher-cmd-window.png" width="100%" alt="Launcher cmd window">
 
 
+### Track the setup of software in EC2 (easy way)
+- Just use Launcher chortcut (Show EC2 setup logs): ``esl``
+
+### Track the setup of software in EC2 (hard way)
+- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
+```bash
+tail_setup_log
+```
+- This should be the last line in the log:
+All installations completed.
+- Press Ctrl+C to exit.
+- To see complete user data script log using less command:  
+```bash
+less_setup_log
+```
+- Press q to exit
 
 ### SSH into EC2 (easy way)
 - Run scripts\start-dev.bat
@@ -177,20 +192,6 @@ set PROJECT_DIR=path/to/your/project/folder
 set ELASTIC_IP=your.elastic.ip.address  
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 ```
-
-### Track the setup of software in EC2
-- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
-```bash
-tail_setup_log
-```
-- This should be the last line in the log:
-All installations completed.
-- Press Ctrl+C to exit.
-- To see complete user data script log using less command:  
-```bash
-less_setup_log
-```
-- Press q to exit
 
 ### Find auto-generated passwords and tokens
 - SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:

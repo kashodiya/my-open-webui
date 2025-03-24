@@ -261,7 +261,13 @@ docker-compose up -d
 - Latest image will be automatically downloaded and used
 
 
-### How to add more Bedrock models?
+### How to add more Bedrock models using LiteLLM (easy way)?
+- Make sure that you have requested access to the model
+- Edit docker\open-webui\litellm-config.yml
+    - Add a model in the model list
+- From the Launcher use shortcut 
+
+### How to add more Bedrock models using LiteLLM (hard way)?
 - Make sure that you have requested access to the model
 - SSH into EC2 server
 - Edit docker\open-webui\litellm-config.yml

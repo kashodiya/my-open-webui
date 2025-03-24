@@ -626,48 +626,48 @@ def add_ingress_rule(ip_range):
         else:
             print(f"Error adding ingress rule: {e}")
 
-def get_token_from_event(event, context):
-    """Extract the token from the Lambda event"""
-    print("Attempting to extract token from event")
+# def get_token_from_event(event, context):
+#     """Extract the token from the Lambda event"""
+#     print("Attempting to extract token from event")
 
-    # Check Authorization header
-    headers = event.get('headers', {})
-    auth_header = headers.get('Authorization') or headers.get('authorization')
-    if auth_header:
-        print("Found Authorization header")
-        parts = auth_header.split()
-        if parts[0].lower() == 'bearer' and len(parts) == 2:
-            print("Bearer token found in Authorization header")
-            return parts[1]
+#     # Check Authorization header
+#     headers = event.get('headers', {})
+#     auth_header = headers.get('Authorization') or headers.get('authorization')
+#     if auth_header:
+#         print("Found Authorization header")
+#         parts = auth_header.split()
+#         if parts[0].lower() == 'bearer' and len(parts) == 2:
+#             print("Bearer token found in Authorization header")
+#             return parts[1]
 
-    # Check query parameters
-    query_params = event.get('queryStringParameters', {})
-    if query_params:
-        token = query_params.get('token')
-        if token:
-            print("Token found in query parameters")
-            return token
+#     # Check query parameters
+#     query_params = event.get('queryStringParameters', {})
+#     if query_params:
+#         token = query_params.get('token')
+#         if token:
+#             print("Token found in query parameters")
+#             return token
 
-    # Check form data or JSON body
-    body = event.get('body')
-    if body:
-        # Try to parse as JSON
-        try:
-            body_json = json.loads(body)
-            token = body_json.get('token')
-            if token:
-                print("Token found in JSON body")
-                return token
-        except json.JSONDecodeError:
-            # If not JSON, treat as form data
-            form_data = parse_qs(body)
-            token = form_data.get('token', [None])[0]
-            if token:
-                print("Token found in form data")
-                return token
+#     # Check form data or JSON body
+#     body = event.get('body')
+#     if body:
+#         # Try to parse as JSON
+#         try:
+#             body_json = json.loads(body)
+#             token = body_json.get('token')
+#             if token:
+#                 print("Token found in JSON body")
+#                 return token
+#         except json.JSONDecodeError:
+#             # If not JSON, treat as form data
+#             form_data = parse_qs(body)
+#             token = form_data.get('token', [None])[0]
+#             if token:
+#                 print("Token found in form data")
+#                 return token
 
-    print("No token found in event")
-    return None
+#     print("No token found in event")
+#     return None
 
 def logout_get_handler(event):
     # Set up the response object

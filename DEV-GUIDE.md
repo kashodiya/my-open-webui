@@ -1,5 +1,23 @@
 # Developers guide
 
+
+
+## EC2 setup 
+- EC2 setup is done using user-data script.
+- User data script is stored in ec2-user\user-data.sh file.
+- Terraform adds some values as bash env variables at the top of the user-data.sh.
+    - Check local.ec2_user_data in terraform\main.tf
+- A S3 bucket is created with name <project_id>-data-<random_string>
+- You can find the generated S3 bucket in terraform\set-tf-output-2-env-var.bat as DATA_BUCKET_NAME value.
+- Computed ec2-serup.sh is copied to S3 data bucket by Terraform. 
+    - In the user data script that file is copied to /root/ec2-setup.sh and executed.
+
+
+
+
+
+
+
 ## Controller Lambda
 ### How to tail the logs
 - Use launcher shortcut:  

@@ -431,11 +431,11 @@ resource "aws_instance" "main_instance" {
   # user_data = local.ec2_user_data
   user_data = <<-EOF
 #!/bin/bash
-aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/ec2-setup.sh /tmp/
-chmod +x /tmp/ec2-setup.sh
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/ec2-setup.sh /root/
+chmod +x /root/ec2-setup.sh
 sudo yum install dos2unix -y
-dos2unix /tmp/ec2-setup.sh
-/tmp/ec2-setup.sh
+dos2unix /root/ec2-setup.sh
+/root/ec2-setup.sh
 EOF
 
   root_block_device {

@@ -1,5 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
+
+if %CD:~-13% NEQ my-open-webui (
+    echo Please run this script from my-open-webui folder as following:
+    echo   scripts\create-launcher.bat
+    exit /b
+)
+
 set "PROJECT_DIR=%CD%"
 set LAUNCHER_PATH=%PROJECT_DIR%\launcher.bat
 echo @echo off > "%LAUNCHER_PATH%"

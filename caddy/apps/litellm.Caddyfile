@@ -1,0 +1,5 @@
+# LiteLLM
+:7105 {
+    import common
+    reverse_proxy localhost:8105
+}

@@ -1,0 +1,19 @@
+model_list:
+  - model_name: Titan Text G1 - Express By Amazon
+    litellm_params:
+      model: amazon.titan-text-express-v1
+  - model_name: Llama 3 8B Instruct By Meta
+    litellm_params:
+      model: meta.llama3-8b-instruct-v1:0
+  - model_name: Llama 3 70B Instruct By Meta
+    litellm_params:
+      model: meta.llama3-70b-instruct-v1:0
+  - model_name: Claude 3.5 Sonnet By Anthropic
+    litellm_params:
+      model: anthropic.claude-3-5-sonnet-20240620-v1:0
+  - model_name: Claude 3 Haiku By Anthropic
+    litellm_params:
+      model: anthropic.claude-3-haiku-20240307-v1:0
+litellm_settings:
+  modify_params: True
+  drop_params: true

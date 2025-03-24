@@ -68,16 +68,18 @@ cd my-open-webui
 
 
 ### Create passwords for various apps
-- Create new file: terraform\terraform.tfvars.json, and add this content
+- Copy terraform\example-terraform.tfvars.json to terraform\terraform.tfvars.json
+- Modify terraform\terraform.tfvars.json
+- Replace "fill--me" by creating your own password, token, and keys - Min length must be 8
 ```json
 {
-    "code_server_password": "fill-me",
-    "litellm_api_key": "fill-me",
-    "jupyter_lab_token": "fill-me",
-    "controller_auth_key": "fill-me"
+    "code_server_password": "fill--me",
+    "litellm_api_key": "fill--me",
+    "jupyter_lab_token": "fill--me",
+    "controller_auth_key": "fill--me",
+    "bedrock_gateway_api_key": "fill--me"
 }
 ```
-- Create your own password, token, and keys - Min length must be 8
 
 ### Init and apply terraform
 ```bat
@@ -562,6 +564,18 @@ deploy.bat controller
 
 ## TODO:
 
+Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
+This can be used for demo apps etc.
+
 Disble the scheduler that starts EC2, only keep stop
 Create shortcuts to enable disable schedular
 
+Allow from About
+EC2 state pilling
+Restart Portainer btn
+
+Logout remove session storage, or refresh btn for apps
+
+- Verify 
+    - Git installed via user data
+    - aws Region is set in set-tf-output...bat

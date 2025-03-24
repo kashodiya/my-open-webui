@@ -1,22 +1,14 @@
-#!/bin/bash
-
-# Redirect output to a log file
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-# export JUPYTER_LAB_TOKEN=$(openssl rand -base64 15 | tr -dc 'a-zA-Z0-9' | head -c 20)
-
-# Function to check if a command exists
 command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Function to update dnf
 update_dnf() {
     echo "Updating dnf..."
     sudo dnf -q update -y
 }
 
-# Function to install Docker
 install_docker() {
     if command_exists docker; then
         echo "Docker is already installed."
@@ -33,7 +25,6 @@ install_docker() {
     fi
 }
 
-# Function to install Docker Compose
 install_docker_compose() {
     if command_exists docker-compose; then
         echo "Docker Compose is already installed."
@@ -48,24 +39,23 @@ install_docker_compose() {
 
 start_containers() {
     export OPEN_WEBUI_DIR=/home/ec2-user/docker/open-webui
-    mkdir -p $OPEN_WEBUI_DIR
+    # mkdir -p $OPEN_WEBUI_DIR
+
+    echo "Creating docker network: shared_network"
+    docker network create shared_network
 
     # See terraform\main.tf file for LITELLM_CONFIG_CONTENT and DOCKER_COMPOSE_CONTENT
 
-    echo "Creating LiteLLM config file"
-    echo "$LITELLM_CONFIG_CONTENT" > "$OPEN_WEBUI_DIR/litellm-config.yml"
-    echo "LiteLLM config file created"
+    # echo "Creating LiteLLM config file"
+    # echo "$LITELLM_CONFIG_CONTENT" > "$OPEN_WEBUI_DIR/litellm-config.yml"
+    # echo "LiteLLM config file created"
 
-    echo "$DOCKER_COMPOSE_CONTENT" > "$OPEN_WEBUI_DIR/docker-compose.yml"
-    echo "$(eval "echo \"$DOCKER_COMPOSE_CONTENT\"")" > "$OPEN_WEBUI_DIR/docker-compose.yml"
-    echo "Docker compose file created"
-
-    sudo chown -R ec2-user:ec2-user $OPEN_WEBUI_DIR
+    # echo "$DOCKER_COMPOSE_CONTENT" > "$OPEN_WEBUI_DIR/docker-compose.yml"
+    # echo "$(eval "echo \"$DOCKER_COMPOSE_CONTENT\"")" > "$OPEN_WEBUI_DIR/docker-compose.yml"
+    # echo "Docker compose file created"
 
     echo "Creating Open WebUI, Ollama, LiteLLM containers"
     cd $OPEN_WEBUI_DIR
-
-    # docker-compose up -d
 
     if ! docker_command "docker-compose up -d --quiet-pull"; then
         log "Failed to start containers. Cleaning up and exiting."
@@ -73,10 +63,39 @@ start_containers() {
         exit 1
     fi
 
-    echo "Containers started"
+    echo "Open WebUI containers started. Building Bedrock gateway image..."
+
+    mkdir -p /home/ec2-user/temp
+    cd /home/ec2-user/temp
+    git clone https://github.com/aws-samples/bedrock-access-gateway.git
+    cd bedrock-access-gateway/src
+    docker build -q -t bedrock-gateway -f Dockerfile_ecs .    
+    cd ../..
+    rm -rf bedrock-access-gateway
+
+    export BEDROCK_GATEWAY_DIR=/home/ec2-user/docker/bedrock-gateway
+    # mkdir -p $BEDROCK_GATEWAY_DIR
+
+    # echo "$BEDROCK_GATEWAY_COMPOSE_CONTENT" > "$BEDROCK_GATEWAY_DIR/docker-compose.yml"
+    # echo "$(eval "echo \"$BEDROCK_GATEWAY_COMPOSE_CONTENT\"")" > "$BEDROCK_GATEWAY_DIR/docker-compose.yml"
+    # echo "Docker composefile for bedrock gateway created"
+
+    sudo chown -R ec2-user:ec2-user $BEDROCK_GATEWAY_DIR
+    sudo chown -R ec2-user:ec2-user /home/ec2-user/temp
+
+    echo "Creating Bedrock Gateway container"
+    cd $BEDROCK_GATEWAY_DIR
+
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
+        log "Failed to start containers. Cleaning up and exiting."
+        cleanup
+        exit 1
+    fi
+
+    sudo chown -R ec2-user:ec2-user $OPEN_WEBUI_DIR/..
+
 }
 
-# Function to run Docker commands with retry
 docker_command() {
     local cmd="$1"
     local max_attempts=3
@@ -95,7 +114,50 @@ docker_command() {
     return 1
 }
 
-# Function to install Caddy
+get_code_from_s3 (){
+
+    # Create the ~/code directory if it doesn't exist
+    CODE_DIR=/home/ec2-user/code
+    mkdir -p $CODE_DIR
+
+    # Download all files from S3 bucket to ~/code
+    aws s3 sync s3://${DATA_BUCKET_NAME}/code $CODE_DIR
+
+    # Check if the download was successful
+    if [ $? -eq 0 ]; then
+        echo "Files downloaded successfully from S3."
+    else
+        echo "Error downloading files from S3. Exiting."
+        exit 1
+    fi
+
+    # Unzip all files in ~/code
+    for zip_file in $CODE_DIR/*.zip; do
+        if [ -f "$zip_file" ]; then
+            # Extract the filename without extension
+            folder_name=$(basename "$zip_file" .zip)
+
+            # Create the directory if it doesn't exist
+            mkdir -p "$CODE_DIR/$folder_name"
+
+            unzip -o "$zip_file" -d "$CODE_DIR/$folder_name"
+            if [ $? -eq 0 ]; then
+                echo "Unzipped: $zip_file"
+                # Optionally, remove the zip file after extraction
+                # rm "$zip_file"
+            else
+                echo "Error unzipping: $zip_file"
+            fi
+        fi
+    done
+
+    sudo chown -R ec2-user:ec2-user $CODE_DIR
+    cp -a /home/ec2-user/code/docker /home/ec2-user/
+    cp -a /home/ec2-user/code/scripts /home/ec2-user/
+
+    echo "Download and unzip process completed."
+}
+
 install_caddy() {
     if command_exists caddy; then
         echo "Caddy is already installed."
@@ -110,19 +172,15 @@ install_caddy() {
         sudo mkdir -p /etc/caddy/certs
 
 
-        # Set variables
         CERT_DIR="/etc/caddy/certs"
         DOMAIN="localhost"  # Using localhost as the default domain
         DAYS_VALID=365
         IP_ADDRESS=$(curl -s https://api.ipify.org)
 
-        # Ensure the certificate directory exists
         sudo mkdir -p $CERT_DIR
 
-        # Generate a private key
         sudo openssl genrsa -out $CERT_DIR/server.key 2048
 
-        # Create a configuration file for the certificate
         cat << EOF > $CERT_DIR/server.cnf
 [req]
 default_bits = 2048
@@ -147,25 +205,51 @@ DNS.1 = $DOMAIN
 IP.1 = $IP_ADDRESS
 EOF
 
-        # Generate a self-signed certificate
         sudo openssl req -x509 -nodes -days $DAYS_VALID \
             -keyout $CERT_DIR/server.key \
             -out $CERT_DIR/server.crt \
             -config $CERT_DIR/server.cnf
 
-        # Set appropriate permissions
         sudo chown caddy:caddy $CERT_DIR/server.key $CERT_DIR/server.crt
         sudo chmod 600 $CERT_DIR/server.key
         sudo chmod 644 $CERT_DIR/server.crt
 
-        # Clean up the configuration file
         sudo rm $CERT_DIR/server.cnf
 
         echo "Self-signed certificate created for $DOMAIN and IP $IP_ADDRESS"
         echo "Certificate location: $CERT_DIR/server.crt"
         echo "Private key location: $CERT_DIR/server.key"
 
-        echo "$CADDYFILE_CONTENT" > "/etc/caddy/Caddyfile"
+        # # echo "$CADDYFILE_CONTENT" > "/etc/caddy/Caddyfile"
+        # echo "Download caddy.zip from S3 and expand in /etc/caddy"
+
+        # # Download caddy.zip from S3
+        # echo "Downloading caddy.zip from S3..."
+        # aws s3 cp s3://${DATA_BUCKET_NAME}/code/caddy.zip /tmp/caddy.zip
+
+        # # Check if the download was successful
+        # if [ $? -ne 0 ]; then
+        #     echo "Error: Failed to download caddy.zip from S3."
+        #     exit 1
+        # fi
+
+        # # Expand the zip file in /etc/caddy
+        # echo "Expanding caddy.zip in /etc/caddy..."
+        # sudo unzip -o /tmp/caddy.zip -d /etc/caddy
+
+        # # Check if the expansion was successful
+        # if [ $? -ne 0 ]; then
+        #     echo "Error: Failed to expand caddy.zip."
+        #     exit 1
+        # fi
+
+        # # Clean up the temporary zip file
+        # rm /tmp/caddy.zip
+
+        # echo "caddy.zip has been successfully downloaded and expanded in /etc/caddy."
+
+        echo "Copying caddy files from /home/ec2-user/code/caddy to /etc/caddy"
+        sudo cp -R /home/ec2-user/code/caddy /etc
 
         cat << EOF > /etc/systemd/system/caddy.service
 [Unit]
@@ -191,7 +275,6 @@ EOF
     fi
 }
 
-# Function to install code-server
 install_code_server() {
     if su - ec2-user -c 'command -v code-server'; then
         echo "code-server is already installed."
@@ -217,15 +300,14 @@ EOF
 install_portainer() {
     echo "Installing portainer in docker"
     export PORTAINER_DIR=/home/ec2-user/docker/portainer
-    mkdir -p $PORTAINER_DIR
-    echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
+    # mkdir -p $PORTAINER_DIR
+    # echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
     cd $PORTAINER_DIR
     docker-compose up -d --quiet-pull
     sudo chown -R ec2-user:ec2-user $PORTAINER_DIR
     echo "Portainer installed"
 }
 
-# Function to install Miniconda
 install_miniconda() {
     if [ -d "/home/ec2-user/miniconda" ]; then
         echo "Miniconda is already installed."
@@ -244,8 +326,6 @@ install_miniconda() {
     fi
 }
 
-
-# Function to install JupyterLab
 install_jupyterlab() {
     if su - ec2-user -c 'command -v jupyter'; then
         echo "JupyterLab is already installed."
@@ -257,7 +337,6 @@ install_jupyterlab() {
         '
     fi
 
-    # Configure JupyterLab to run on port 8106
     echo "Configuring JupyterLab to run on port 8106..."
 
     mkdir -p /home/ec2-user/.jupyter
@@ -303,8 +382,11 @@ EOF'
 }
 
 create_utils() {
+
+    echo "Installing git..."
+    sudo yum install git -y    
+
     mkdir -p /home/ec2-user/.local/bin
-    # Create the tail_setup_log script
     cat << 'EOF' > /home/ec2-user/.local/bin/tail_setup_log
 #!/bin/bash
 sudo tail -f /var/log/user-data.log  
@@ -348,16 +430,16 @@ EOF
 create_apps_json() {
     SCRIPTS_DIR=/home/ec2-user/scripts
 
-    mkdir -p $SCRIPTS_DIR
+    # mkdir -p $SCRIPTS_DIR
 
-    cp /etc/caddy/Caddyfile $SCRIPTS_DIR
+    # cp /etc/caddy/Caddyfile $SCRIPTS_DIR
 
     cd $SCRIPTS_DIR
 
-    echo "$GENERATE_APP_URLS_PY_CONTENT" > "$SCRIPTS_DIR/generate-app-urls.py"
+    # echo "$GENERATE_APP_URLS_PY_CONTENT" > "$SCRIPTS_DIR/generate-app-urls.py"
 
     chown -R ec2-user:ec2-user $SCRIPTS_DIR
-
+    
     su - ec2-user -c '
         cd /home/ec2-user/scripts
         python generate-app-urls.py
@@ -374,33 +456,87 @@ create_apps_json() {
         echo "File uploaded successfully to s3"
     else
         echo "Error uploading file"
-        exit 1  # Exit the script with a non-zero status to indicate failure
+        exit 1  
     fi    
 
-    # # Read the existing parameter
-    # existing_param=$(aws ssm get-parameter --name "/$PROJECT_ID/info" --query "Parameter.Value" --output text)
-
-    # Read the apps.json file
     apps_value=$(cat apps.json)
 
-    # # Combine the existing parameter with the new key-value pair
-    # new_param=$(echo $existing_param | jq --argjson apps "$apps_value" '. + {apps: $apps}')
-
-    # Update the parameter
     aws ssm put-parameter \
         --name "/$PROJECT_ID/apps" \
         --value "$apps_value" \
         --type "String" \
         --overwrite    
 
-    rm Caddyfile
-    rm apps.json
+    # rm Caddyfile
+    # rm apps.json
 
     echo "apps.json has been generated."
 }
 
+register_start() {
+    current_datetime=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$current_datetime" > "$PROJECT_ID-ec2-setup-started"
+    echo "Copying $PROJECT_ID-ec2-setup-started to s3://$DATA_BUCKET_NAME"
+    aws s3 cp $PROJECT_ID-ec2-setup-started s3://$DATA_BUCKET_NAME/
+    rm $PROJECT_ID-ec2-setup-started
+
+    S3_FILE_PATH="s3://${DATA_BUCKET_NAME}/${PROJECT_ID}-ec2-setup-ended"
+    aws s3 rm "$S3_FILE_PATH" --quiet
+}
+
+register_end() {
+    current_datetime=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$current_datetime" > "$PROJECT_ID-ec2-setup-ended"
+    echo "Copying $PROJECT_ID-ec2-setup-ended to s3://$DATA_BUCKET_NAME"
+    aws s3 cp $PROJECT_ID-ec2-setup-ended s3://$DATA_BUCKET_NAME/
+    rm $PROJECT_ID-ec2-setup-ended
+}
+
+add_vars_to_bashrc() {
+    # Array of variable names to add to .bashrc
+    variables=(
+        "PROJECT_ID"
+        "AWS_REGION"
+        "CODE_SERVER_PASSWORD"
+        "LITELLM_API_KEY"
+        "BEDROCK_GATEWAY_API_KEY"
+        "JUPYTER_LAB_TOKEN"
+        "DATA_BUCKET_NAME"
+    )
+
+    # Path to .bashrc file
+    bashrc_file="/home/ec2-user/.bashrc"
+
+    # Function to add variable to .bashrc if it's set and not already present
+    add_variable_to_bashrc() {
+        local var_name=$1
+        local var_value=${!var_name}
+        
+        if [ -n "$var_value" ]; then
+            if ! grep -q "export $var_name=" "$bashrc_file"; then
+                echo "export $var_name=\"$var_value\"" >> "$bashrc_file"
+                echo "Added $var_name to .bashrc"
+            else
+                echo "$var_name already exists in .bashrc, skipping"
+            fi
+        else
+            echo "$var_name is not set, skipping"
+        fi
+    }
+
+    # Main loop to process each variable
+    for var in "${variables[@]}"; do
+        add_variable_to_bashrc "$var"
+    done
+
+    echo "Finished updating .bashrc"
+}
+
 # Main execution
+register_start
 update_dnf
+add_vars_to_bashrc
+get_code_from_s3
 create_utils
 install_ansible
 install_docker
@@ -412,5 +548,6 @@ install_code_server
 install_miniconda
 install_jupyterlab
 create_apps_json
+register_end
 
 echo "All installations completed."

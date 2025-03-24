@@ -1,0 +1,5 @@
+# Code Server
+:7104 {
+    import common
+    reverse_proxy localhost:8104
+}

@@ -51,8 +51,15 @@ echo litellm = Opens LiteLLM in Browser
 doskey controller=start %CONTROLLER_URL%
 echo controller = Opens Controller in Browser
 
+doskey esl=%SCRIPTS_DIR%\ec2-setup-logs.bat
+echo esl = See EC2 setup logs
 
-doskey taint-ec2=cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance  
+
+doskey controller-tail=aws logs tail /aws/lambda/myowu-controller --follow
+echo controller-tail = Opens Controller in Browser
+
+
+doskey tec2=ssh-keygen -R %ELASTIC_IP% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance $T %SCRIPTS_DIR%\tf-apply.bat 
 
 doskey rkh=ssh-keygen -R %ELASTIC_IP%  
 echo rkh = Remove known SSH host

@@ -1,0 +1,5 @@
+# Jupyter Lab
+:7103 {
+    import common
+    reverse_proxy localhost:8103
+}

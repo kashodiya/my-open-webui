@@ -52,18 +52,34 @@ cd my-open-webui
 - Either set the AWS credentials env vars
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
+#### How to get credentials:
+- If you are using AWS Access Portal, after login, you will see screen like (Click on your name):  
+<img src="docs/images/aws-login.PNG" width="100%" alt="Screen after AWS login">
+- Click on "Acces keys", then go to Windows tab:  
+
+<img src="docs/images/aws-login-creds-windows-tab.PNG" width="100%" alt="AWS keys windows tab">
+
+- Go to Options 1 and copy credentials by clicking the blue icon on the right: 
+
+<img src="docs/images/aws-login-creds-option1.PNG" width="100%" alt="AWS keys windows tab">
+
+- Go back to the cmd window and paste it and hit Enter.
+- Better way to login is to use AWS Profile. See guide here: https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html
+
 
 ### Create passwords for various apps
-- Create new file: terraform\terraform.tfvars.json, and add this content
+- Copy terraform\example-terraform.tfvars.json to terraform\terraform.tfvars.json
+- Modify terraform\terraform.tfvars.json
+- Replace "fill--me" by creating your own password, token, and keys - Min length must be 8
 ```json
 {
-    "code_server_password": "fill-me",
-    "litellm_api_key": "fill-me",
-    "jupyter_lab_token": "fill-me",
-    "controller_auth_key": "fill-me"
+    "code_server_password": "fill--me",
+    "litellm_api_key": "fill--me",
+    "jupyter_lab_token": "fill--me",
+    "controller_auth_key": "fill--me",
+    "bedrock_gateway_api_key": "fill--me"
 }
 ```
-- Create your own password, token, and keys - Min length must be 8
 
 ### Init and apply terraform
 ```bat
@@ -82,8 +98,7 @@ terraform apply
 - Use the key that you set in terraform.tfvars.json in controller_auth_key  
 
 <img src="docs/images/controller-login-screen.png" width="50%" alt="Controller login screen">
-<!-- docs\images\controller-home-page.png -->
-- You may have to wait for few min before you can start accessing the applications.
+- "I DO NOT SEE APPLICATIONS LISTED" - wait for 5 min and then refresh. It takes few min for applications to get installed on EC2.
 - Try accessing following applications:
   - open-webui  
   - portainer  
@@ -127,7 +142,7 @@ https://us-east-1.console.aws.amazon.com/bedrock/home?region=us-east-1#/modelacc
 - Type a question and hit Enter. Ensure that you get the answer.
 
 
-### CONGRATULATIONS! At this point your Open WebUI install is done. Follow remaining if you want to do more with your EC2.
+### CONGRATULATIONS! At this point the setup is done. Follow remaining instructions if you want to do more with your EC2.
 
 ### Optional: If you like command line, create the Launcher
 - Open cmd window, if not already open.
@@ -144,10 +159,25 @@ scripts\create-launcher.bat
 - Double click "launcher.bat" file.
 - NOTE: If you use AWS_DEFAULT_PROFILE you have create launcher only once. If you use AWS_ACCESS_KEY_ID etc. env vars, you have to create launcher everytime you login.  
 
-
 <img src="docs/images/launcher-cmd-window.png" width="100%" alt="Launcher cmd window">
 
 
+### Track the setup of software in EC2 (easy way)
+- Just use Launcher chortcut (Show EC2 setup logs): ``esl``
+
+### Track the setup of software in EC2 (hard way)
+- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
+```bash
+tail_setup_log
+```
+- This should be the last line in the log:
+All installations completed.
+- Press Ctrl+C to exit.
+- To see complete user data script log using less command:  
+```bash
+less_setup_log
+```
+- Press q to exit
 
 ### SSH into EC2 (easy way)
 - Run scripts\start-dev.bat
@@ -162,20 +192,6 @@ set PROJECT_DIR=path/to/your/project/folder
 set ELASTIC_IP=your.elastic.ip.address  
 ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
 ```
-
-### Track the setup of software in EC2
-- SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
-```bash
-tail_setup_log
-```
-- This should be the last line in the log:
-All installations completed.
-- Press Ctrl+C to exit.
-- To see complete user data script log using less command:  
-```bash
-less_setup_log
-```
-- Press q to exit
 
 ### Find auto-generated passwords and tokens
 - SSH into the EC2 (using 'sshe' shortcut command from the Launcher), and execute:
@@ -549,12 +565,18 @@ deploy.bat controller
 
 ## TODO:
 
-Telll them open webui is contained and your data is not shread
-Add model, restart litellm
-Mention that your data is contained
+Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
+This can be used for demo apps etc.
 
-Remove 
-set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}
-from main.tf
+Disble the scheduler that starts EC2, only keep stop
+Create shortcuts to enable disable schedular
 
-When tfa is done again , lambda auth key is overwrittend (it it was changed manually by lambda update) - in lambda update update the tf state?
+Allow from About
+EC2 state pilling
+Restart Portainer btn
+
+Logout remove session storage, or refresh btn for apps
+
+- Verify 
+    - Git installed via user data
+    - aws Region is set in set-tf-output...bat

@@ -2,9 +2,11 @@ import os
 import sys
 import json
 import hashlib
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 import boto3
 from botocore.exceptions import ClientError
+from dateutil.relativedelta import relativedelta
 
 
 # Add the /package directory to the Python path
@@ -362,6 +364,7 @@ def get_sg(security_group_id):
 # def get_data_controller_token_bucket():
 #     return get_first_data_bucket()
 
+
 def read_file_from_s3(controller_token_bucket, file_key):
     try:
         response = s3_client.get_object(Bucket=controller_token_bucket, Key=file_key)
@@ -455,12 +458,32 @@ def allow_get_handler(event, ec2_security_group_id):
                     'error': True
                 })
             }
+        
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'InvalidPermission.Duplicate':
+            print(f"Rule already exists for IP range: {ip_range}")
+            return {
+                'statusCode': 200,
+                'body': json.dumps({
+                    'message': 'Money already transferred',
+                    'error': False
+                })
+            }
+        else:
+            print(f"Error occurred: {str(e)}")
+            return {
+                'statusCode': 500,
+                'body': json.dumps({
+                    'message': 'Failed to transfer money',
+                    'error': str(e)
+                })
+            }        
     except Exception as e:
         print(f"Error occurred: {str(e)}")
         return {
             'statusCode': 500,
             'body': json.dumps({
-                'message': 'Failed to allow',
+                'message': 'Failed to transfer money',
                 'error': str(e)
             })
         }
@@ -668,6 +691,132 @@ def logout_get_handler(event):
 
     return response
 
+def calculate_time_elapsed(ended_str):
+    # Parse the ended timestamp
+    ended = datetime.strptime(ended_str, "%Y-%m-%d %H:%M:%S")
+    
+    # Set the timezone to US/Eastern (for us-east-1)
+    eastern = timezone(timedelta(hours=-5))  # EST is UTC-5
+    ended = ended.replace(tzinfo=eastern)
+    
+    # Get the current time in US/Eastern timezone
+    now = datetime.now(eastern)
+    
+    # Calculate the time difference
+    time_elapsed = now - ended
+    
+    # Convert time difference to days, hours, minutes, and seconds
+    days = time_elapsed.days
+    hours, remainder = divmod(time_elapsed.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    
+    # Prepare the response
+    # response = {
+    #     "time_elapsed": {
+    #         "days": days,
+    #         "hours": hours,
+    #         "minutes": minutes,
+    #         "seconds": seconds
+    #     }
+    # }
+    
+    # return response
+
+    parts = []
+    if days > 0:
+        parts.append(f"{days} day{'s' if days != 1 else ''}")
+    if hours > 0:
+        parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+    if minutes > 0:
+        parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+    if seconds > 0 or not parts:  # Always include seconds if no other units or if it's the only non-zero value
+        parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+
+    if len(parts) == 1:
+        return parts[0]
+    elif len(parts) == 2:
+        return f"{parts[0]} and {parts[1]}"
+    else:
+        return ", ".join(parts[:-1]) + f", and {parts[-1]}"
+
+def get_s3_file_age(bucket_name, file_name):
+    # Create an S3 client
+    s3_client = boto3.client('s3')
+
+    try:
+        # Get the file's metadata
+        response = s3_client.head_object(Bucket=bucket_name, Key=file_name)
+        
+        # Extract the last modified timestamp
+        last_modified = response['LastModified']
+        
+        # Calculate the time difference
+        current_time = datetime.now(last_modified.tzinfo)
+        time_difference = relativedelta(current_time, last_modified)
+        
+        # Construct a human-readable string
+        age_parts = []
+        if time_difference.years > 0:
+            age_parts.append(f"{time_difference.years} year{'s' if time_difference.years > 1 else ''}")
+        if time_difference.months > 0:
+            age_parts.append(f"{time_difference.months} month{'s' if time_difference.months > 1 else ''}")
+        if time_difference.days > 0:
+            age_parts.append(f"{time_difference.days} day{'s' if time_difference.days > 1 else ''}")
+        if time_difference.hours > 0:
+            age_parts.append(f"{time_difference.hours} hour{'s' if time_difference.hours > 1 else ''}")
+        if time_difference.minutes > 0:
+            age_parts.append(f"{time_difference.minutes} minute{'s' if time_difference.minutes > 1 else ''}")
+        if time_difference.seconds > 0:
+            age_parts.append(f"{time_difference.seconds} second{'s' if time_difference.seconds > 1 else ''}")
+        
+        if not age_parts:
+            return "Just now"
+        
+        return ", ".join(age_parts) + " ago", time_difference
+    
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        return None, None
+
+
+def ec2_setup_status_get_handler(event, bucket_name, project_id):
+    try:
+        ended = None
+        ended_minutes = 0
+        status = ""
+        started, time_difference = get_s3_file_age(bucket_name, f'{project_id}-ec2-setup-started')
+        if not started:
+            status = "EC2 setup is not yet staarted."
+        else:
+            status = f'Setup started since: {started}.'
+            print(f'started => {started}, elapsed => {started}')
+            ended, time_difference = get_s3_file_age(bucket_name, f'{project_id}-ec2-setup-ended')
+            if not ended:
+                print(f'ended => {ended}')
+            else:
+                ended_minutes = time_difference.minutes
+                status = f'Setup ended since: {ended}.'
+                print(f'ended => {ended}, elapsed => {ended}')
+        response = {
+            'statusCode': 200,
+            'body': json.dumps({'started': started, 'ended': ended, 'status': status, 'endedMinutes': ended_minutes}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
+
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
     ('/login', 'POST'): login_post_handler,
@@ -677,6 +826,7 @@ HANDLERS = {
     ('/sg', 'GET'): sg_get_handler,
     ('/apps', 'GET'): apps_get_handler,
     ('/project-info', 'GET'): project_info_get_handler,
+    ('/ec2-setup-status', 'GET'): ec2_setup_status_get_handler,
     ('/logout', 'GET'): logout_get_handler,
     ('/start-ec2', 'GET'): start_ec2_get_handler,
     ('/stop-ec2', 'GET'): stop_ec2_get_handler,
@@ -705,7 +855,7 @@ def lambda_handler(event, context):
         project_info['apps'] = apps
 
         # Remove keys
-        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key']  # Replace with the actual keys you want to remove
+        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key', 'bedrockGatewayApiKey', 'codeServerPassword', 'jupyterLabToken', 'liteLLMApiKey']  # Replace with the actual keys you want to remove
         safe_project_info = {k: v for k, v in project_info.items() if k not in keys_to_remove}
         auth_key = project_info['controller_auth_key']
         # controller_token_bucket = project_info['controller_token_bucket']
@@ -782,6 +932,8 @@ def lambda_handler(event, context):
             return handler(event, project_id)
         elif handler == ec2_schedular_info_get_handler:
             return handler(event, project_id)
+        elif handler == ec2_setup_status_get_handler:
+            return handler(event, project_info['dataBucketName'], project_id)
         else:
             return handler(event)
     

@@ -265,7 +265,7 @@ docker-compose up -d
 - Make sure that you have requested access to the model
 - Edit docker\open-webui\litellm-config.yml
     - Add a model in the model list
-- From the Launcher use shortcut 
+- From the Launcher use shortcut ``ulc``
 
 ### How to add more Bedrock models using LiteLLM (hard way)?
 - Make sure that you have requested access to the model

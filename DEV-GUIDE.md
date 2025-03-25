@@ -92,3 +92,25 @@ start http://%EIP_PUBLIC_DNS%:8107
 - If your app is already running on HTTPS and you want to use Caddy, see the example: caddy\apps\portainer.Caddyfile
 
 
+
+
+
+## How to create a Flask web app
+- Decide a app name. Let's say - my-app
+- Create folder web-apps\my-app. 
+- Create following files in that folder.
+- Create app.py
+    - Write Flask app
+- Create index.html
+    - Write frontend
+- Write my-app.Caddyfile
+    - Decide the Caddy port and application port
+- Create a folder and file: ansible\my-app\my-app.yml
+- Run this command from ansible folder in CMD:
+```bat
+play app-cmd
+```
+
+
+
+

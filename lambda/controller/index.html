@@ -267,7 +267,9 @@
           this.isLoading = true;
           console.log('Allowing...');
           try {
-            const ipResp = await fetch('https://api.ipify.org?format=json');
+            // const ipResp = await fetch('https://api.ipify.org?format=json');
+            const ipResp = await fetch('https://api.my-ip.io/v2/ip.json');
+            
             if (!ipResp.ok) {
               throw new Error(`HTTP error! status: ${ipResp.status}`);
             }

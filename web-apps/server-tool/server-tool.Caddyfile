@@ -1,0 +1,5 @@
+# Server Tool
+:7108 {
+    import common
+    reverse_proxy localhost:8108
+}

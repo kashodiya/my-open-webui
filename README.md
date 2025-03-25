@@ -574,15 +574,10 @@ deploy.bat controller
 Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
 This can be used for demo apps etc.
 
-Disble the scheduler that starts EC2, only keep stop
 Create shortcuts to enable disable schedular
 
-Allow from About
 EC2 state pilling
 Restart Portainer btn
 
-Logout remove session storage, or refresh btn for apps
-
-- Verify 
-    - Git installed via user data
-    - aws Region is set in set-tf-output...bat
+Ansible - add all web-apps
+    - Zip created and uploaded to S3

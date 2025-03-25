@@ -281,7 +281,14 @@ docker-compose restart litellm
 ### How to manage Open WebUI users?
 TODO
 
-
+### I messed up my environment, how I can do clean start again?
+- If you have already run terraform apply, first destroy it:
+```bat
+cd terraform
+terraform destroy
+```
+- Rename the my-open-webui folder to OLD-1-my-open-webui
+- Go to the setup step for git clone and follow again
 
 ### How to check server (running in Docker) logs?
 - SSH into EC2 server  

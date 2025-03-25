@@ -261,7 +261,13 @@ docker-compose up -d
 - Latest image will be automatically downloaded and used
 
 
-### How to add more Bedrock models?
+### How to add more Bedrock models using LiteLLM (easy way)?
+- Make sure that you have requested access to the model
+- Edit docker\open-webui\litellm-config.yml
+    - Add a model in the model list
+- From the Launcher use shortcut ``ulc``
+
+### How to add more Bedrock models using LiteLLM (hard way)?
 - Make sure that you have requested access to the model
 - SSH into EC2 server
 - Edit docker\open-webui\litellm-config.yml
@@ -275,7 +281,14 @@ docker-compose restart litellm
 ### How to manage Open WebUI users?
 TODO
 
-
+### I messed up my environment, how I can do clean start again?
+- If you have already run terraform apply, first destroy it:
+```bat
+cd terraform
+terraform destroy
+```
+- Rename the my-open-webui folder to OLD-1-my-open-webui
+- Go to the setup step for git clone and follow again
 
 ### How to check server (running in Docker) logs?
 - SSH into EC2 server  
@@ -568,15 +581,20 @@ deploy.bat controller
 Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
 This can be used for demo apps etc.
 
-Disble the scheduler that starts EC2, only keep stop
 Create shortcuts to enable disable schedular
 
-Allow from About
 EC2 state pilling
 Restart Portainer btn
 
-Logout remove session storage, or refresh btn for apps
+Web-apps
+- Ansible playbook
+- Update command bat
+- Zip created and uploaded to S3
+- For each app
+    - Config
+        - Enabled?
+        - Caddyfile
+        - Service def
 
-- Verify 
-    - Git installed via user data
-    - aws Region is set in set-tf-output...bat
+set-dev.bat
+    - shortcut help - show again

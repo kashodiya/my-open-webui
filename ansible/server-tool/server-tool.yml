@@ -1,0 +1,38 @@
+---
+- name: Setup and deploy Flask application
+  hosts: your_target_hosts
+  become: yes
+  vars:
+    app_name: "server-tool"
+    port: 8108
+    app_folder: "~/web-apps/{{ app_name }}"
+
+  tasks:
+    - name: Install Python packages from requirements.txt
+      become_user: ec2-user
+      pip:
+        requirements: "{{ app_folder }}/requirements.txt"
+
+    - name: Create systemd service for Flask app
+      template:
+        src: flask_app.service.j2
+        dest: /etc/systemd/system/{{ app_name }}.service
+
+    - name: Reload systemd to apply new service
+      command: systemctl daemon-reload
+
+    - name: Enable and start the Flask app service
+      service:
+        name: "{{ app_name }}"
+        enabled: yes
+        state: started
+
+    - name: Copy Caddyfile
+      copy:
+        src: "{{ app_folder }}/{{ app_name }}.Caddyfile"
+        dest: /etc/caddy/apps/{{ app_name }}.Caddyfile
+
+    - name: Reload Caddy service
+      service:
+        name: caddy
+        state: reloaded

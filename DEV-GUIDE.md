@@ -1,11 +1,38 @@
 # Developers guide
 
+
+## EC2 setup 
+- EC2 setup is done using user-data script.
+- User data script is stored in ec2-user\user-data.sh file.
+- Terraform adds some values as bash env variables at the top of the user-data.sh.
+    - Check local.ec2_user_data in terraform\main.tf
+- A S3 bucket is created with name <project_id>-data-<random_string>
+- You can find the generated S3 bucket in terraform\set-tf-output-2-env-var.bat as DATA_BUCKET_NAME value.
+- Computed ec2-serup.sh is copied to S3 data bucket by Terraform. 
+    - In the user data script that file is copied to /root/ec2-setup.sh and executed.
+- Terraform zips some of the folders like docker, caddy etc. and upload to S3 data bucket.
+- These zip are downloaded on EC2 in ~/code folder. They are copied to ~/docket etc. folders before being used. 
+
+
+## Monitoring EC2 setup
+- When the setup starts it creates a flag file on S3 data bucket
+    - myowu-ec2-setup-started
+- When the setup ends it creates a flag file on S3 data bucket
+    - myowu-ec2-setup-ended
+- Thes flag files are used by the Controller lambda to let user know the status.
+- To see live log of setup use:
+    - scripts\ec2-setup-logs.bat
+    - Or use Launcher shortcut ``esl``.
+- You can see logs from EC2 by using ``tail_setup_log`` command.
+
+
 ## Controller Lambda
 ### How to tail the logs
 - Use launcher shortcut:  
 controller-tail  
 - OR, Use this AWS CLI command  
 aws logs tail /aws/lambda/myowu-controller --follow  
+
 
 ## IP address scheme
 - All the ports between 7000 and 7999 are exposed authomatically by the EC2 security group
@@ -14,12 +41,13 @@ aws logs tail /aws/lambda/myowu-controller --follow
     - Use Caddy to expose 7102 for app running on 8102 locally on EC2.
     - Using this scheme you will be able to guess the Caddy and the application ports, if you know any one of them!
 
+
 ## How to add a docker container
 - Check a sample container included in this repo in: docker\n8n folder.
 - To use this docker container run in CMD window:
 ```bat
 cd docker
-do.bat n8n up
+do.bat n8n up -d
 ```
 - Once you see message ``Container n8n  Running``, press Ctrl+C
 - Optional: 
@@ -29,6 +57,12 @@ do.bat n8n up
 ```bat
 start http://%EIP_PUBLIC_DNS%:7107
 ```
+- To remove containers (example):
+```bat
+do.bat n8n down
+```
+- Why to chamge files locally instead of on EC2?
+    - In case we delete EC2 (in some case admins delete them every month), we have the source code and can create EC2 again easily.
 
 
 ## How to expose app using Caddy
@@ -56,5 +90,27 @@ update.bat my-app.Caddyfile
 start http://%EIP_PUBLIC_DNS%:8107
 ```
 - If your app is already running on HTTPS and you want to use Caddy, see the example: caddy\apps\portainer.Caddyfile
+
+
+
+
+
+## How to create a Flask web app
+- Decide a app name. Let's say - my-app
+- Create folder web-apps\my-app. 
+- Create following files in that folder.
+- Create app.py
+    - Write Flask app
+- Create index.html
+    - Write frontend
+- Write my-app.Caddyfile
+    - Decide the Caddy port and application port
+- Create a folder and file: ansible\my-app\my-app.yml
+- Run this command from ansible folder in CMD:
+```bat
+play app-cmd
+```
+
+
 
 

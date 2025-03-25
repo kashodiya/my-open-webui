@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Tool</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.css" rel="stylesheet">
+  <style>
+  </style>
+
+  <!-- <script type="text/x-template" id="xyz-template">
+    <v-container fluid>
+      <div class="text-h5">Xys</div>
+      <p>About xyz</p>
+    </v-container>
+  </script> -->
+
+  <script type="text/x-template" id="about-template">
+    <v-container fluid>
+      <v-card>
+        <v-card-title class="text-h5">About</v-card-title>
+        <v-card-text>
+          <p>A server tool app.</p>
+        </v-card-text>
+      </v-card>
+    </v-container>
+  </script>
+
+  <script type="text/x-template" id="home-template">
+    <v-container fluid>
+      <v-card>
+        <v-card-title class="text-h5">Home</v-card-title>
+        <v-card-text>
+          <p>Welcome home</p>
+        </v-card-text>
+      </v-card>
+    </v-container>
+  </script>
+
+</head>
+
+<body>
+  <div id="app">
+    <v-app>
+      <v-app-bar color="primary">
+        <v-app-bar-title>Server Tool</v-app-bar-title>
+        <v-spacer></v-spacer>
+        <v-btn to="/">Home</v-btn>
+        <v-btn to="/about">About</v-btn>
+        <v-btn @click="logout">Logout</v-btn>
+      </v-app-bar>
+
+      <v-main>
+        <router-view></router-view>
+      </v-main>
+
+      <v-snackbar v-model="snackbar" :color="snackbarColor">
+        {{ snackbarText }}
+        <template v-slot:actions>
+          <v-btn color="white" text @click="snackbar = false">Close</v-btn>
+        </template>
+      </v-snackbar>
+    </v-app>
+  </div>
+
+  <script src="https://unpkg.com/vue@3.3.4/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.js"></script>
+  <script src="https://unpkg.com/vue-router@4.2.4/dist/vue-router.global.js"></script>
+  <script>
+    const { createApp, ref } = Vue;
+    const { createVuetify } = Vuetify;
+    const { createRouter, createWebHashHistory } = VueRouter;
+
+    const store = {
+      state: {}
+    }
+
+    const Home = {
+      template: '#home-template',
+      data: function () {
+        return {
+          state: store.state
+        }
+      },
+      methods: {
+      },
+      async mounted() {
+        console.log('Home mounted');
+      },
+      created() {
+        console.log('Home created');
+      }
+    }
+
+    const About = {
+      template: '#about-template',
+      data: function () {
+        return {
+          state: store.state,
+        }
+      },
+      methods: {
+      },
+      mounted() {
+        console.log('About mounted');
+      },
+      created() {
+        console.log('About created');
+      }
+    }
+
+    const snackbarMixin = {
+      data() {
+        return {
+          snackbar: false,
+          snackbarText: '',
+          snackbarColor: 'success',
+        }
+      },
+      methods: {
+        showSnackbar(text, color = 'success') {
+          this.snackbarText = text;
+          this.snackbarColor = color;
+          this.snackbar = true;
+        }
+      }
+    };
+
+    const routes = [
+      { path: '/', component: Home },
+      { path: '/about', component: About }
+    ];
+
+    const router = createRouter({
+      history: createWebHashHistory(),
+      routes
+    });
+
+
+    const vuetify = createVuetify();
+
+    const app = createApp({
+      mixins: [snackbarMixin],
+
+      data() {
+        return {
+        };
+      },
+      methods: {
+        async logout() {
+          try {
+            // Do logout
+            // window.location.href = '/login';
+          } catch (error) {
+            console.error("Could not fetch apps:", error);
+          }
+        }
+      }
+    });
+
+    app.use(vuetify);
+    app.use(router);
+    const vm = app.mount('#app');
+  </script>
+
+  <script>
+  </script>
+</body>
+
+</html>

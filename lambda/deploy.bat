@@ -17,7 +17,7 @@ if not exist "%FOLDER_NAME%" (
 )
 
 REM Create the zip file using tar
-tar -acf function.zip -C "%FOLDER_NAME%" .
+tar -acf function.zip -C "%FOLDER_NAME%" *
 
 echo Zip file created: function.zip
 
@@ -50,7 +50,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-del %ZIP_FILE_PATH%
+@REM del %ZIP_FILE_PATH%
 
 echo Lambda function %FUNCTION_NAME% deployed successfully.
 

@@ -382,6 +382,13 @@ module "ec2-setup_zip_upload" {
   output_filename = "ec2-setup.zip"
 }
 
+module "web-apps_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "web-apps"
+  source_dir      = "${path.module}/../web-apps"
+  output_filename = "web-apps.zip"
+}
 
 
 locals {
@@ -431,11 +438,11 @@ resource "aws_instance" "main_instance" {
   # user_data = local.ec2_user_data
   user_data = <<-EOF
 #!/bin/bash
-aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/ec2-setup.sh /tmp/
-chmod +x /tmp/ec2-setup.sh
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/ec2-setup.sh /root/
+chmod +x /root/ec2-setup.sh
 sudo yum install dos2unix -y
-dos2unix /tmp/ec2-setup.sh
-/tmp/ec2-setup.sh
+dos2unix /root/ec2-setup.sh
+/root/ec2-setup.sh
 EOF
 
   root_block_device {

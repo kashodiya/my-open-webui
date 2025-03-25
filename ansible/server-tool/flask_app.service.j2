@@ -1,0 +1,12 @@
+[Unit]
+Description=Flask App {{ app_name }}
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory={{ app_folder }}
+EnvironmentFile=-/home/ec2-user/.bashrc
+ExecStart=flask run --port 8108 --debug
+
+[Install]
+WantedBy=multi-user.target

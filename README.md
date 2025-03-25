@@ -579,5 +579,15 @@ Create shortcuts to enable disable schedular
 EC2 state pilling
 Restart Portainer btn
 
-Ansible - add all web-apps
-    - Zip created and uploaded to S3
+Web-apps
+- Ansible playbook
+- Update command bat
+- Zip created and uploaded to S3
+- For each app
+    - Config
+        - Enabled?
+        - Caddyfile
+        - Service def
+
+set-dev.bat
+    - shortcut help - show again

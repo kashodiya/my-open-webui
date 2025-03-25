@@ -382,6 +382,13 @@ module "ec2-setup_zip_upload" {
   output_filename = "ec2-setup.zip"
 }
 
+module "web-apps_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "web-apps"
+  source_dir      = "${path.module}/../web-apps"
+  output_filename = "web-apps.zip"
+}
 
 
 locals {

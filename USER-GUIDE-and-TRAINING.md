@@ -137,6 +137,45 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Scroll down and explore some community tool
 - Get inspired and create your own tool
 
+
+### Pie that will echo your question
+- Settings => Admin Settings => Functions
+- Click '+' icon on top right.
+- Name: Echo Pipe, Description: Echo the question
+```python
+from pydantic import BaseModel, Field
+
+
+class Pipe:
+    class Valves(BaseModel):
+        MODEL_ID: str = Field(default="")
+
+    def __init__(self):
+        self.valves = self.Valves()
+
+    def pipe(self, body: dict):
+        # Logic goes here
+        print(
+            self.valves, body
+        )  # This will print the configuration options and the input body
+
+        question = body["messages"][0]["content"]
+
+        return f"Body: {body}\nQuestion: {question}"
+```
+- Save
+- On Functions page, enable Echo Pipe
+- New chat
+- Refresh page
+- Select model - Echo Pipe
+- Ask a question
+#### Challenge exercise
+- Create a Image Generation pipe
+- Use this sample code to generate image:
+https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-runtime_example_bedrock-runtime_InvokeModel_StableDiffusion_section.html
+- Get inspired by: https://openwebui.com/f/bgeneto/dall_e 
+
+
 ## Use Ollama via Open WebUI
 - Ollama is a server which can serve local LLM models
 - You can also use Haggingface models
@@ -169,7 +208,7 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - Explore other APIs
 
 
-### Use LiteLLM to talk to Bedrock
+### Use LiteLLM proxy to talk to Bedrock
 - Open Jupyter Lab
 - Navigate to /home/ec2-user
 - Create new Notebook
@@ -198,7 +237,7 @@ else:
 - Review code
 
 
-### Use LangChain to talk to Bedrock via LiteLLM
+### Use LangChain to talk to Bedrock via LiteLLM proxy
 - Open Jupyter Lab
 - Navigate to /home/ec2-user
 - Create new Notebook
@@ -220,6 +259,25 @@ print(response)
 - Run code
 - Review code
 
+
+### Use LiteLLM python package directly
+- Use Jupyter Lab to run following code.
+    - Note that it expects "bedrock/anthropic.claude-3-haiku-20240307-v1:0" to be approved. Or use any text model that you have access. 
+    - Edit code to use the real key.
+```python
+from litellm import completion
+
+model="bedrock/anthropic.claude-3-haiku-20240307-v1:0"
+prompt = "What is the capital of India"
+
+response = completion(
+  api_key="123123",  
+  model=model, 
+  messages=[{ "content": prompt,"role": "user"}]
+)    
+
+print(response.choices[0].message.content)
+```
 
 
 ## EC2 and other tools guide

@@ -89,7 +89,7 @@
 
   <script type="text/x-template" id="home-template">
     <v-container fluid>
-      <v-row v-if="ec2SetupStatus.endedMinutes < 5">
+      <v-row v-if="ec2SetupStatus.endedMinutes < 5 && ec2SetupStatus.endedHours < 1">
         <v-col>
           EC2 Setup Status: {{ec2SetupStatus.status}}
         </v-col>
@@ -262,33 +262,6 @@
             console.error("Error stopping EC2:", error);
             this.$root.showSnackbar("Error stopping EC2", 'error');
           }
-        },
-        async allowIp() {
-          this.isLoading = true;
-          console.log('Allowing...');
-          try {
-            // const ipResp = await fetch('https://api.ipify.org?format=json');
-            const ipResp = await fetch('https://api.my-ip.io/v2/ip.json');
-            
-            if (!ipResp.ok) {
-              throw new Error(`HTTP error! status: ${ipResp.status}`);
-            }
-            let ipData = await ipResp.json();
-            console.log({ ip: ipData.ip });
-
-            const response = await fetch(`${baseUrl}/allow?ip=${ipData.ip}`);
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const reply = await response.json();
-            console.log({ reply });
-
-          } catch (error) {
-            console.error("Could not allow: ", error);
-          } finally {
-            this.isLoading = false;
-          }
         }
       },
       async mounted() {
@@ -372,8 +345,8 @@
       methods: {
         async allow() {
           try {
-            // Use the ipify API to get the IP address
-            let response = await fetch('https://api.ipify.org?format=json');
+            // let response = await fetch('https://api.ipify.org?format=json');
+            let response = await fetch('https://api.my-ip.io/v2/ip.json');
             const data = await response.json();
 
             // Extract the IP address from the response

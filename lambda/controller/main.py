@@ -795,11 +795,12 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
                 print(f'ended => {ended}')
             else:
                 ended_minutes = time_difference.minutes
+                ended_hours = time_difference.hours
                 status = f'Setup ended since: {ended}.'
                 print(f'ended => {ended}, elapsed => {ended}')
         response = {
             'statusCode': 200,
-            'body': json.dumps({'started': started, 'ended': ended, 'status': status, 'endedMinutes': ended_minutes}),
+            'body': json.dumps({'started': started, 'ended': ended, 'status': status, 'endedMinutes': ended_minutes, 'endedHours': ended_hours}),
             'headers': {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'

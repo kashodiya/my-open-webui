@@ -795,7 +795,8 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
                 print(f'ended => {ended}')
             else:
                 ended_minutes = time_difference.minutes
-                ended_hours = time_difference.hours
+                # ended_hours = time_difference.hours
+                ended_hours = getattr(time_difference, 'hours', 0)
                 status = f'Setup ended since: {ended}.'
                 print(f'ended => {ended}, elapsed => {ended}')
         response = {

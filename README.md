@@ -586,7 +586,15 @@ Create shortcuts to enable disable schedular
 EC2 state pilling
 Restart Portainer btn
 
+Fix ended hours
+"error": "cannot access local variable 'ended_hours' where it is not associated with a value"
+
 Web-apps
+- Change user-data.sh to 
+    - Unzip web-apps
+    - Copy to ~/web-apps
+    - mkdir ansible
+    - Unzip ansible
 - Ansible playbook
 - Update command bat
 - Zip created and uploaded to S3
@@ -598,3 +606,7 @@ Web-apps
 
 set-dev.bat
     - shortcut help - show again
+
+
+- VERIFY
+    - Ansible is installed

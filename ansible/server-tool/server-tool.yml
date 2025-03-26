@@ -1,11 +1,11 @@
 ---
 - name: Setup and deploy Flask application
-  hosts: your_target_hosts
+  hosts: localhost
   become: yes
   vars:
     app_name: "server-tool"
     port: 8108
-    app_folder: "~/web-apps/{{ app_name }}"
+    app_folder: "/home/ec2-user/web-apps/{{ app_name }}"
 
   tasks:
     - name: Install Python packages from requirements.txt
@@ -14,9 +14,21 @@
         requirements: "{{ app_folder }}/requirements.txt"
 
     - name: Create systemd service for Flask app
-      template:
-        src: flask_app.service.j2
+      copy:
         dest: /etc/systemd/system/{{ app_name }}.service
+        content: |
+          [Unit]
+          Description=Flask App {{ app_name }}
+          After=network.target
+
+          [Service]
+          User=ec2-user
+          WorkingDirectory={{ app_folder }}
+          ExecStart=/bin/bash -c 'source /home/ec2-user/.bashrc && flask run --port {{ port }}'
+          Restart=always
+
+          [Install]
+          WantedBy=multi-user.target
 
     - name: Reload systemd to apply new service
       command: systemctl daemon-reload

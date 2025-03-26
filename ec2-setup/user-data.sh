@@ -154,6 +154,8 @@ get_code_from_s3 (){
     sudo chown -R ec2-user:ec2-user $CODE_DIR
     cp -a /home/ec2-user/code/docker /home/ec2-user/
     cp -a /home/ec2-user/code/scripts /home/ec2-user/
+    cp -a /home/ec2-user/code/ansible /home/ec2-user/
+    cp -a /home/ec2-user/code/web-apps /home/ec2-user/
 
     echo "Download and unzip process completed."
 }
@@ -332,7 +334,7 @@ install_jupyterlab() {
     else
         echo "Installing JupyterLab..."
         su - ec2-user -c '
-            $HOME/miniconda/bin/pip install --quiet jupyterlab boto3
+            $HOME/miniconda/bin/pip install --quiet jupyterlab boto3 ansible
             $HOME/miniconda/bin/jupyter --version
         '
     fi

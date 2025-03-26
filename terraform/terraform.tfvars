@@ -1,7 +1,7 @@
 # DO NOT MODIFY THIS FILE, CREATE "terraform\terraform.tfvars.json" AND OVERWRITE ANY VALUES YOU WANT TO CHANGE
 # vpc_id               = ""
 # subnet_cidr          = ""
-allowed_source_ips      = ["34.145.226.111/32","34.145.226.210/32"]
+allowed_source_ips      = []
 ami                     = "ami-08a0d1e16fc3f61ea"
 instance_type           = "m5.2xlarge"
 project_id              = "myowu"

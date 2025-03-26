@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 :: Check if a parameter is provided
 if "%~1"=="" (
-    echo You must provide a folder name.
+    echo You must provide a folder name of the web app.
     exit /b 1
 )
 
@@ -14,9 +14,7 @@ set "folderName=%~1"
 if exist "%folderName%\" (
     echo Folder "%folderName%" exists.
     echo Copying files to EC2...
-    scp -i "%PROJECT_DIR%\keys\private_key.pem" -r "%folderName%" ec2-user@%ELASTIC_IP%:~/ansible
-    echo Running ansible playbook on EC2...
-    ssh -i "%PROJECT_DIR%\keys\private_key.pem" ec2-user@%ELASTIC_IP% "cd ~/ansible/%folderName% && ansible-playbook %folderName%.yml"
+    scp -i "%PROJECT_DIR%\keys\private_key.pem" -r "%folderName%" ec2-user@%ELASTIC_IP%:~/web-apps
     echo Done.
 ) else (
     echo Folder "%folderName%" does not exist.

@@ -377,17 +377,6 @@ def read_file_from_s3(controller_token_bucket, file_key):
             print(f"An error occurred: {e}")
         return None
 
-def XXXallow_get_handler(event, ec2_security_group_id):
-    query_params = event.get('queryStringParameters', {})
-    allow_ip = query_params.get('ip')    
-    ip_range = f'{allow_ip}/32'
-    add_ingress_rule(ip_range)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'result': f'Money transferred'}),
-    }
-
-
 
 
 def allow_get_handler(event, ec2_security_group_id):
@@ -465,7 +454,7 @@ def allow_get_handler(event, ec2_security_group_id):
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    'message': 'Money already transferred',
+                    'message': 'Already allowed',
                     'error': False
                 })
             }
@@ -474,7 +463,7 @@ def allow_get_handler(event, ec2_security_group_id):
             return {
                 'statusCode': 500,
                 'body': json.dumps({
-                    'message': 'Failed to transfer money',
+                    'message': 'Allowed',
                     'error': str(e)
                 })
             }        
@@ -783,6 +772,7 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
     try:
         ended = None
         ended_minutes = 0
+        ended_hours = 0
         status = ""
         started, time_difference = get_s3_file_age(bucket_name, f'{project_id}-ec2-setup-started')
         if not started:

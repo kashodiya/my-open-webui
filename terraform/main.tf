@@ -390,6 +390,13 @@ module "web-apps_zip_upload" {
   output_filename = "web-apps.zip"
 }
 
+module "ansible_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "ansible"
+  source_dir      = "${path.module}/../ansible"
+  output_filename = "ansible.zip"
+}
 
 locals {
   # caddy_folder = "${path.module}/../caddy"

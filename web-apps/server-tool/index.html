@@ -30,6 +30,38 @@
     </v-container>
   </script>
 
+  <script type="text/x-template" id="login-template">
+    <v-container class="fill-height" fluid>
+      <v-row align="center" justify="center">
+        <v-col cols="12" sm="8" md="4">
+          <v-card class="elevation-12">
+            <v-toolbar color="primary" dark flat>
+              <v-toolbar-title>Login</v-toolbar-title>
+            </v-toolbar>
+            <v-card-text>
+              <v-form @submit.prevent="login" ref="form">
+                <v-text-field
+                  v-model="password"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="showPassword ? 'text' : 'password'"
+                  name="password"
+                  label="Password"
+                  id="password"
+                  :rules="[rules.required, rules.min]"
+                  @click:append="showPassword = !showPassword"
+                ></v-text-field>
+              </v-form>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="login" :loading="loading">Login</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+  </script>
+
   <script type="text/x-template" id="home-template">
     <v-container fluid>
       <v-card>
@@ -97,6 +129,65 @@
       }
     }
 
+
+    const Login = {
+      template: '#login-template',
+      data: function () {
+        return {
+          state: store.state,
+          password: '',
+          showPassword: false,
+          loading: false,
+          rules: {
+            required: value => !!value || 'Required.',
+            min: v => v.length >= 8 || 'Min 8 characters',
+          },
+        }
+      },
+      methods: {
+        async login() {
+          if (this.$refs.form.validate()) {
+            this.loading = true;
+            try {
+              // Replace this with your actual login logic
+              const response = await this.performLogin(this.password);
+              const token = response.token;
+
+              // Set the token cookie
+              document.cookie = `token=${token}; path=/; SameSite=Strict`;
+
+              // Redirect to home page or dashboard
+              this.$router.push('/');
+            } catch (error) {
+              console.error('Login failed:', error);
+              // Handle login error (e.g., show error message)
+            } finally {
+              this.loading = false;
+            }
+          }
+        },
+        performLogin(password) {
+          // Replace this with your actual API call
+          return new Promise((resolve, reject) => {
+            // Simulating API call
+            setTimeout(() => {
+              if (password === '123123123') {
+                resolve({ token: 'fake-jwt-token' });
+              } else {
+                reject(new Error('Invalid password'));
+              }
+            }, 1000);
+          });
+        },
+      },
+      mounted() {
+        console.log('Login mounted');
+      },
+      created() {
+        console.log('Login created');
+      }
+    }
+
     const About = {
       template: '#about-template',
       data: function () {
@@ -112,6 +203,18 @@
       created() {
         console.log('About created');
       }
+    }
+
+
+    function checkAuthCookie() {
+      const cookies = document.cookie.split(';')
+      for (let cookie of cookies) {
+        cookie = cookie.trim()
+        if (cookie.startsWith('token=')) {
+          return true // Token cookie exists
+        }
+      }
+      return false // Token cookie not found
     }
 
     const snackbarMixin = {
@@ -132,14 +235,25 @@
     };
 
     const routes = [
-      { path: '/', component: Home },
-      { path: '/about', component: About }
+      { path: '/', name: 'Home', component: Home },
+      { path: '/login', name: 'Login', component: Login },
+      { path: '/about', name: 'About', component: About }
     ];
 
     const router = createRouter({
       history: createWebHashHistory(),
       routes
     });
+
+    // Add a global navigation guard
+    router.beforeEach((to, from, next) => {
+      const isAuthenticated = checkAuthCookie()
+      if (to.name !== 'Login' && !isAuthenticated) {
+        next({ name: 'Login' })
+      } else {
+        next()
+      }
+    })
 
 
     const vuetify = createVuetify();

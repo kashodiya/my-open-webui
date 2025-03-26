@@ -52,6 +52,8 @@ cd my-open-webui
 - Either set the AWS credentials env vars
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
+- Note that your creadentials and config files are in .aws folder in your HOME folder.
+    - If you do not have this folder or files, you should do ``aws configure``, or create them manually.
 #### How to get credentials:
 - If you are using AWS Access Portal, after login, you will see screen like (Click on your name):  
 <img src="docs/images/aws-login.PNG" width="100%" alt="Screen after AWS login">

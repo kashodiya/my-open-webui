@@ -22,8 +22,10 @@ flask run --debug
 ## Manage system service
 ```bash
 sudo systemctl restart server-tool
-
+sudo systemctl status server-tool
 sudo systemctl stop server-tool
+sudo journalctl -u server-tool
+sudo journalctl -fu server-tool
 
 ```
 

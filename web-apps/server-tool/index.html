@@ -149,18 +149,41 @@
           if (this.$refs.form.validate()) {
             this.loading = true;
             try {
-              // Replace this with your actual login logic
-              const response = await this.performLogin(this.password);
-              const token = response.token;
+              const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: this.password }),
+              });
+              if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+                if(data.token){
+                  console.log('Login success');
+                  document.cookie = `token=${data.token}; path=/; SameSite=Strict`;
+                  this.$router.push('/');
+                }else{
+                  console.log(data.error || 'Login failed');
+                  this.$root.showSnackbar('Login failed.', 'error');
+                }
+              } else {
+                  const errorData = await response.json();
+                  console.log(errorData.error || 'Login failed');
+                  this.$root.showSnackbar('Login failed.', 'error');
+              }
+
+              // // Replace this with your actual login logic
+              // const response = await this.performLogin(this.password);
+              // const token = response.token;
 
               // Set the token cookie
-              document.cookie = `token=${token}; path=/; SameSite=Strict`;
+              // document.cookie = `token=${token}; path=/; SameSite=Strict`;
 
               // Redirect to home page or dashboard
-              this.$router.push('/');
             } catch (error) {
               console.error('Login failed:', error);
-              // Handle login error (e.g., show error message)
+              this.$root.showSnackbar('Login failed.', 'error');
             } finally {
               this.loading = false;
             }
@@ -205,18 +228,6 @@
       }
     }
 
-
-    function checkAuthCookie() {
-      const cookies = document.cookie.split(';')
-      for (let cookie of cookies) {
-        cookie = cookie.trim()
-        if (cookie.startsWith('token=')) {
-          return true // Token cookie exists
-        }
-      }
-      return false // Token cookie not found
-    }
-
     const snackbarMixin = {
       data() {
         return {
@@ -233,6 +244,17 @@
         }
       }
     };
+
+    function checkAuthCookie() {
+      const cookies = document.cookie.split(';')
+      for (let cookie of cookies) {
+        cookie = cookie.trim()
+        if (cookie.startsWith('token=')) {
+          return true // Token cookie exists
+        }
+      }
+      return false // Token cookie not found
+    }
 
     const routes = [
       { path: '/', name: 'Home', component: Home },
@@ -268,8 +290,9 @@
       methods: {
         async logout() {
           try {
-            // Do logout
-            // window.location.href = '/login';
+            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            console.log("User logged out successfully");
+            this.$router.push({ name: 'Login' })
           } catch (error) {
             console.error("Could not fetch apps:", error);
           }

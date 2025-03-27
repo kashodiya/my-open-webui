@@ -76,6 +76,7 @@ cd my-open-webui
 ```json
 {
     "code_server_password": "fill--me",
+    "server_tool_password": "fill--me",
     "litellm_api_key": "fill--me",
     "jupyter_lab_token": "fill--me",
     "controller_auth_key": "fill--me",

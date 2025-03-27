@@ -57,8 +57,8 @@ echo esl = See EC2 setup logs
 doskey ulc=%SCRIPTS_DIR%\update-litellm-config.bat
 echo ulc = Update LiteLLM config
 
-doskey controller-tail=aws logs tail /aws/lambda/myowu-controller --follow
-echo controller-tail = Opens Controller in Browser
+doskey tcl=aws logs tail /aws/lambda/myowu-controller --follow
+echo tcl = Tail Controller Lambda logs
 
 
 doskey tec2=ssh-keygen -R %ELASTIC_IP% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance $T %SCRIPTS_DIR%\tf-apply.bat 

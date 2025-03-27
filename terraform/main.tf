@@ -60,6 +60,17 @@ variable "bedrock_gateway_api_key" {
   }
 }
 
+
+variable "server_tool_password" {
+  type        = string
+  description = "Server Tool password"
+  sensitive   = true  # Changed to true for security
+  validation {
+    condition     = length(var.server_tool_password) >= 8
+    error_message = "The password for Server Tool must be at least 8 characters long."
+  }
+}
+
 provider "aws" {
   region = var.region
 }
@@ -189,6 +200,14 @@ resource "aws_security_group" "allow_sources" {
     protocol    = "tcp"
     cidr_blocks = local.all_allowed_ips
   }
+
+  # ingress {
+  #   description     = "Allow ingress from controller lambda security group"
+  #   from_port       = 0
+  #   to_port         = 65535
+  #   protocol        = "tcp"
+  #   security_groups = [aws_security_group.controller_lambda_sg.id]
+  # }
 
   # ingress {
   #   # Do not change this description, it is used in controller lambda
@@ -503,7 +522,32 @@ data "archive_file" "controller_lambda_zip" {
 }
 
 
+
+# Define the AWS Lambda Layer
+resource "aws_lambda_layer_version" "common_layer" {
+  layer_name = "common-layer"
+  
+  filename = data.archive_file.layer_zip.output_path
+  
+  compatible_runtimes = ["python3.8", "python3.9"] # Adjust as needed
+  
+  description = "Common Lambda Layer for shared dependencies"
+}
+
+# Create a zip file from the layer packages
+data "archive_file" "layer_zip" {
+  type        = "zip"
+  source_dir  = "${path.module}/../lambda/layer/package"
+  output_path = "${path.module}/../lambda/layer.zip"
+}
+
 resource "random_string" "bucket_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+resource "random_string" "server_tool_jwt_secret" {
   length  = 8
   special = false
   upper   = false
@@ -527,7 +571,6 @@ resource "random_string" "controller_jwt_secret_key" {
   upper   = false
 }
 
-
 resource "aws_lambda_function" "main_controller_lambda" {
   filename         = data.archive_file.controller_lambda_zip.output_path
   function_name    = "${var.project_id}-controller"
@@ -536,6 +579,13 @@ resource "aws_lambda_function" "main_controller_lambda" {
   runtime          = "python3.12" # Or your preferred Python runtime
   source_code_hash = data.archive_file.controller_lambda_zip.output_base64sha256
   timeout          = 60
+
+  layers = [aws_lambda_layer_version.common_layer.arn]
+
+  # vpc_config {
+  #   subnet_ids         = [aws_subnet.public.id]
+  #   security_group_ids = [aws_security_group.controller_lambda_sg.id]
+  # }
 
   # depends_on = [aws_s3_bucket.data_bucket]
 
@@ -551,6 +601,27 @@ resource "aws_lambda_function" "main_controller_lambda" {
     CreatedBy = "terraform"
   }
 }
+
+
+# resource "aws_security_group" "controller_lambda_sg" {
+#   name        = "${var.project_id}-lambda-sg"
+#   description = "Security group for Lambda function"
+#   vpc_id      = aws_vpc.main.id
+
+#   # Add any necessary ingress/egress rules
+#   # For example:
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = ["0.0.0.0/0"]
+#   }
+
+#   tags = {
+#     Name      = "${var.project_id}controller-lambda-sg"
+#     CreatedBy = "terraform"
+#   }
+# }
 
 resource "aws_lambda_function_url" "controller_lambda_url" {
   function_name      = aws_lambda_function.main_controller_lambda.function_name
@@ -766,6 +837,8 @@ resource "aws_ssm_parameter" "resource_ids" {
     controllerUrl             = aws_lambda_function_url.controller_lambda_url.function_url,
     dataBucketName            = aws_s3_bucket.data_bucket.id,
     codeServerPassword        = var.code_server_password,
+    serverToolPassword        = var.server_tool_password,
+    serverToolJwtSecret       = random_string.server_tool_jwt_secret.result,
     liteLLMApiKey             = var.litellm_api_key,
     jupyterLabToken           = var.jupyter_lab_token,
     bedrockGatewayApiKey      = var.bedrock_gateway_api_key,

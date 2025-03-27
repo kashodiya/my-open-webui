@@ -8,10 +8,26 @@
     app_folder: "/home/ec2-user/web-apps/{{ app_name }}"
 
   tasks:
+    # - name: Install Python packages from requirements.txt
+    #   become_user: ec2-user
+    #   pip:
+    #     requirements: "{{ app_folder }}/requirements.txt"
+
     - name: Install Python packages from requirements.txt
       become_user: ec2-user
-      pip:
-        requirements: "{{ app_folder }}/requirements.txt"
+      shell: |
+        source ~/.bashrc
+        pip install -r "{{ app_folder }}/requirements.txt"
+
+    # - name: Create AWS SSM Parameters
+    #   community.aws.aws_ssm_parameter_store:
+    #     name: "/{{ lookup('env', 'PROJECT_ID') }}/server-tool/{{ item.key }}"
+    #     value: "{{ item.value }}"
+    #     type: SecureString
+    #     overwrite: yes
+    #   loop:
+    #     - { key: "jwt_secret_key", value: "lkjsdfahladhdslds" }
+    #     - { key: "password", value: "testtest" }
 
     - name: Create systemd service for Flask app
       copy:
@@ -24,7 +40,7 @@
           [Service]
           User=ec2-user
           WorkingDirectory={{ app_folder }}
-          ExecStart=/bin/bash -c 'source /home/ec2-user/.bashrc && flask run --port {{ port }}'
+          ExecStart=/bin/bash -c 'source /home/ec2-user/.bashrc && flask run --port {{ port }} --debug'
           Restart=always
 
           [Install]
@@ -48,3 +64,10 @@
       service:
         name: caddy
         state: reloaded
+
+    - name: Source .bashrc and run Python script
+      become_user: ec2-user
+      shell: |
+        source /home/ec2-user/.bashrc && python ~/scripts/generate-app-urls.py
+      args:
+        executable: /bin/bash

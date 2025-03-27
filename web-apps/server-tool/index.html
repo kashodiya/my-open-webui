@@ -103,6 +103,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.js"></script>
   <script src="https://unpkg.com/vue-router@4.2.4/dist/vue-router.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>  
   <script>
     const { createApp, ref } = Vue;
     const { createVuetify } = Vuetify;
@@ -290,7 +291,8 @@
       methods: {
         async logout() {
           try {
-            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            Cookies.remove('token');            
             console.log("User logged out successfully");
             this.$router.push({ name: 'Login' })
           } catch (error) {

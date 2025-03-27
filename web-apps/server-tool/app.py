@@ -12,17 +12,20 @@ app = Flask(__name__)
 
 # Global dictionary
 store = {}
+# Get the region from the environment variable
+AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')  # Default to 'us-east-1' if not set
+
 
 def init():
-    print('before_request...')
     project_id = os.environ.get('PROJECT_ID')
     parameter_name = f'/{project_id}/info'
     project_info = get_project_info(parameter_name)
     store['project_info'] = project_info
-    print(project_info)
+    print('Got project_info from Param Store')
 
 def get_project_info(parameter_name):
-    ssm_client = boto3.client('ssm')
+    # Create the SSM client with the specified region
+    ssm_client = boto3.client('ssm', region_name=AWS_REGION)    
     try:
         response = ssm_client.get_parameter(Name=parameter_name, WithDecryption=True)
         parameter_value = response['Parameter']['Value']
@@ -41,11 +44,13 @@ def require_auth(f):
     def decorator(*args, **kwargs):
         # Check for token in Authorization header
         token = request.headers.get('Authorization')
-        if token == store['project_info']['serverToolPassword']:
+        print(f'Bearer token: {token}')
+        auth_pwd = store['project_info']['serverToolPassword']
+        if token == f'Bearer {auth_pwd}':
             return f(*args, **kwargs)
         
         # Check for JWT in cookie
-        jwt_token = request.cookies.get('jwt')
+        jwt_token = request.cookies.get('token')
         if jwt_token:
             try:
                 # Verify and decode the JWT

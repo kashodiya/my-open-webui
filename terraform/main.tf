@@ -417,6 +417,14 @@ module "ansible_zip_upload" {
   output_filename = "ansible.zip"
 }
 
+module "code-server-extensions_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "code-server-extensions"
+  source_dir      = "${path.module}/../code-server-extensions"
+  output_filename = "code-server-extensions.zip"
+}
+
 locals {
   # caddy_folder = "${path.module}/../caddy"
 

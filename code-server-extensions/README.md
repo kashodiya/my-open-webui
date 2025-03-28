@@ -13,19 +13,8 @@
 cd code-server-extensions
 update <extension name>
 ```
-- This command will copy your extension cord to EC2 server and deploy it.
+- This command will copy your extension code to EC2 server and deploy it.
 - To test the extension open code-server in your browser. If it is already open, then just refresh the window.
 
 
-
-
-
-
-## TODO:
-- sudo dnf install nodejs -y
-- sudo npm install -g vsce
-- Zip code-server-extensions S3 unzip
-
-- 
-sudo journalctl -fu code-server@ec2-user
 

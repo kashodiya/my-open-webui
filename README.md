@@ -581,35 +581,9 @@ deploy.bat controller
 
 ## TODO:
 
-Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
-This can be used for demo apps etc.
+Create shortcuts to enable disable ec2 schedular
 
-Create shortcuts to enable disable schedular
-
-EC2 state pilling
 Restart Portainer btn
-
-Fix ended hours
-"error": "cannot access local variable 'ended_hours' where it is not associated with a value"
-
-Web-apps
-- Change user-data.sh to 
-    - Unzip web-apps
-    - Copy to ~/web-apps
-    - mkdir ansible
-    - Unzip ansible
-- Ansible playbook
-- Update command bat
-- Zip created and uploaded to S3
-- For each app
-    - Config
-        - Enabled?
-        - Caddyfile
-        - Service def
 
 set-dev.bat
     - shortcut help - show again
-
-
-- VERIFY
-    - Ansible is installed

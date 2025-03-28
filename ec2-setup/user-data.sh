@@ -156,6 +156,7 @@ get_code_from_s3 (){
     cp -a /home/ec2-user/code/scripts /home/ec2-user/
     cp -a /home/ec2-user/code/ansible /home/ec2-user/
     cp -a /home/ec2-user/code/web-apps /home/ec2-user/
+    cp -a /home/ec2-user/code/code-server-extensions /home/ec2-user/
 
     echo "Download and unzip process completed."
 }
@@ -384,9 +385,14 @@ EOF'
 }
 
 create_utils() {
-
     echo "Installing git..."
     sudo yum install git -y    
+
+    echo "Installing nodejs..."
+    sudo dnf install nodejs -y
+
+    echo "Installing vsce..."
+    sudo npm install -g vsce
 
     mkdir -p /home/ec2-user/.local/bin
     cat << 'EOF' > /home/ec2-user/.local/bin/tail_setup_log

@@ -41,12 +41,6 @@ function activate(context) {
 	// systemServices.forEach(servince => {
 	// });
 
-
-// 	"command": "my-utils.show-jupyter-lab-logs",
-// 	"title": "My Utils: Show Jupyter Lab logs"
-//   },{
-// 	"command": "my-utils.show-code-server-logs",
-
 	const showCaddyLogs = vscode.commands.registerCommand('my-utils.show-caddy-logs', function () {
 		executeInTerminal('sudo journalctl -fu caddy');
 	});

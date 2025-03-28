@@ -15,6 +15,7 @@ services:
       - "8106:80"
     networks:
       - shared_network
+    restart: unless-stopped
 
 networks:
   shared_network:

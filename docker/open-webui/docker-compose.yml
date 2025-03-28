@@ -51,6 +51,7 @@ services:
       - ./litellm-config.yml:/app/config.yaml
     ports:
       - "8105:80"
+    restart: unless-stopped
     environment:
       # See ec2-setup\user-data.sh for how LITELLM_API_KEY is created
       - LITELLM_API_KEY=${LITELLM_API_KEY}

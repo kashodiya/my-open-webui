@@ -57,7 +57,7 @@ echo esl = See EC2 setup logs
 doskey ulc=%SCRIPTS_DIR%\update-litellm-config.bat
 echo ulc = Update LiteLLM config
 
-doskey controller-tail=aws logs tail /aws/lambda/myowu-controller --follow
+doskey controller-tail=aws logs tail /aws/lambda/%PROJECT_ID%-controller --follow
 echo controller-tail = Opens Controller in Browser
 
 

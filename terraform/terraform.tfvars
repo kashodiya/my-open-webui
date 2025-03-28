@@ -4,7 +4,7 @@
 allowed_source_ips      = []
 ami                     = "ami-08a0d1e16fc3f61ea"
 instance_type           = "m5.2xlarge"
-project_id              = "myowu"
+project_id              = "myowuty"
 code_server_password    = ""
 litellm_api_key         = ""
 bedrock_gateway_api_key = ""

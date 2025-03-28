@@ -1,0 +1,10 @@
+version: '3'
+services:
+  web:
+    image: httpd:latest
+    container_name: my-apache-container
+    ports:
+      - "7110:80"
+    volumes:
+      - ./website:/usr/local/apache2/htdocs
+    restart: unless-stopped

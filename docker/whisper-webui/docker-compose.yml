@@ -1,0 +1,9 @@
+version: '3'
+services:
+  openai-whisper-webapp:
+    container_name: whisper-webui
+    ports:
+      - '8501:8501'
+    environment:
+      - DEVICE=cpu
+    image: 'amrrs/openai-whisper-webapp:latest'

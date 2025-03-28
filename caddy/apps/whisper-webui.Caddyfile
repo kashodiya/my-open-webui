@@ -1,0 +1,5 @@
+# Whisper-WebUI
+:7501 {
+    import common
+    reverse_proxy localhost:8501
+}

@@ -24,7 +24,7 @@ echo tfd = Terraform destroy
 doskey cdd=cd %PROJECT_DIR%
 echo cdd = CD to project directory
 
-doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ConnectTimeout=1200 ec2-user@%ELASTIC_IP%
+doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ServerAliveInterval=60 -o ServerAliveCountMax=180 ec2-user@%ELASTIC_IP%
 echo sshe = SSH into EC2
 
 doskey ec2=aws ec2 start-instances --instance-ids %INSTANCE_ID%
@@ -62,6 +62,7 @@ echo controller-tail = Opens Controller in Browser
 
 
 doskey tec2=ssh-keygen -R %ELASTIC_IP% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance $T %SCRIPTS_DIR%\tf-apply.bat 
+echo tec2 = Taint ec2 and destroy and recreate it
 
 doskey rkh=ssh-keygen -R %ELASTIC_IP%  
 echo rkh = Remove known SSH host

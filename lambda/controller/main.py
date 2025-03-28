@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 import boto3
 from botocore.exceptions import ClientError
 from dateutil.relativedelta import relativedelta
+# import requests
 
 
 # Add the /package directory to the Python path
@@ -279,6 +280,29 @@ def start_ec2_get_handler(event, instance_id):
     return response
 
 
+
+def ec2_status_get_handler(event, instance_id):
+    try:
+        status = get_ec2_instance_status(instance_id)
+        response = {
+            'statusCode': 200,
+            'body': json.dumps(status),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        response = {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    return response
+
 def apps_get_handler(event, apps):
     try:
         response = {
@@ -377,17 +401,6 @@ def read_file_from_s3(controller_token_bucket, file_key):
             print(f"An error occurred: {e}")
         return None
 
-def XXXallow_get_handler(event, ec2_security_group_id):
-    query_params = event.get('queryStringParameters', {})
-    allow_ip = query_params.get('ip')    
-    ip_range = f'{allow_ip}/32'
-    add_ingress_rule(ip_range)
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'result': f'Money transferred'}),
-    }
-
-
 
 
 def allow_get_handler(event, ec2_security_group_id):
@@ -465,7 +478,7 @@ def allow_get_handler(event, ec2_security_group_id):
             return {
                 'statusCode': 200,
                 'body': json.dumps({
-                    'message': 'Money already transferred',
+                    'message': 'Already allowed',
                     'error': False
                 })
             }
@@ -474,7 +487,7 @@ def allow_get_handler(event, ec2_security_group_id):
             return {
                 'statusCode': 500,
                 'body': json.dumps({
-                    'message': 'Failed to transfer money',
+                    'message': 'Allowed',
                     'error': str(e)
                 })
             }        
@@ -778,11 +791,38 @@ def get_s3_file_age(bucket_name, file_name):
         print(f"Error: {str(e)}")
         return None, None
 
+def get_ec2_instance_status(instance_id):
+    """
+    Returns the status of an EC2 instance given its ID.
+    
+    :param instance_id: The ID of the EC2 instance
+    :return: The status of the instance, or None if the instance is not found
+    """
+    # Create an EC2 client
+    ec2 = boto3.client('ec2')
+    
+    try:
+        # Describe the instance
+        response = ec2.describe_instances(InstanceIds=[instance_id])
+        
+        # Check if the instance exists
+        if len(response['Reservations']) > 0 and len(response['Reservations'][0]['Instances']) > 0:
+            # Get the instance status
+            instance = response['Reservations'][0]['Instances'][0]
+            return instance['State']['Name']
+        else:
+            print(f"Instance with ID {instance_id} not found.")
+            return None
+    
+    except ClientError as e:
+        print(f"An error occurred: {e}")
+        return None
 
 def ec2_setup_status_get_handler(event, bucket_name, project_id):
     try:
         ended = None
         ended_minutes = 0
+        ended_hours = 0
         status = ""
         started, time_difference = get_s3_file_age(bucket_name, f'{project_id}-ec2-setup-started')
         if not started:
@@ -818,6 +858,23 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
         }
     return response
 
+# def call_server_tool():
+#     url = "http://ec2-44-213-29-205.compute-1.amazonaws.com:7100/"
+    
+#     try:
+#         # Send a GET request to the URL
+#         response = requests.get(url)
+        
+#         # Check if the request was successful
+#         if response.status_code == 200:
+#             print("Request successful!")
+#             print("Response content:")
+#             print(response.text)
+#         else:
+#             print(f"Request failed with status code: {response.status_code}")
+    
+#     except requests.exceptions.RequestException as e:
+#         print(f"An error occurred: {e}")
 
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
@@ -832,6 +889,7 @@ HANDLERS = {
     ('/logout', 'GET'): logout_get_handler,
     ('/start-ec2', 'GET'): start_ec2_get_handler,
     ('/stop-ec2', 'GET'): stop_ec2_get_handler,
+    ('/ec2_status', 'GET'): ec2_status_get_handler,
     ('/ec2-schedular-info', 'GET'): ec2_schedular_info_get_handler,
     ('/ensble-disable-start-stop-ec2-schedular', 'GET'): ensble_disable_start_stop_ec2_schedular_get_handler,
     ('/hello', 'GET'): hello_get_handler
@@ -849,6 +907,7 @@ def parse_cookies(cookie_string):
 
 def lambda_handler(event, context):
     try:
+        # call_server_tool()
         function_name = context.function_name
         project_id = function_name.split('-')[0]
         parameter_name = f'/{project_id}/info'
@@ -857,7 +916,7 @@ def lambda_handler(event, context):
         project_info['apps'] = apps
 
         # Remove keys
-        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key', 'bedrockGatewayApiKey', 'codeServerPassword', 'jupyterLabToken', 'liteLLMApiKey']  # Replace with the actual keys you want to remove
+        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key', 'bedrockGatewayApiKey', 'codeServerPassword', 'jupyterLabToken', 'liteLLMApiKey', 'serverToolPassword', 'serverToolJwtSecret']  # Replace with the actual keys you want to remove
         safe_project_info = {k: v for k, v in project_info.items() if k not in keys_to_remove}
         auth_key = project_info['controller_auth_key']
         # controller_token_bucket = project_info['controller_token_bucket']
@@ -928,6 +987,9 @@ def lambda_handler(event, context):
             instance_id = project_info['instanceId'] 
             return handler(event, instance_id)
         elif handler == stop_ec2_get_handler:
+            instance_id = project_info['instanceId'] 
+            return handler(event, instance_id)
+        elif handler == ec2_status_get_handler:
             instance_id = project_info['instanceId'] 
             return handler(event, instance_id)
         elif handler == ensble_disable_start_stop_ec2_schedular_get_handler:

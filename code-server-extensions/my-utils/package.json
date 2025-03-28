@@ -1,0 +1,34 @@
+{
+    "name": "my-utils",
+    "displayName": "My Utils",
+    "description": "Server utils",
+    "version": "0.0.1",
+    "engines": {
+      "vscode": "^1.50.0"
+    },
+    "categories": [
+      "Other"
+    ],
+    "activationEvents": [
+      "onCommand:my-utils.helloWorld"
+    ],    
+    "main": "./extension.js",
+    "contributes": {
+      "commands": [{
+        "command": "my-utils.show-caddy-logs",
+        "title": "My Utils: Show Caddy logs"
+      },{
+        "command": "my-utils.show-jupyter-lab-logs",
+        "title": "My Utils: Show Jupyter Lab logs"
+      },{
+        "command": "my-utils.show-code-server-logs",
+        "title": "My Utils: Show Code Server logs"
+      },{
+        "command": "my-utils.test",
+        "title": "My Utils: Test"
+      }]
+    },
+    "permissions": [
+      "terminal"
+    ]
+  }

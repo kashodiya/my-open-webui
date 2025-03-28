@@ -52,6 +52,8 @@ cd my-open-webui
 - Either set the AWS credentials env vars
 - OR, setup profile and set AWS_DEFAULT_PROFILE
 - Ensure env var AWS_REGION is set
+- Note that your creadentials and config files are in .aws folder in your HOME folder.
+    - If you do not have this folder or files, you should do ``aws configure``, or create them manually.
 #### How to get credentials:
 - If you are using AWS Access Portal, after login, you will see screen like (Click on your name):  
 <img src="docs/images/aws-login.PNG" width="100%" alt="Screen after AWS login">
@@ -74,6 +76,7 @@ cd my-open-webui
 ```json
 {
     "code_server_password": "fill--me",
+    "server_tool_password": "fill--me",
     "litellm_api_key": "fill--me",
     "jupyter_lab_token": "fill--me",
     "controller_auth_key": "fill--me",
@@ -578,23 +581,9 @@ deploy.bat controller
 
 ## TODO:
 
-Ask passwrod for caddy in tfvars.json file and use it to create basic auth for Caddy
-This can be used for demo apps etc.
+Create shortcuts to enable disable ec2 schedular
 
-Create shortcuts to enable disable schedular
-
-EC2 state pilling
 Restart Portainer btn
-
-Web-apps
-- Ansible playbook
-- Update command bat
-- Zip created and uploaded to S3
-- For each app
-    - Config
-        - Enabled?
-        - Caddyfile
-        - Service def
 
 set-dev.bat
     - shortcut help - show again

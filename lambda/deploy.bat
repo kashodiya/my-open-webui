@@ -10,6 +10,13 @@ if "%~1"=="" (
 REM Set the folder name from the parameter
 set "FOLDER_NAME=%~1"
 
+REM Check if the folder name is "layer"
+if /I "%FOLDER_NAME%"=="layer" (
+    echo Building layer...
+
+    exit /b 0
+)
+
 REM Check if the folder exists
 if not exist "%FOLDER_NAME%" (
     echo Folder "%FOLDER_NAME%" does not exist.
@@ -18,7 +25,6 @@ if not exist "%FOLDER_NAME%" (
 
 REM Create the zip file using tar
 tar -acf function.zip -C "%FOLDER_NAME%" *
-
 echo Zip file created: function.zip
 
 REM Set your Lambda function name
@@ -50,8 +56,7 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-@REM del %ZIP_FILE_PATH%
-
+del %ZIP_FILE_PATH%
 echo Lambda function %FUNCTION_NAME% deployed successfully.
 
 endlocal

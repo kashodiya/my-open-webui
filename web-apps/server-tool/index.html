@@ -30,12 +30,44 @@
     </v-container>
   </script>
 
+  <script type="text/x-template" id="login-template">
+    <v-container class="fill-height" fluid>
+      <v-row align="center" justify="center">
+        <v-col cols="12" sm="8" md="4">
+          <v-card class="elevation-12">
+            <v-toolbar color="primary" dark flat>
+              <v-toolbar-title>Login</v-toolbar-title>
+            </v-toolbar>
+            <v-card-text>
+              <v-form @submit.prevent="login" ref="form">
+                <v-text-field
+                  v-model="password"
+                  :append-icon="showPassword ? 'mdi-eye' : 'mdi-eye-off'"
+                  :type="showPassword ? 'text' : 'password'"
+                  name="password"
+                  label="Password"
+                  id="password"
+                  :rules="[rules.required, rules.min]"
+                  @click:append="showPassword = !showPassword"
+                ></v-text-field>
+              </v-form>
+            </v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" @click="login" :loading="loading">Login</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+  </script>
+
   <script type="text/x-template" id="home-template">
     <v-container fluid>
       <v-card>
         <v-card-title class="text-h5">Home</v-card-title>
         <v-card-text>
-          <p>Welcome home</p>
+          <p>Welcome home!</p>
         </v-card-text>
       </v-card>
     </v-container>
@@ -71,6 +103,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.15/dist/vuetify-labs.min.js"></script>
   <script src="https://unpkg.com/vue-router@4.2.4/dist/vue-router.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>  
   <script>
     const { createApp, ref } = Vue;
     const { createVuetify } = Vuetify;
@@ -94,6 +127,88 @@
       },
       created() {
         console.log('Home created');
+      }
+    }
+
+
+    const Login = {
+      template: '#login-template',
+      data: function () {
+        return {
+          state: store.state,
+          password: '',
+          showPassword: false,
+          loading: false,
+          rules: {
+            required: value => !!value || 'Required.',
+            min: v => v.length >= 8 || 'Min 8 characters',
+          },
+        }
+      },
+      methods: {
+        async login() {
+          if (this.$refs.form.validate()) {
+            this.loading = true;
+            try {
+              const response = await fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ password: this.password }),
+              });
+              if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+                if(data.token){
+                  console.log('Login success');
+                  document.cookie = `token=${data.token}; path=/; SameSite=Strict`;
+                  this.$router.push('/');
+                }else{
+                  console.log(data.error || 'Login failed');
+                  this.$root.showSnackbar('Login failed.', 'error');
+                }
+              } else {
+                  const errorData = await response.json();
+                  console.log(errorData.error || 'Login failed');
+                  this.$root.showSnackbar('Login failed.', 'error');
+              }
+
+              // // Replace this with your actual login logic
+              // const response = await this.performLogin(this.password);
+              // const token = response.token;
+
+              // Set the token cookie
+              // document.cookie = `token=${token}; path=/; SameSite=Strict`;
+
+              // Redirect to home page or dashboard
+            } catch (error) {
+              console.error('Login failed:', error);
+              this.$root.showSnackbar('Login failed.', 'error');
+            } finally {
+              this.loading = false;
+            }
+          }
+        },
+        performLogin(password) {
+          // Replace this with your actual API call
+          return new Promise((resolve, reject) => {
+            // Simulating API call
+            setTimeout(() => {
+              if (password === 'testtest') {
+                resolve({ token: 'fake-jwt-token' });
+              } else {
+                reject(new Error('Invalid password'));
+              }
+            }, 1000);
+          });
+        },
+      },
+      mounted() {
+        console.log('Login mounted');
+      },
+      created() {
+        console.log('Login created');
       }
     }
 
@@ -131,15 +246,37 @@
       }
     };
 
+    function checkAuthCookie() {
+      const cookies = document.cookie.split(';')
+      for (let cookie of cookies) {
+        cookie = cookie.trim()
+        if (cookie.startsWith('token=')) {
+          return true // Token cookie exists
+        }
+      }
+      return false // Token cookie not found
+    }
+
     const routes = [
-      { path: '/', component: Home },
-      { path: '/about', component: About }
+      { path: '/', name: 'Home', component: Home },
+      { path: '/login', name: 'Login', component: Login },
+      { path: '/about', name: 'About', component: About }
     ];
 
     const router = createRouter({
       history: createWebHashHistory(),
       routes
     });
+
+    // Add a global navigation guard
+    router.beforeEach((to, from, next) => {
+      const isAuthenticated = checkAuthCookie()
+      if (to.name !== 'Login' && !isAuthenticated) {
+        next({ name: 'Login' })
+      } else {
+        next()
+      }
+    })
 
 
     const vuetify = createVuetify();
@@ -154,8 +291,10 @@
       methods: {
         async logout() {
           try {
-            // Do logout
-            // window.location.href = '/login';
+            // document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            Cookies.remove('token');            
+            console.log("User logged out successfully");
+            this.$router.push({ name: 'Login' })
           } catch (error) {
             console.error("Could not fetch apps:", error);
           }

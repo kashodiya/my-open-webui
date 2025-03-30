@@ -114,3 +114,53 @@ run my-app
 ```
 
 
+## ttyd
+- What is ttyd?
+    - Expose HTTP session over HTTP/web
+    - You can also share a session in read only mode! Good for sharing live logs etc. 
+- Source: https://github.com/tsl0922/ttyd
+- Docs: https://github.com/tsl0922/ttyd/wiki/Example-Usage
+- Do following on EC2
+```bash
+cd temp
+git clone https://github.com/tsl0922/ttyd.git
+sudo bash scri
+sudo bash scripts/cross-build.sh
+cd build
+echo Testing local ...
+./ttyd
+sudo cp ttyd /usr/local/bin
+echo Testing global ...
+ttyd
+```
+- Run on HTTP (unsafe)
+```bash
+ttyd -W -p 7200 /usr/bin/bash
+```
+- Run as Docker (not useful as it SSH into docker container, and not EC2)
+```bash
+docker run -it --rm -p 7201:7681 tsl0922/ttyd
+```
+- TODO: Add Caddy to make it run on HTTPS
+
+
+## Agno
+- Intro: https://docs.agno.com/introduction
+- Source: https://github.com/agno-agi/agno
+- best tutorial: https://www.youtube.com/watch?v=s7Kkc6vA2K0
+- Install
+```cmd
+cd caddy\apps
+update.bat agno-ui.Caddyfile
+cd ..\..
+cd ansible
+run agno-agent-ui
+```
+- Access agno on 7019 port
+
+
+## How to create caddy user
+- Create file: caddy/users.txt
+- Generate pasword using ``caddy hash-password``
+- Create entries in users.txt
+caddy hash-password

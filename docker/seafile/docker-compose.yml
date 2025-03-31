@@ -6,6 +6,9 @@ services:
       - MYSQL_ROOT_PASSWORD=db_dev  # Required, set the root's password of MySQL service.
       - MYSQL_LOG_CONSOLE=true
       - MARIADB_AUTO_UPGRADE=1
+      # - MYSQL_DATABASE=seafile
+      # - MYSQL_USER=seafile
+      # - MYSQL_PASSWORD=seafile_password  # Choose a strong password      
     volumes:
       - /opt/seafile-mysql/db:/var/lib/mysql  # Required, specifies the path to MySQL data persistent store.
     networks:
@@ -25,10 +28,13 @@ services:
       - "8111:80"
 #     - "443:443"  # If https is enabled, cancel the comment.
     volumes:
-      - /opt/seafile-data:/shared   # Required, specifies the path to Seafile data persistent store.
+      - /opt/seafile-data:/shared
+      # - /home/ec2-user/shared-folder:/shared   # Required, specifies the path to Seafile data persistent store.
     environment:
       - DB_HOST=db
       - DB_ROOT_PASSWD=db_dev  # Required, the value should be root's password of MySQL service.
+      # - DB_USER=seafile
+      # - DB_PASSWORD=seafile_password  # Same as MYSQL_PASSWORD above      
       - TIME_ZONE=Etc/UTC  # Optional, default is UTC. Should be uncomment and set to your local time zone.
       - SEAFILE_ADMIN_EMAIL=me@example.com # Specifies Seafile admin user, default is 'me@example.com'.
       - SEAFILE_ADMIN_PASSWORD=asecret     # Specifies Seafile admin password, default is 'asecret'.

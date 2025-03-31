@@ -120,7 +120,16 @@ run my-app
     - You can also share a session in read only mode! Good for sharing live logs etc. 
 - Source: https://github.com/tsl0922/ttyd
 - Docs: https://github.com/tsl0922/ttyd/wiki/Example-Usage
-- Do following on EC2
+- To isntall using Ansible
+```bat
+cd ansible
+run ttyd
+cd ..
+cd caddy\apps
+update.bat ttyd.Caddyfile
+```
+- Access it on port 7112
+- To manually install do following on EC2
 ```bash
 cd /tmp
 git clone https://github.com/tsl0922/ttyd.git
@@ -133,11 +142,11 @@ sudo cp ttyd /usr/local/bin
 ```bash
 ttyd -W -p 7200 /usr/bin/bash
 ```
-- Run as Docker (not useful as it SSH into docker container, and not EC2)
+- Run as Docker is not useful as it SSH into docker container, and not EC2
+- Run on EC2
 ```bash
 docker run -it --rm -p 7201:7681 tsl0922/ttyd
 ```
-- TODO: Add Caddy to make it run on HTTPS
 
 
 ## Agno

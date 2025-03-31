@@ -1,0 +1,78 @@
+---
+- name: Install ttyd on Amazon Linux
+  become: yes
+  hosts: localhost
+  tasks:
+    - name: Check if ttyd is already installed
+      stat:
+        path: /usr/local/bin/ttyd
+      register: ttyd_check
+
+    - name: Install dependencies
+      yum:
+        name:
+          - git
+          - gcc
+          - make
+          - cmake
+          - pkgconfig
+          - automake
+          - autoconf
+          - libtool        
+        state: present
+      when: not ttyd_check.stat.exists
+
+    - name: Clone ttyd repository
+      git:
+        repo: 'https://github.com/tsl0922/ttyd.git'
+        dest: /tmp/ttyd
+        version: main
+      when: not ttyd_check.stat.exists
+
+    - name: Run cross-build script
+      command: bash scripts/cross-build.sh
+      args:
+        chdir: /tmp/ttyd
+      when: not ttyd_check.stat.exists
+
+    - name: Copy ttyd binary to /usr/local/bin
+      copy:
+        src: /tmp/ttyd/build/ttyd
+        dest: /usr/local/bin/ttyd
+        mode: '0755'
+      when: not ttyd_check.stat.exists
+
+    - name: Clean up temporary files
+      file:
+        path: /tmp/ttyd
+        state: absent
+      when: not ttyd_check.stat.exists
+
+    - name: Create ttyd systemd service
+      copy:
+        dest: /etc/systemd/system/ttyd.service
+        content: |
+          [Unit]
+          Description=ttyd service
+          After=network.target
+          [Service]
+          ExecStart=/usr/local/bin/ttyd -W -p 8112 /usr/bin/bash
+          WorkingDirectory=/home/ec2-user
+          User=ec2-user
+          Restart=always
+          RestartSec=3
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start ttyd service
+      systemd:
+        name: ttyd
+        enabled: yes
+        state: started

@@ -1,0 +1,5 @@
+# ttyd
+:7112 {
+    import common
+    reverse_proxy localhost:8112
+}

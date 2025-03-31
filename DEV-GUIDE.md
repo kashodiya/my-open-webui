@@ -122,16 +122,12 @@ run my-app
 - Docs: https://github.com/tsl0922/ttyd/wiki/Example-Usage
 - Do following on EC2
 ```bash
-cd temp
+cd /tmp
 git clone https://github.com/tsl0922/ttyd.git
-sudo bash scri
+cd ttyd
 sudo bash scripts/cross-build.sh
 cd build
-echo Testing local ...
-./ttyd
 sudo cp ttyd /usr/local/bin
-echo Testing global ...
-ttyd
 ```
 - Run on HTTP (unsafe)
 ```bash

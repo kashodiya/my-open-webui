@@ -1,0 +1,5 @@
+# Seafile
+:7111 {
+    import common
+    reverse_proxy localhost:8111
+}

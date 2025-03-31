@@ -164,3 +164,8 @@ run agno-agent-ui
 - Generate pasword using ``caddy hash-password``
 - Create entries in users.txt
 caddy hash-password
+
+
+## Seafile
+me@example.com 
+asecret 

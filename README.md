@@ -282,7 +282,6 @@ docker-compose restart litellm
 ```
 
 ## How to activate other applications?
-- For your convenience I have added few applications. You can follow the same recipe to add other applications also. 
 - To activate an application:
 - Edit caddy\apps\<app-caddy-file>
     - Remove ``(not activated)`` text from first line. Just keep the app name.
@@ -294,6 +293,8 @@ cd docker
 do <app-folder> up
 ```
 - Open Controller and open the app
+- If you want to run any application that is in the form of a docker container, just study one of the app and follow the pattern.
+
 
 ### How to manage Open WebUI users?
 TODO

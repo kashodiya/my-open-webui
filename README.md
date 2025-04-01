@@ -281,6 +281,20 @@ cd docker
 docker-compose restart litellm  
 ```
 
+## How to activate other applications?
+- For your convenience I have added few applications. You can follow the same recipe to add other applications also. 
+- To activate an application:
+- Edit caddy\apps\<app-caddy-file>
+    - Remove ``(not activated)`` text from first line. Just keep the app name.
+```bat
+cd caddy\apps
+update <caddy-file-from-apps-folder>
+cd ..\..
+cd docker
+do <app-folder> up
+```
+- Open Controller and open the app
+
 ### How to manage Open WebUI users?
 TODO
 
@@ -578,6 +592,13 @@ deploy.bat controller
  
 12. Q: Can OpenWebUI be customized for specific use cases?  
     A: Yes, OpenWebUI is designed to be customizable. Users can often modify the interface, add new features, or integrate it with other tools to suit their specific requirements or organizational needs.
+
+
+## Monthly reset by admins
+- Some organizaions delete all the resources at the end of the month in their R&D env.
+- If that happens follow these steps:
+    - Delete Routing table (which has name of your project_id)
+    - Delete VPC
 
 ## TODO:
 

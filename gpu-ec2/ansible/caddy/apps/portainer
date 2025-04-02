@@ -1,0 +1,9 @@
+# portainer
+:8102 {
+    import common
+    reverse_proxy https://localhost:9102 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }          
+}

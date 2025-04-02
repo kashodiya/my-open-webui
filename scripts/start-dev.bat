@@ -27,11 +27,20 @@ echo cdd = CD to project directory
 doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ServerAliveInterval=60 -o ServerAliveCountMax=180 ec2-user@%ELASTIC_IP%
 echo sshe = SSH into EC2
 
+doskey ssheg=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ServerAliveInterval=60 -o ServerAliveCountMax=180 ubuntu@%ELASTIC_IP_G%
+echo ssheg = SSH into GPU EC2
+
 doskey ec2=aws ec2 start-instances --instance-ids %INSTANCE_ID%
 echo ec2 = Start EC2
 
+doskey ec2g=aws ec2 start-instances --instance-ids %INSTANCE_ID_G%
+echo ec2g = Start GPU EC2
+
 doskey ec2x=aws ec2 stop-instances --instance-ids %INSTANCE_ID%
 echo ec2x = Stop EC2
+
+doskey ec2xg=aws ec2 stop-instances --instance-ids %INSTANCE_ID_G%
+echo ec2xg = Stop GPU EC2
 
 doskey open-webui=start https://%ELASTIC_IP%:7101/
 echo open-webui = Opens Open WebUI in Browser
@@ -66,6 +75,9 @@ echo tec2 = Taint ec2 and destroy and recreate it
 doskey rkh=ssh-keygen -R %ELASTIC_IP%  
 echo rkh = Remove known SSH host
 
+doskey rkhg=ssh-keygen -R %ELASTIC_IP_G%  
+echo rkhg = Remove known SSH host of GPU EC2
+
 title %PROJECT_ID%
 
-doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%
+@REM doskey sshe=ssh -i %PROJECT_DIR%\keys\private_key.pem ec2-user@%ELASTIC_IP%

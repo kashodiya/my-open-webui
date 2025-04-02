@@ -1,0 +1,83 @@
+- name: Install and configure JupyterLab
+  hosts: localhost
+  connection: local
+  vars:
+    jupyterlab_port: 9103
+    jupyterlab_user: ubuntu
+    jupyterlab_home: /home/ubuntu
+  tasks:
+    # - name: Install JupyterLab using conda
+    #   become: yes
+    #   become_user: "{{ jupyterlab_user }}"
+    #   shell: |
+    #     source ~/.bashrc
+    #     /home/ubuntu/miniconda/bin/conda install -y jupyterlab
+    #   args:
+    #     executable: /bin/bash
+
+    - name: Install JupyterLab using conda
+      become: yes
+      become_user: "{{ jupyterlab_user }}"
+      shell: "/home/ubuntu/miniconda/bin/conda install -y jupyterlab"
+
+    - name: Create JupyterLab config directory
+      file:
+        path: "{{ jupyterlab_home }}/.jupyter"
+        state: directory
+        owner: "{{ jupyterlab_user }}"
+        group: "{{ jupyterlab_user }}"
+        mode: '0700'
+
+    # - name: Generate JupyterLab config
+    #   become_user: "{{ jupyterlab_user }}"
+    #   become: yes
+    #   shell: |
+    #     source ~/.bashrc
+    #     jupyter lab --generate-config
+    #   args:
+    #     creates: "{{ jupyterlab_home }}/.jupyter/jupyter_lab_config.py"
+    #     executable: /bin/bash
+
+    - name: Generate JupyterLab config
+      become: yes
+      become_user: "{{ jupyterlab_user }}"
+      shell: "/home/ubuntu/miniconda/bin/jupyter lab --generate-config"
+      args:
+        creates: "{{ jupyterlab_home }}/.jupyter/jupyter_lab_config.py"
+                
+    - name: Configure JupyterLab to listen on all interfaces and set port
+      lineinfile:
+        path: "{{ jupyterlab_home }}/.jupyter/jupyter_lab_config.py"
+        line: "{{ item }}"
+      loop:
+        - "c.ServerApp.ip = '0.0.0.0'"
+        - "c.ServerApp.port = {{ jupyterlab_port }}"
+    - name: Create JupyterLab systemd service file
+      copy:
+        content: |
+          [Unit]
+          Description=JupyterLab
+          After=network.target
+          [Service]
+          User={{ jupyterlab_user }}
+          ExecStart=/bin/bash -c 'source ~/.bashrc && exec jupyter lab --config={{ jupyterlab_home }}/.jupyter/jupyter_server_config.json'
+          WorkingDirectory={{ jupyterlab_home }}
+          Restart=always
+          RestartSec=10          
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/jupyterlab.service
+      notify: Restart JupyterLab
+      become: yes
+    - name: Enable and start JupyterLab service
+      systemd:
+        name: jupyterlab
+        enabled: yes
+        state: started
+      become: yes
+  handlers:
+    - name: Restart JupyterLab
+      systemd:
+        name: jupyterlab
+        state: restarted
+      become: yes

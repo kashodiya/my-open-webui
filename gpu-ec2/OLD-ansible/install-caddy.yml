@@ -1,0 +1,90 @@
+---
+- name: Install and configure Caddy
+  hosts: localhost
+  connection: local
+  become: yes
+  tasks:
+    - name: Download Caddy
+      get_url:
+        url: https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz
+        dest: /tmp/caddy_2.9.1_linux_amd64.tar.gz
+
+    - name: Extract Caddy
+      ansible.builtin.unarchive:
+        src: /tmp/caddy_2.9.1_linux_amd64.tar.gz
+        dest: /tmp
+        remote_src: yes
+
+    - name: Move Caddy to /usr/local/bin
+      ansible.builtin.copy:
+        src: /tmp/caddy
+        dest: /usr/local/bin/
+        mode: '0755'
+        remote_src: yes
+
+    - name: Create Caddy directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /etc/caddy/apps
+        - /var/lib/caddy/custom_certs
+        - /var/log/caddy
+
+    - name: Set ownership for Caddy directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        owner: ec2-user
+        group: ec2-user
+        recurse: yes
+      loop:
+        - /var/lib/caddy
+        - /var/log/caddy
+        - /etc/caddy
+
+    - name: Create Caddy service file
+      ansible.builtin.copy:
+        content: |
+          [Unit]
+          Description=Caddy Web Server
+          Documentation=https://caddyserver.com/docs/
+          After=network.target network-online.target
+          Requires=network-online.target
+
+          [Service]
+          User=ec2-user
+          Group=ec2-user
+          ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
+          ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile
+          TimeoutStopSec=5s
+          LimitNOFILE=1048576
+          LimitNPROC=512
+          PrivateTmp=true
+          ProtectSystem=full
+          AmbientCapabilities=CAP_NET_BIND_SERVICE
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/caddy.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Caddy service
+      ansible.builtin.systemd:
+        name: caddy
+        enabled: yes
+        state: started
+
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/caddy_2.9.1_linux_amd64.tar.gz
+        - /tmp/caddy

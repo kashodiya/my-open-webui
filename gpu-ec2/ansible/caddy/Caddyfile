@@ -1,0 +1,18 @@
+{
+    auto_https off
+}
+
+(common) {
+    encode gzip
+    tls /var/lib/caddy/custom_certs/server.crt /var/lib/caddy/custom_certs/server.key
+}
+
+(auth_config) {
+    basicauth {
+        admin $2a$14$TMXXMj3dYHvPE0rQb.GpauM4Yuydaqk1AUOMtpBSZpkI6O1Y/Y3Mm
+    }
+    request_header X-Authenticated-User {http.auth.user.id}
+}
+
+import /etc/caddy/apps/*
+

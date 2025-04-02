@@ -601,6 +601,21 @@ deploy.bat controller
     - Delete Routing table (which has name of your project_id)
     - Delete VPC
 
+
+## GPU EC2 instance
+- WARRNING: GPU instances are very expensive. Control cost by keeping it down when not using. 
+- Increate quota for G instance:
+    - http://aws.amazon.com/contact-us/ec2-request
+    - Select your region 
+    - Set new Limit to 5
+- Go tp AWS Console, Service Quota, for "Amazon Elastic Compute Cloud (Amazon EC2)" service and request to increase "Running On-Demand G and VT instances" to 5. (Assuming that you are using g5.xlarge instance type.)
+- To create GPU instance add following variable in ``terraform\terraform.tfvars.json``
+```json
+   "create_gpu_instance": true
+```
+- Run terraform apply
+
+
 ## TODO:
 
 Create shortcuts to enable disable ec2 schedular

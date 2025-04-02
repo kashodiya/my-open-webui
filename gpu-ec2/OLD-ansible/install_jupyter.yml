@@ -10,7 +10,7 @@
     working_directory: /home/{{ username }}  # Adjust if needed
     service_name: jupyterlab
     ansible_shell_executable: /bin/bash
-    jupyter_password: "123123qweqwe"
+    jupyter_password: "testtestqweqwe"
     jupyter_config_dir: "/home/ec2-user/.jupyter"
     # jupyterlab_params: lab --no-browser --port=9102 --certfile=/etc/ssl/jupyterlab-certs/dummy.crt --keyfile=/etc/ssl/jupyterlab-certs/dummy.key --ServerApp.disable_check_xsrf=True --ServerApp.password_required=False
     jupyterlab_params: lab --no-browser --ip=0.0.0.0 --port=9102  --ServerApp.disable_check_xsrf=True --ServerApp.password_required=False --ServerApp.token=""

@@ -21,7 +21,7 @@ do-ansible.bat install_jupyter_lab.yml
 cd /home/ubuntu/projects/comfy/ComfyUI
 python main.py --port 9104
 admin
-123123
+testtest
 
 
 
@@ -174,7 +174,7 @@ cd dify/docker
 cp .env.example .env
 docker-compose -p dify up -d
 ### Use LiteLLM
-Bearer 123123
+Bearer testtest
 http://host.docker.internal:9108
 
 Bedrock Anthropic Claude v3.5

@@ -17,7 +17,7 @@ model_list:
   - model_name: Bedrock Stable diffusion xl v1
     litellm_params:
       model: bedrock/stability.stable-diffusion-xl-v1
-
+# Some models removed
 
 litellm_settings:
   modify_params: True

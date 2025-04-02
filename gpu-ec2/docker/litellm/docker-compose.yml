@@ -7,14 +7,14 @@ services:
     volumes:
       - litellm_data:/app/data
     environment:
-      - LITELLM_API_KEY=123123
+      - LITELLM_API_KEY=testtest
       - PORT=8111
       - AWS_REGION=us-east-1
-      - LITELLM_MASTER_KEY=123123
+      - LITELLM_MASTER_KEY=testtest
       # 1
       # - LITELLM_MASTER_KEY="sk-1234" # this is your master key for using the proxy server
       # - UI_USERNAME=admin   # username to sign in on UI
-      # - UI_PASSWORD=123123        # password to sign in on UI
+      # - UI_PASSWORD=testtest        # password to sign in on UI
     command: ["--config", "/app/data/config.yaml", "--detailed_debug"]
     restart: always
     networks:

@@ -1,0 +1,40 @@
+---
+- name: Install Portainer on Ubuntu
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Ensure python3-docker is installed
+      become: yes
+      apt:
+        name: python3-docker
+        state: present
+        update_cache: yes
+
+    - name: Create Docker volume for Portainer data
+      docker_volume:
+        name: portainer_data
+        state: present
+
+    - name: Pull Portainer Docker image
+      docker_image:
+        name: portainer/portainer-ce:latest
+        source: pull
+        force_source: yes
+        state: present
+
+    - name: Stop and remove existing container
+      docker_container:
+        name: portainer
+        state: absent
+
+    - name: Run Portainer container
+      docker_container:
+        name: portainer
+        image: portainer/portainer-ce:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "9102:9443"   # Adjust port mapping as needed
+        volumes:
+          - portainer_data:/data              # Mount the portainer_data volume to /data in the container
+          - /var/run/docker.sock:/var/run/docker.sock   # Mount Docker socket for Docker API access

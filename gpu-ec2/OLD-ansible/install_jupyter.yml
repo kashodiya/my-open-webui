@@ -1,0 +1,73 @@
+---
+- name: Install Jupyter on EC2
+  hosts: localhost
+  connection: local
+  become: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3  
+    username: ec2-user           # Replace with your actual username
+    jupyter_path: jupyter  # Adjust if Jupyter is installed elsewhere
+    working_directory: /home/{{ username }}  # Adjust if needed
+    service_name: jupyterlab
+    ansible_shell_executable: /bin/bash
+    jupyter_password: "123123qweqwe"
+    jupyter_config_dir: "/home/ec2-user/.jupyter"
+    # jupyterlab_params: lab --no-browser --port=9102 --certfile=/etc/ssl/jupyterlab-certs/dummy.crt --keyfile=/etc/ssl/jupyterlab-certs/dummy.key --ServerApp.disable_check_xsrf=True --ServerApp.password_required=False
+    jupyterlab_params: lab --no-browser --ip=0.0.0.0 --port=9102  --ServerApp.disable_check_xsrf=True --ServerApp.password_required=False --ServerApp.token=""
+  tasks:
+
+    - name: Check if pip is installed
+      command: pip --version
+      register: pip_installed
+      ignore_errors: true        
+
+    - name: Install python3-pip
+      become: yes
+      dnf:
+        name:
+          - python3-pip
+        state: present
+      when: pip_installed is failed
+
+    - name: Check if jupyterlab is installed
+      command: jupyter lab --version
+      register: jupyterlab_installed
+      ignore_errors: true        
+
+    - name: Install JupyterLab
+      pip:
+        name: jupyterlab
+        state: present
+      when: jupyterlab_installed is failed
+
+    - name: Create JupyterLab systemd service file
+      copy:
+        dest: /etc/systemd/system/{{ service_name }}.service
+        content: |
+          [Unit]
+          Description=JupyterLab
+          After=network.target
+
+          [Service]
+          Type=simple
+          User={{ username }}
+          ExecStart=/bin/bash -c 'source /home/ec2-user/.bashrc && exec {{ jupyter_path }} {{ jupyterlab_params }}'
+          WorkingDirectory={{ working_directory }}
+          Restart=always
+          RestartSec=10
+
+          [Install]
+          WantedBy=multi-user.target
+      become: yes  # Escalate privileges for this task
+
+    - name: Reload systemd configuration
+      command: sudo systemctl daemon-reload      
+
+    - name: Enable and start service
+      systemd:
+        name: "{{ service_name }}"
+        enabled: yes
+        state: started
+      become: yes  # Escalate privileges for this task
+
+

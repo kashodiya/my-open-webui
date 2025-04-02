@@ -1,0 +1,49 @@
+---
+- name: Install noVNC
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Clone noVNC repository
+      ansible.builtin.git:
+        repo: 'https://github.com/novnc/noVNC.git'
+        dest: '/home/ubuntu/noVNC'
+        version: master
+        clone: yes
+        update: yes
+      become: yes
+      become_user: ubuntu
+
+    - name: Create systemd service file
+      copy:
+        content: |
+          [Unit]
+          Description=noVNC Proxy Service
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=ubuntu
+          WorkingDirectory=/home/ubuntu/noVNC
+          ExecStart=/home/ubuntu/noVNC/utils/novnc_proxy --vnc localhost:5901 --listen 0.0.0.0:9105
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        dest: /etc/systemd/system/novnc_proxy.service
+        owner: root
+        group: root
+        mode: '0644'
+      become: yes
+
+
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+      become: yes
+
+    - name: Enable and start noVNC proxy service
+      systemd:
+        name: novnc_proxy
+        enabled: yes
+        state: started
+      become: yes

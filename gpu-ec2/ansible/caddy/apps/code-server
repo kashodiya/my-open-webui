@@ -1,0 +1,6 @@
+# code-server
+:8101 {
+    reverse_proxy localhost:9101
+    import common
+    import auth_config
+}

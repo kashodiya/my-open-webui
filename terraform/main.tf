@@ -7,6 +7,7 @@ variable "project_id" {}
 variable "ami" {}
 variable "instance_type" {}
 variable "availability_zone" {}
+variable "create_gpu_instance" {}
 
 variable "jupyter_lab_token" {
   type        = string
@@ -517,6 +518,52 @@ resource "aws_eip" "dev_ec2_eip" {
 }
 
 
+
+# EC2 GPU
+
+resource "aws_instance" "gpu_instance" {
+  count = var.create_gpu_instance ? 1 : 0
+
+  # Deep Learning Base AMI (Amazon Linux 2) Version 58.3
+  # ami           = "ami-001c6931a3dcdfbff"
+
+  # Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 20.04) 20240827
+  ami = "ami-003c04f18386a1dcc"
+
+  # instance_type = "g4dn.xlarge"  
+  instance_type = "g5.xlarge"  
+  subnet_id                   = aws_subnet.public.id
+  key_name                    = aws_key_pair.main_key.key_name
+  iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
+  vpc_security_group_ids      = [aws_security_group.allow_sources.id]
+  associate_public_ip_address = true # Ensure public IP is associated
+
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = 2048 # 2TB root volume
+    encrypted             = true
+    delete_on_termination = true
+  }
+
+  tags = {
+    Name      = "${var.project_id}_gpu"
+    CreatedBy = "terraform"
+  }
+}
+
+
+resource "aws_eip" "gpu_ec2_eip" {
+  count = var.create_gpu_instance ? 1 : 0
+
+  instance = aws_instance.gpu_instance[0].id
+  tags = {
+    Name      = "${var.project_id}_gpu"
+    CreatedBy = "terraform"
+  }
+}
+
+
+
 # Add basic Lambda execution permissions
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.dev_role.name
@@ -834,14 +881,26 @@ output "vpc_id" {
   value       = aws_vpc.main.id
 }
 
+# output "ec2_ip_gpu" {
+#   value       = var.create_gpu_instance ? aws_instance.gpu_instance[0].ip : null
+# }
+
+# output "ec2_dns_gpu" {
+#   # value = aws_instance.gpu_instance[0].public_dns
+#   value = aws_instance.gpu_instance.id
+# }
+
+
 
 resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
   value = jsonencode({
     elasticIP                 = aws_eip.dev_ec2_eip.public_ip,
+    elasticIPG = try(aws_eip.gpu_ec2_eip[0].public_ip, null),
     projectId                 = var.project_id,
     instanceId                = aws_instance.main_instance.id,
+    instanceIdG               = try(aws_instance.gpu_instance[0].id, null),
     controllerUrl             = aws_lambda_function_url.controller_lambda_url.function_url,
     dataBucketName            = aws_s3_bucket.data_bucket.id,
     codeServerPassword        = var.code_server_password,
@@ -854,7 +913,8 @@ resource "aws_ssm_parameter" "resource_ids" {
     controller_jwt_secret_key = random_string.controller_jwt_secret_key.result,
     ec2SecurityGroupId        = aws_security_group.allow_sources.id,
     ec2PublicDns              = aws_instance.main_instance.public_dns,
-    eipPublicDns              = aws_eip.dev_ec2_eip.public_dns
+    eipPublicDns              = aws_eip.dev_ec2_eip.public_dns,
+    eipPublicDnsG             = try(aws_eip.gpu_ec2_eip[0].public_dns, null)
   })
 
   # Ensure this resource is created after all other resources
@@ -873,9 +933,12 @@ resource "local_file" "outputs" {
   content  = <<-EOT
 set AWS_REGION=${data.aws_region.current.name}
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
+set ELASTIC_IP_G=${try(aws_eip.gpu_ec2_eip[0].public_ip, "")}
 set PROJECT_ID=${var.project_id}
 set INSTANCE_ID=${aws_instance.main_instance.id}
+set INSTANCE_ID_G=${try(aws_instance.gpu_instance[0].id, "")}
 set EIP_PUBLIC_DNS=${aws_eip.dev_ec2_eip.public_dns}
+set EIP_PUBLIC_DNS_G=${try(aws_eip.gpu_ec2_eip[0].public_dns, "")}
 set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}

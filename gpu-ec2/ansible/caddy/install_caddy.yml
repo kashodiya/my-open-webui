@@ -1,0 +1,100 @@
+---
+- name: Install and configure Caddy
+  hosts: localhost
+  connection: local
+  become: yes
+
+  tasks:
+    - name: Ensure certificate directory exists
+      file:
+        path: /var/lib/caddy/custom_certs
+        state: directory
+        mode: '0755'
+      become: yes
+
+    - name: Generate private key
+      openssl_privatekey:
+        path: /var/lib/caddy/custom_certs/server.key
+        size: 2048
+      become: yes
+
+    - name: Generate CSR
+      openssl_csr:
+        path: /var/lib/caddy/custom_certs/server.csr
+        privatekey_path: /var/lib/caddy/custom_certs/server.key
+        common_name: localhost
+        subject_alt_name:
+          - "DNS:localhost"
+          - "IP:127.0.0.1"
+      become: yes
+
+    - name: Generate self-signed certificate
+      openssl_certificate:
+        path: /var/lib/caddy/custom_certs/server.crt
+        privatekey_path: /var/lib/caddy/custom_certs/server.key
+        csr_path: /var/lib/caddy/custom_certs/server.csr
+        provider: selfsigned
+        selfsigned_not_before: "-1d"
+        selfsigned_not_after: "+365d"
+      become: yes
+
+    - name: Remove CSR file
+      file:
+        path: /var/lib/caddy/custom_certs/server.csr
+        state: absent
+      become: yes
+
+    - name: Set ownership of server key to caddy user and group
+      ansible.builtin.file:
+        path: /var/lib/caddy/custom_certs/server.key
+        owner: caddy
+        group: caddy
+        mode: '0600'  # This sets appropriate permissions for a private key
+      become: yes  # This is equivalent to using sudo
+
+    - name: Set ownership of server certificate to caddy user and group
+      ansible.builtin.file:
+        path: /var/lib/caddy/custom_certs/server.crt
+        owner: caddy
+        group: caddy
+        mode: '0644'  # This sets appropriate permissions for a certificate
+      become: yes  # This is equivalent to using sudo
+
+
+
+  
+
+    - name: Install Caddy
+      apt:
+        name: caddy
+        state: present
+        update_cache: yes
+
+    - name: Ensure Caddy custom certs directory exists
+      file:
+        path: /var/lib/caddy/custom_certs
+        state: directory
+        mode: '0755'
+
+
+    - name: Copy Caddyfile to target location
+      copy:
+        src: Caddyfile
+        dest: /etc/caddy/Caddyfile        
+
+    - name: Copy apps folder to target location
+      copy:
+        src: apps
+        dest: /etc/caddy/
+        directory_mode: yes
+
+
+    # - name: Restart Caddy service
+    #   systemd:
+    #     name: caddy
+    #     state: restarted
+    #     daemon_reload: yes
+    #     enabled: yes
+
+
+

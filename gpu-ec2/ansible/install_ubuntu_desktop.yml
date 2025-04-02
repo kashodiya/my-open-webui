@@ -1,0 +1,87 @@
+- name: Install XFCE4
+  hosts: localhost
+  connection: local
+  become: yes
+  vars:
+    vnc_user: "ubuntu"
+    vnc_password: "Pass!111"  
+  tasks:
+    - name: Install XFCE4 and XFCE4-goodies
+      apt:
+        name:
+          - xfce4
+          - xfce4-goodies
+          - tightvncserver
+          - python3-pexpect
+          - libpam-modules
+        state: present
+        update_cache: yes
+      
+    - name: Ensure .vnc directory exists
+      file:
+        path: "/home/{{ vnc_user }}/.vnc"
+        state: directory
+        owner: "{{ vnc_user }}"
+        group: "{{ vnc_user }}"
+        mode: '0755'
+
+    - name: Set VNC password
+      expect:
+        command: vncpasswd
+        responses:
+          (?i)password: "{{ vnc_password }}"
+          (?i)verify: "{{ vnc_password }}"
+          (?i)would you like to enter a view-only password: "n"
+      become_user: "{{ vnc_user }}"
+
+    - name: Create VNC xstartup file
+      copy:
+        content: |
+          #!/bin/bash
+          xrdb $HOME/.Xresources
+          startxfce4 &
+        dest: "/home/{{ vnc_user }}/.vnc/xstartup"
+        owner: "{{ vnc_user }}"
+        group: "{{ vnc_user }}"
+        mode: '0755'
+
+
+    # - name: Create systemd service file for VNC
+    #   copy:
+    #     content: |
+    #       [Unit]
+    #       Description=Start TightVNC server at startup
+    #       After=syslog.target network.target
+
+    #       [Service]
+    #       Type=forking
+    #       User={{ vnc_user }}
+    #       Group={{ vnc_user }}
+    #       # PAMName=login
+    #       # PIDFile=/home/{{ vnc_user }}/.vnc/%H:%i.pid
+    #       # ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
+    #       # ExecStart=/usr/bin/vncserver -depth 24 -geometry 1280x720 :%i
+    #       # ExecStart=/usr/bin/vncserver
+    #       # ExecStop=/usr/bin/vncserver -kill :%i
+
+    #       ExecStartPre=-/usr/bin/vncserver -kill :%i > /dev/null 2>&1
+    #       # ExecStart=/usr/bin/vncserver :%i -geometry 1280x720 -depth 24
+    #       ExecStart=/usr/bin/vncserver :%i -geometry 2000x1300
+    #       ExecStop=/usr/bin/vncserver -kill :%i          
+
+    #       [Install]
+    #       WantedBy=multi-user.target
+    #     dest: /etc/systemd/system/vncserver@.service
+    #     owner: root
+    #     group: root
+    #     mode: '0644'        
+
+    # - name: Reload systemd
+    #   systemd:
+    #     daemon_reload: yes
+
+    # - name: Enable and start VNC service
+    #   systemd:
+    #     name: vncserver@1.service
+    #     enabled: yes
+    #     state: started

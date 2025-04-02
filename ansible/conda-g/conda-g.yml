@@ -1,0 +1,58 @@
+---
+- name: Install and configure Miniconda as user ubuntu
+  hosts: all
+  become: yes
+  become_user: ubuntu
+  vars:
+    conda_install_location: /home/ubuntu/miniconda
+    temp_dir: /home/ubuntu/temp
+    miniconda_script: Miniconda3-latest-Linux-x86_64.sh
+    miniconda_script_url: https://repo.anaconda.com/miniconda/{{ miniconda_script }}
+
+  tasks:
+    - name: Check if Conda is already installed
+      command: command -v {{ conda_install_location }}/bin/conda
+      register: conda_check
+      ignore_errors: yes
+
+    - name: Print message if Conda is already installed
+      debug:
+        msg: "Conda is already installed"
+      when: conda_check.rc == 0
+
+    - name: Create temporary directory
+      file:
+        path: "{{ temp_dir }}"
+        state: directory
+
+    - name: Download Miniconda installer
+      get_url:
+        url: "{{ miniconda_script_url }}"
+        dest: "{{ temp_dir }}/{{ miniconda_script }}"
+      when: conda_check.rc != 0
+
+    - name: Install Miniconda
+      command: bash {{ temp_dir }}/{{ miniconda_script }} -b -p {{ conda_install_location }}
+      when: conda_check.rc != 0
+
+    - name: Initialize Conda
+      command: "{{ conda_install_location }}/bin/conda init"
+      when: conda_check.rc != 0
+
+    - name: Source .bashrc to update PATH
+      command: source $HOME/.bashrc
+      when: conda_check.rc != 0
+      register: source_bashrc
+      changed_when: no
+
+    - name: Print installation completion message
+      debug:
+        msg: "DONE Installing mini-conda..."
+      when: conda_check.rc != 0
+
+    - name: Verify Conda installation
+      command: "{{ conda_install_location }}/bin/conda --version"
+      register: conda_version
+    - name: Print Conda version
+      debug:
+        msg: "Conda version: {{ conda_version.stdout }}"

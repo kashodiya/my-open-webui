@@ -1,0 +1,226 @@
+---
+- name: Install and configure Caddy
+  hosts: all
+  become: yes
+
+  vars:
+    caddy_version: "2.9.1"
+    caddy_download_url: "https://github.com/caddyserver/caddy/releases/download/v{{ caddy_version }}/caddy_{{ caddy_version }}_linux_amd64.tar.gz"
+    domain: "ec2-34-195-186-102.compute-1.amazonaws.com"
+    caddy_service_file: /etc/systemd/system/caddy.service
+    caddy_config_file: /etc/caddy/Caddyfile
+    caddy_certs_dir: /etc/caddy/certs
+    caddy_binary: /usr/local/bin/caddy
+
+  tasks:
+    - name: Check if Caddy is already installed
+      command: command -v caddy
+      register: caddy_check
+      ignore_errors: yes
+
+    - name: Print Caddy version if installed
+      debug:
+        msg: "Caddy is already installed."
+      when: caddy_check.rc == 0
+      register: caddy_version_output
+
+    - name: Get Caddy version
+      command: caddy -v
+      when: caddy_check.rc == 0
+      register: caddy_version_output
+
+    - name: Print Caddy version output
+      debug:
+        var: caddy_version_output.stdout
+      when: caddy_check.rc == 0
+
+    - name: Install Caddy
+      ansible.builtin.block:
+        - name: Download Caddy
+          get_url:
+            url: "{{ caddy_download_url }}"
+            dest: /tmp/caddy_{{ caddy_version }}_linux_amd64.tar.gz
+
+        - name: Extract Caddy
+          unarchive:
+            src: /tmp/caddy_{{ caddy_version }}_linux_amd64.tar.gz
+            dest: /tmp/
+            remote_src: yes
+
+        - name: Move Caddy binary to /usr/local/bin/
+          command: mv /tmp/caddy {{ caddy_binary }}
+
+        - name: Remove downloaded tar.gz file
+          file:
+            path: /tmp/caddy_{{ caddy_version }}_linux_amd64.tar.gz
+            state: absent
+
+        - name: Create certs directory
+          file:
+            path: "{{ caddy_certs_dir }}"
+            state: directory
+            mode: '0755'
+
+        - name: Generate private key
+          openssl_privatekey:
+            path: "{{ caddy_certs_dir }}/server.key"
+            size: 2048
+
+        - name: Create CSR configuration file
+          tempfile:
+            state: present
+            suffix: .cnf
+          register: csr_config_file
+
+        - name: Add content to CSR configuration file
+          copy:
+            dest: "{{ csr_config_file.path }}"
+            content: |
+              [req]
+              distinguished_name = req_distinguished_name
+              x509_extensions = v3_req
+              prompt = no
+              [req_distinguished_name]
+              CN = {{ domain }}
+              [v3_req]
+              subjectAltName = DNS:{{ domain }}
+              keyUsage = critical, digitalSignature, keyEncipherment
+              extendedKeyUsage = serverAuth
+
+        - name: Create certificate configuration file
+          tempfile:
+            state: present
+            suffix: .cnf
+          register: cert_config_file
+
+        - name: Add content to certificate configuration file
+          copy:
+            dest: "{{ cert_config_file.path }}"
+            content: |
+              [v3_req]
+              subjectAltName = DNS:{{ domain }}
+              keyUsage = critical, digitalSignature, keyEncipherment
+              extendedKeyUsage = serverAuth
+
+        - name: Create CSR with Subject Alternative Name
+          openssl_csr:
+            path: "{{ caddy_certs_dir }}/server.csr"
+            privatekey_path: "{{ caddy_certs_dir }}/server.key"
+            provider: default
+            subject_alt_name: "DNS:{{ domain }}"
+            config: "{{ csr_config_file.path }}"
+
+        - name: Generate self-signed certificate
+          openssl_certificate:
+            path: "{{ caddy_certs_dir }}/server.crt"
+            csr_path: "{{ caddy_certs_dir }}/server.csr"
+            privatekey_path: "{{ caddy_certs_dir }}/server.key"
+            provider: default
+            config: "{{ cert_config_file.path }}"
+
+        - name: Clean up temporary files
+          file:
+            path: "{{ item }}"
+            state: absent
+          with_items:
+            - "{{ csr_config_file.path }}"
+            - "{{ cert_config_file.path }}"
+
+        - name: Set ownership and permissions for certs
+          file:
+            path: "{{ item }}"
+            owner: ubuntu
+            group: ubuntu
+            mode: "{{ '0600' if item.endswith('key') else '0644' }}"
+          with_items:
+            - "{{ caddy_certs_dir }}/server.key"
+            - "{{ caddy_certs_dir }}/server.crt"
+
+        - name: Create Caddy systemd service file
+          copy:
+            dest: "{{ caddy_service_file }}"
+            content: |
+              [Unit]
+              Description=Caddy
+              Documentation=https://caddyserver.com/docs/
+              After=network.target network-online.target
+              Requires=network-online.target
+              [Service]
+              User=ubuntu
+              Group=ubuntu
+              ExecStart={{ caddy_binary }} run --config {{ caddy_config_file }}
+              ExecReload={{ caddy_binary }} reload --config {{ caddy_config_file }}
+              TimeoutStopSec=5s
+              LimitNOFILE=1048576
+              LimitNPROC=512
+              PrivateTmp=true
+              ProtectSystem=full
+              AmbientCapabilities=CAP_NET_BIND_SERVICE
+              [Install]
+              WantedBy=multi-user.target
+            mode: '0644'
+
+        - name: Create Caddyfile
+          copy:
+            dest: "{{ caddy_config_file }}"
+            content: |
+              {
+                  auto_https off
+              }
+              (common) {
+                  encode gzip
+                  tls {{ caddy_certs_dir }}/server.crt {{ caddy_certs_dir }}/server.key
+              }
+              (auth_config) {
+                  basicauth {
+                      admin $2a$14$TMXXMj3dYHvPE0rQb.GpauM4Yuydaqk1AUOMtpBSZpkI6O1Y/Y3Mm
+                  }
+                  request_header X-Authenticated-User {http.auth.user.id}
+              }
+              :7100 {
+                  respond "Hello from my server!"
+              }
+              # portainer
+              :7102 {
+                  import common
+                  reverse_proxy https://localhost:9102 {
+                      transport http {
+                          tls_insecure_skip_verify
+                      }
+                  }    
+              }
+              # jupyter-lab
+              :7103 {
+                  import common
+                  reverse_proxy localhost:9103
+              }
+              # comfyui
+              :7104 {
+                  reverse_proxy localhost:9104
+                  import common
+                  import auth_config
+              }
+              # code-server
+              :7109 {
+                  import common
+                  reverse_proxy localhost:9109
+              }
+            mode: '0644'
+
+        - name: Set ownership for Caddyfile
+          file:
+            path: "{{ caddy_config_file }}"
+            owner: ubuntu
+            group: ubuntu
+
+        - name: Reload systemd, enable and start Caddy service
+          systemd:
+            name: caddy
+            enabled: yes
+            state: started
+            daemon_reload: yes
+
+        - name: Print success message
+          debug:
+            msg: "Caddy has been installed and started successfully."
+      when: caddy_check.rc != 0

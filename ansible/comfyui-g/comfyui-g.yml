@@ -1,0 +1,57 @@
+---
+- name: Install ComfyUI
+  hosts: all
+  become: yes
+  become_user: ubuntu
+
+  vars:
+    comfy_dir: "/home/ubuntu/projects/comfy"
+    comfyui_repo: "https://github.com/comfyanonymous/ComfyUI.git"
+    comfyui_manager_repo: "https://github.com/ltdrdata/ComfyUI-Manager"
+    conda_path: "/home/ubuntu/miniconda/bin"
+    comfy_alias: "alias comfy='cd {{ comfy_dir }}/ComfyUI && python main.py --port 9104'"
+
+  tasks:
+    - name: Ensure projects directory exists
+      file:
+        path: "{{ comfy_dir }}"
+        state: directory
+
+    - name: Clone ComfyUI repository
+      git:
+        repo: "{{ comfyui_repo }}"
+        dest: "{{ comfy_dir }}/ComfyUI"
+
+    - name: Source .bashrc
+      command: source $HOME/.bashrc
+      register: bashrc_source
+      changed_when: false
+
+    - name: Update PATH with conda binary
+      set_fact:
+        ansible_python_interpreter: "{{ conda_path }}/python"
+        ansible_become_exe: "{{ conda_path }}/conda"
+
+    - name: Install Python requirements
+      pip:
+        requirements: "{{ comfy_dir }}/ComfyUI/requirements.txt"
+        executable: "{{ conda_path }}/pip"
+
+    - name: Ensure custom_nodes directory exists
+      file:
+        path: "{{ comfy_dir }}/ComfyUI/custom_nodes"
+        state: directory
+
+    - name: Clone ComfyUI-Manager repository
+      git:
+        repo: "{{ comfyui_manager_repo }}"
+        dest: "{{ comfy_dir }}/ComfyUI/custom_nodes/comfyui-manager"
+
+    - name: Add comfy alias to .bashrc
+      lineinfile:
+        path: "~/.bashrc"
+        line: "{{ comfy_alias }}"
+
+    - name: Display completion message
+      debug:
+        msg: "DONE Installing ComfyUI..."

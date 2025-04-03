@@ -281,6 +281,21 @@ cd docker
 docker-compose restart litellm  
 ```
 
+## How to activate other applications?
+- To activate an application:
+- Edit caddy\apps\<app-caddy-file>
+    - Remove ``(not activated)`` text from first line. Just keep the app name.
+```bat
+cd caddy\apps
+update <caddy-file-from-apps-folder>
+cd ..\..
+cd docker
+do <app-folder> up
+```
+- Open Controller and open the app
+- If you want to run any application that is in the form of a docker container, just study one of the app and follow the pattern.
+
+
 ### How to manage Open WebUI users?
 TODO
 
@@ -443,6 +458,15 @@ docker-compose up -d
 
 ## Troubleshooting
 
+### Permission error when doing SSH
+- If you have key permissions issue during sshe, run these commands to fix the issue: (replace file path with your own)
+- Replace path with your project path in following CMD commands. 
+```bat
+icacls "D:\ws\my-open-webui\keys\private_key.pem" /inheritance:r
+icacls "D:\ws\my-open-webui\keys\private_key.pem" /grant:r %username%:R
+rkh
+```
+
 ### I messed up the install. How can I restart?
 - If you have done terraform apply...
     - In cmd window cd to terraform folder and do "terraform destroy"
@@ -578,6 +602,58 @@ deploy.bat controller
  
 12. Q: Can OpenWebUI be customized for specific use cases?  
     A: Yes, OpenWebUI is designed to be customizable. Users can often modify the interface, add new features, or integrate it with other tools to suit their specific requirements or organizational needs.
+
+
+## Monthly reset by admins
+- Some organizaions delete all the resources at the end of the month in their R&D env.
+- If that happens follow these steps:
+    - Delete Routing table (which has name of your project_id)
+    - Delete VPC
+
+
+## GPU EC2 instance
+- WARRNING: GPU instances are very expensive. Control cost by keeping it down when not using. 
+- Increase quota for G instance:
+    - http://aws.amazon.com/contact-us/ec2-request
+    - Select your region 
+    - Set new Limit to 10
+- Go to AWS Console, Service Quota, for "Amazon Elastic Compute Cloud (Amazon EC2)" service and request to increase "Running On-Demand G and VT instances" to 10. (Assuming that you are using g5.xlarge instance type.)
+    - Wait for the quota increase to be approved.
+- To create GPU instance add following variable in ``terraform\terraform.tfvars.json``
+```json
+   "create_gpu_instance": true
+```
+- Run terraform apply
+
+### How to run comfyui on GPU EC2?
+- SSSH in GPU EC2 using ``ssheg`` shortcut
+- Set password
+    - Generate password hash ``caddy hash-password``
+    - Copy hash in /etc/caddy/Caddyfile
+        - Password hash goes in ``basicauth`` section.
+        - First part is the user name and next is hash
+        - Optionally, You can change user name, if you want
+    - Reload caddy ``sudo systemctl reload caddy``
+- Run command ``comfy``
+- Open browser and access it using port 7104
+
+### Start-stop GPU EC2
+- Use Controller or shortcuts! ``ec2g`` or ``ec2xg``
+
+
+## Work in progress
+### Anthropic Claude Code
+export CLAUDE_CODE_USE_BEDROCK=1
+export ANTHROPIC_MODEL='us.anthropic.claude-3-7-sonnet-20250219-v1:0'
+export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
+export AWS_REGION
+
+export ANTHROPIC_MODEL='anthropic.claude-3-haiku-20240307-v1:0'
+export ANTHROPIC_SMALL_FAST_MODEL='anthropic.claude-3-haiku-20240307-v1:0'
+
+
+ANTHROPIC_MODEL='us.anthropic.claude-3-7-sonnet-20250219-v1:0'
+
 
 ## TODO:
 

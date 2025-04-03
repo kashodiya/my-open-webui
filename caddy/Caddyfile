@@ -5,9 +5,9 @@
     encode gzip
     tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
 }
-(auth_config) {
-    basicauth {
-        admin $2a$14$TMXXMj3dYHvPE0rQb.GpauM4Yuydaqk1AUOMtpBSZpkI6O1Y/Y3Mm
+(auth_basic) {
+    basicauth /* {
+        import /etc/caddy/users.txt
     }
     request_header X-Authenticated-User {http.auth.user.id}
 }

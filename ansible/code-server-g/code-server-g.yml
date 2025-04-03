@@ -1,0 +1,57 @@
+---
+- name: Install and configure code-server
+  hosts: all
+  become: yes
+  vars:
+    # TODO: Do not hardcode password
+    code_server_password: "testtest"
+    code_server_config_file: "/home/ubuntu/.config/code-server/config.yaml"
+
+  tasks:
+    - name: Check if code-server is installed
+      command: command -v code-server
+      register: code_server_check
+      ignore_errors: yes
+      changed_when: false
+
+    - name: Install code-server if not installed
+      become_user: ubuntu
+      get_url:
+        url: https://code-server.dev/install.sh
+        dest: /tmp/install_code-server.sh
+      when: code_server_check.rc != 0
+
+    - name: Run the code-server installation script
+      become_user: ubuntu
+      command: sh /tmp/install_code-server.sh
+      when: code_server_check.rc != 0
+
+    - name: Create code-server config directory
+      become_user: ubuntu
+      file:
+        path: "{{ code_server_config_file | dirname }}"
+        state: directory
+
+    - name: Configure code-server
+      become_user: ubuntu
+      copy:
+        dest: "{{ code_server_config_file }}"
+        content: |
+          bind-addr: 127.0.0.1:9109
+          auth: password
+          password: {{ code_server_password }}
+          cert: false
+      when: code_server_check.rc != 0
+
+    - name: Enable and start code-server service
+      become: yes
+      systemd:
+        name: "code-server@ubuntu"
+        enabled: yes
+        state: started
+      when: code_server_check.rc != 0
+
+    - name: Inform that code-server is already installed
+      debug:
+        msg: "code-server is already installed."
+      when: code_server_check.rc == 0

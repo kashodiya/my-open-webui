@@ -1,0 +1,6 @@
+# Agno UI (not activated)
+:7109 {
+    import common
+    import auth_basic
+    reverse_proxy localhost:8109
+}

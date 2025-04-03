@@ -1,0 +1,62 @@
+---
+- name: Set up and run Agent UI
+  hosts: localhost
+  become: yes
+  become_user: ec2-user
+  vars:
+    user_home: "/home/ec2-user"
+
+  tasks:
+    - name: Create agno directory
+      ansible.builtin.file:
+        path: "{{ user_home }}/agno"
+        state: directory
+        mode: '0755'
+
+    - name: Install create-agent-ui
+      ansible.builtin.command:
+        cmd: npx create-agent-ui@latest
+        chdir: "{{ user_home }}/agno"
+      register: create_agent_ui_result
+      changed_when: create_agent_ui_result.rc == 0
+
+    - name: Install npm dependencies
+      ansible.builtin.command:
+        cmd: npm install
+        chdir: "{{ user_home }}/agno/agent-ui"
+      register: npm_install_result
+      changed_when: npm_install_result.rc == 0
+
+    - name: Create agno-agent-ui service
+      become: yes
+      become_user: root
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/agno-agent-ui.service
+        content: |
+          [Unit]
+          Description=Agno Agent UI Next.js Development Server
+          After=network.target
+
+          [Service]
+          Type=simple
+          User=ec2-user
+          WorkingDirectory={{ user_home }}/agno/agent-ui
+          ExecStart=/usr/bin/npx next dev -p 8109
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd
+      become: yes
+      become_user: root
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
+    - name: Start and enable agno-agent-ui service
+      become: yes
+      become_user: root
+      ansible.builtin.systemd:
+        name: agno-agent-ui
+        state: started
+        enabled: yes

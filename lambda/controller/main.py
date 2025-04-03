@@ -253,10 +253,12 @@ def stop_ec2_get_handler(event, instance_id):
         }
     return response
 
+
+
 def start_ec2_get_handler(event, instance_id):
     try:
         start_response = ec2_client.start_instances(InstanceIds=[instance_id])
-        
+
         # Get the current state of the instance
         instance_state = start_response['StartingInstances'][0]['CurrentState']['Name']
         
@@ -876,6 +878,15 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
 #     except requests.exceptions.RequestException as e:
 #         print(f"An error occurred: {e}")
 
+def getInstanceIdByIndex(event, project_info):
+    query_params = event.get('queryStringParameters', {})
+    index = int(query_params['index'])
+    if index == 0:
+        return project_info['instanceId']
+    else:
+        return project_info['instanceIdG']
+
+
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
     ('/login', 'POST'): login_post_handler,
@@ -984,13 +995,16 @@ def lambda_handler(event, context):
             ec2_security_group_id = project_info['ec2SecurityGroupId'] 
             return handler(event, ec2_security_group_id)
         elif handler == start_ec2_get_handler:
-            instance_id = project_info['instanceId'] 
+            # instance_id = project_info['instanceId']
+            instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == stop_ec2_get_handler:
-            instance_id = project_info['instanceId'] 
+            # instance_id = project_info['instanceId'] 
+            instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == ec2_status_get_handler:
-            instance_id = project_info['instanceId'] 
+            # instance_id = project_info['instanceId'] 
+            instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == ensble_disable_start_stop_ec2_schedular_get_handler:
             return handler(event, project_id)

@@ -1,0 +1,27 @@
+
+
+---
+- name: Install python
+  hosts: localhost
+  connection: local
+  become: yes
+
+  tasks:
+
+    - name: Install Python3, pip, and venv on Ubuntu and set python alias
+      become: yes
+      block:
+        - name: Install Python packages
+          apt:
+            name:
+              - python3
+              - python3-pip
+              - python3-venv
+            state: present
+            update_cache: yes
+
+        - name: Add python alias to .bashrc
+          lineinfile:
+            path: /home/ubuntu/.bashrc
+            line: 'alias python=python3'
+            create: yes

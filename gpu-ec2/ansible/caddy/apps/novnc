@@ -1,0 +1,6 @@
+# novnc
+:8105 {
+    reverse_proxy localhost:9105
+    import common
+    import auth_config
+}

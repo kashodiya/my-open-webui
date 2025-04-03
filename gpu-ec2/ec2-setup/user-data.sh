@@ -136,7 +136,7 @@ EOF
 
 (auth_config) {
     basicauth {
-        admin $2a$14$TMXXMj3dYHvPE0rQb.GpauM4Yuydaqk1AUOMtpBSZpkI6O1Y/Y3Mm
+        admin $2a$14$J6BFoAGj68Y7DwZ3NT1yx./ILPGHSbnq4nGCqdQAisqlEGtxpL7xq
     }
     request_header X-Authenticated-User {http.auth.user.id}
 }

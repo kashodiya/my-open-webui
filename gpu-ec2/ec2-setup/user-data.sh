@@ -235,7 +235,7 @@ install_code_server() {
         cat << EOF > "$CONFIG_FILE"
 bind-addr: 127.0.0.1:9109
 auth: password
-password: testtest
+password: $CODE_SERVER_PASSWORD
 cert: false
 EOF
         sudo systemctl enable --now code-server@$USER

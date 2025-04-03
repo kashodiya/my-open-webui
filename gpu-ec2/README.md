@@ -2,9 +2,8 @@
 - It is a EC2 with GPU
 - To experiment with projects requiring GPU
 
-## How it is created
-- See terraform\gpu-ec2.tf
-
+## How EC2 is created
+- See terraform\main.tf
 
 ## Initial setup
 - After the EC2 is created

@@ -15,5 +15,6 @@ lambda/function.zip
 lambda/layer.zip
 
 *.zip
+help.txt
 
 web-apps/server-tool/__pycache__

@@ -436,6 +436,7 @@ locals {
   # generate_app_urls_py = file("${path.module}/../scripts/generate-app-urls.py")
   # caddyfile = file("${path.module}/../caddy/Caddyfile")
   user_data_script   = file("${path.module}/../ec2-setup/user-data.sh")
+  gpu_user_data_script   = file("${path.module}/../gpu-ec2/ec2-setup/user-data.sh")
   ec2_user_data = <<-EOT
 #!/bin/bash
 
@@ -451,7 +452,35 @@ ${local.user_data_script}
 
 EOT 
 
+
+  gpu_ec2_user_data = <<-EOT
+#!/bin/bash
+
+export PROJECT_ID=${var.project_id}
+export AWS_REGION=${data.aws_region.current.name}
+export CODE_SERVER_PASSWORD="${var.code_server_password}"
+export LITELLM_API_KEY="${var.litellm_api_key}"
+export BEDROCK_GATEWAY_API_KEY="${var.bedrock_gateway_api_key}"
+export JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
+export DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
+
+${local.gpu_user_data_script}
+
+EOT 
+
 }
+
+
+
+
+resource "aws_s3_object" "gpu_ec2_setup_script" {
+  bucket  = aws_s3_bucket.data_bucket.id
+  key     = "gpu-ec2-setup.sh"
+  content = local.gpu_ec2_user_data
+  # content_type = "text/x-sh"
+  content_type = "text/x-shellscript"  
+}
+
 
 resource "aws_s3_object" "ec2_setup_script" {
   bucket  = aws_s3_bucket.data_bucket.id
@@ -537,6 +566,16 @@ resource "aws_instance" "gpu_instance" {
   iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
   vpc_security_group_ids      = [aws_security_group.allow_sources.id]
   associate_public_ip_address = true # Ensure public IP is associated
+
+  user_data = <<-EOF
+#!/bin/bash
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/gpu-ec2-setup.sh /root/
+chmod +x /root/gpu-ec2-setup.sh
+sudo apt-get install dos2unix
+dos2unix /root/gpu-ec2-setup.sh
+/root/gpu-ec2-setup.sh
+EOF
+
 
   root_block_device {
     volume_type           = "gp3"

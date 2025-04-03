@@ -615,6 +615,19 @@ deploy.bat controller
 ```
 - Run terraform apply
 
+### How to run comfyui on GPU EC2?
+- SSSH in GPU EC2 using ``ssheg`` shortcut
+- Set password
+    - Generate password hash ``caddy hash-password``
+    - Copy hash in /etc/caddy/Caddyfile
+        - Password hash goes in ``basicauth`` section.
+        - First part is the user name and next is hash
+        - Optionally, You can change user name, if you want
+    - Reload caddy ``sudo systemctl reload caddy``
+- Run command ``comfy``
+- Open browser and access it using port 7104
+
+
 
 ## Work in progress
 ### Anthropic Claude Code

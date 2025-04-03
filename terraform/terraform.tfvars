@@ -7,7 +7,6 @@ instance_type           = "m5.2xlarge"
 <<<<<<< HEAD
 project_id              = ""
 =======
-project_id              = "myowu"
 admin_password          = ""
 >>>>>>> main
 code_server_password    = ""

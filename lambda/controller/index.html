@@ -128,40 +128,43 @@
         </v-col>
     
         <v-col cols="8">
-          <v-card>
-            <v-card-title>EC2 Controls
-
-              (Status: {{ec2Status}})
-              <v-icon
-                xx-small
-                class="ml-2"
-                @click="getEc2Status"
-              >
-                mdi-refresh
-              </v-icon>
-
-            </v-card-title>
-            <v-card-text>
-              <v-btn
-                color="success"
-                @click="startEc2"
-                class="mr-4 mb-4"
-              >
-                <v-icon left>mdi-play</v-icon>
-                Start EC2
-              </v-btn>
-              
-              <v-btn
-                color="error"
-                @click="stopEc2"
-                class="mr-4 mb-4"
-              >
-                <v-icon left>mdi-stop</v-icon>
-                Stop EC2
-              </v-btn>
-            </v-card-text>
-          </v-card>
-        </v-col>
+          <v-row>
+            <v-col v-for="(ec2, index) in ec2List" :key="index">
+              <v-card>
+                <v-card-title>{{ec2.name}} Controls
+  
+                  (Status: {{ec2.ec2Status}})
+                  <v-icon
+                    xx-small
+                    class="ml-2"
+                    @click="getEc2Status(index)"
+                  >
+                    mdi-refresh
+                  </v-icon>
+  
+                </v-card-title>
+                <v-card-text>
+                  <v-btn
+                    color="success"
+                    @click="startEc2(index)"
+                    class="mr-4 mb-4"
+                  >
+                    <v-icon left>mdi-play</v-icon>
+                    Start EC2
+                  </v-btn>
+                  
+                  <v-btn
+                    color="error"
+                    @click="stopEc2(index)"
+                    class="mr-4 mb-4"
+                  >
+                    <v-icon left>mdi-stop</v-icon>
+                    Stop EC2
+                  </v-btn>
+                </v-card-text>
+              </v-card>
+  
+            </v-col>
       </v-row>
 
 
@@ -223,19 +226,19 @@
           apps: [],
           projectInfo: {},
           isLoading: false,
-          ec2SetupStatus: 'Loading...',
-          ec2Status: 'unknown'
+          ec2List: [{name: 'EC2', ec2Status: 'unknown'}],   // If GPU exist we will add a element 
+          ec2SetupStatus: 'Loading...'
         }
       },
       methods: {
-        async getEc2Status(){
-            this.ec2Status = '...';
-            const response = await fetch(`${baseUrl}/ec2_status`);
+        async getEc2Status(index){
+            this.ec2List[index].ec2Status = '...';
+            const response = await fetch(`${baseUrl}/ec2_status?index=${index}`);
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
-            this.ec2Status = await response.json();
-            console.log('EC2 status:', this.ec2Status);
+            this.ec2List[index].ec2Status = await response.json();
+            console.log('EC2 status:', this.ec2List[index].ec2Status);
         },
         async refreshProjectInfo(){
             // If no cached data, fetch from API
@@ -249,10 +252,10 @@
             // Cache the fetched data
             sessionStorage.setItem('projectInfo', JSON.stringify(this.projectInfo));
         },
-        async startEc2() {
+        async startEc2(index) {
           try {
-            this.ec2Status = '...';
-            let response = await fetch(`${baseUrl}/start-ec2`);
+            this.ec2List[index].ec2Status = '...';
+            let response = await fetch(`${baseUrl}/start-ec2?index=${index}`);
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -262,16 +265,16 @@
             if (state.status) {
               this.$root.showSnackbar(`Start status: ${state.status}`, 'success');
             }
-            this.getEc2Status();
+            this.getEc2Status(index);
           } catch (error) {
             console.error("Error starting EC2:", error);
             this.$root.showSnackbar("Error starting EC2", 'error');
           }
         },
-        async stopEc2() {
+        async stopEc2(index) {
           try {
-            this.ec2Status = '...';
-            let response = await fetch(`${baseUrl}/stop-ec2`);
+            this.ec2List[index].ec2Status = '...';
+            let response = await fetch(`${baseUrl}/stop-ec2?index=${index}`);
             if (!response.ok) {
               throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -282,7 +285,7 @@
               // this.$root.showSnackbar(state.status, 'success');
               this.$root.showSnackbar(`Stop status: ${state.status}`, 'success');
             }
-            this.getEc2Status();
+            this.getEc2Status(index);
           } catch (error) {
             console.error("Error stopping EC2:", error);
             this.$root.showSnackbar("Error stopping EC2", 'error');
@@ -318,7 +321,12 @@
         }
 
         this.getEc2SetupStatus();
-        this.getEc2Status();
+        this.getEc2Status(0);
+        if(this.projectInfo.instanceIdG){
+          this.ec2List.push({name: 'GPU EC2', ec2Status: 'unknown'});
+          this.getEc2Status(1);
+        }
+
 
         console.log('Home mounted');
       },

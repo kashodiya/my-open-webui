@@ -616,6 +616,20 @@ deploy.bat controller
 - Run terraform apply
 
 
+## Work in progress
+### Anthropic Claude Code
+export CLAUDE_CODE_USE_BEDROCK=1
+export ANTHROPIC_MODEL='us.anthropic.claude-3-7-sonnet-20250219-v1:0'
+export ANTHROPIC_SMALL_FAST_MODEL='us.anthropic.claude-3-5-haiku-20241022-v1:0'
+export AWS_REGION
+
+export ANTHROPIC_MODEL='anthropic.claude-3-haiku-20240307-v1:0'
+export ANTHROPIC_SMALL_FAST_MODEL='anthropic.claude-3-haiku-20240307-v1:0'
+
+
+ANTHROPIC_MODEL='us.anthropic.claude-3-7-sonnet-20250219-v1:0'
+
+
 ## TODO:
 
 Create shortcuts to enable disable ec2 schedular

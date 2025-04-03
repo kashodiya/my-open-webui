@@ -5,6 +5,7 @@ allowed_source_ips      = []
 ami                     = "ami-08a0d1e16fc3f61ea"
 instance_type           = "m5.2xlarge"
 project_id              = "myowu"
+admin_password          = ""
 code_server_password    = ""
 server_tool_password    = ""
 litellm_api_key         = ""

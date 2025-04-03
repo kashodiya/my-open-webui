@@ -458,6 +458,15 @@ docker-compose up -d
 
 ## Troubleshooting
 
+### Permission error when doing SSH
+- If you have key permissions issue during sshe, run these commands to fix the issue: (replace file path with your own)
+- Replace path with your project path in following CMD commands. 
+```bat
+icacls "D:\ws\my-open-webui\keys\private_key.pem" /inheritance:r
+icacls "D:\ws\my-open-webui\keys\private_key.pem" /grant:r %username%:R
+rkh
+```
+
 ### I messed up the install. How can I restart?
 - If you have done terraform apply...
     - In cmd window cd to terraform folder and do "terraform destroy"

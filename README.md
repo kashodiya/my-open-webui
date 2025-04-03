@@ -375,6 +375,12 @@ cat /home/ec2-user/.config/code-server/config.yaml
 
 ## Tips and tricks
 
+### Want to explore Open WebUI APIs?
+- Open Open WebUI and add /docs after the port number in the URL!
+- If you want to programatically use the API, create a API Key.
+    - Go to Settings => Account => API Keys => Show => Create new secret key
+- Here are the docs how to use it: https://docs.openwebui.com/getting-started/api-endpoints/
+
 ### Careful before changing project_id
 - If you have already deployed this product and change project_id and deploy again, it will destroy previous deployment. 
 

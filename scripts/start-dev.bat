@@ -68,6 +68,9 @@ echo litellm     = Opens LiteLLM in Browser >> help.txt
 doskey controller=start %CONTROLLER_URL%
 echo controller  = Opens Controller in Browser >> help.txt
 
+doskey comfy=start https://%ELASTIC_IP_G%:7104/
+echo comfy      = Opens ComfyUI (GPU EC2) in Browser >> help.txt
+
 doskey esl=%SCRIPTS_DIR%\ec2-setup-logs.bat
 echo esl   = See EC2 setup logs >> help.txt
 

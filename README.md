@@ -604,11 +604,12 @@ deploy.bat controller
 
 ## GPU EC2 instance
 - WARRNING: GPU instances are very expensive. Control cost by keeping it down when not using. 
-- Increate quota for G instance:
+- Increase quota for G instance:
     - http://aws.amazon.com/contact-us/ec2-request
     - Select your region 
-    - Set new Limit to 5
-- Go tp AWS Console, Service Quota, for "Amazon Elastic Compute Cloud (Amazon EC2)" service and request to increase "Running On-Demand G and VT instances" to 5. (Assuming that you are using g5.xlarge instance type.)
+    - Set new Limit to 10
+- Go to AWS Console, Service Quota, for "Amazon Elastic Compute Cloud (Amazon EC2)" service and request to increase "Running On-Demand G and VT instances" to 10. (Assuming that you are using g5.xlarge instance type.)
+    - Wait for the quota increase to be approved.
 - To create GPU instance add following variable in ``terraform\terraform.tfvars.json``
 ```json
    "create_gpu_instance": true
@@ -627,6 +628,8 @@ deploy.bat controller
 - Run command ``comfy``
 - Open browser and access it using port 7104
 
+### Start-stop GPU EC2
+- Use Controller or shortcuts! ``ec2g`` or ``ec2xg``
 
 
 ## Work in progress

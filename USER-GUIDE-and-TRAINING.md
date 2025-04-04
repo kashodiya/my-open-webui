@@ -102,7 +102,8 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - New chat
 - Select model: Claude 3 Haiku By Anthropic
 - Click "Code Interpreter" button
-- Enter question: Get current time
+- Enter question: Write python code to get current time
+- OR: Write python code to get user name
 - Hit Enter
 - Expand: Analyzed dropdown
 - Check the time printed in "STDOUT/STDERR"

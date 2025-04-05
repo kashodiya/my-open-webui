@@ -1,9 +1,12 @@
 #!/bin/bash
 
+# exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+exec > >(tee /home/ubuntu/user-data.log|logger -t user-data -s 2>&1) 2>&1
+
 # Function to update and upgrade the system
 update_system() {
-    apt-get update
-    apt-get upgrade -y
+    sudo apt-get update
+    sudo apt-get upgrade -y
 }
 
 install_comfyui() {
@@ -211,9 +214,9 @@ install_conda() {
 install_ansible() {
     if ! command -v ansible &> /dev/null; then
         echo "Installing Ansible..."
-        apt-get install -y software-properties-common
-        apt-add-repository --yes --update ppa:ansible/ansible
-        apt-get install -y ansible
+        sudo apt-get install -y software-properties-common
+        sudo apt-add-repository --yes --update ppa:ansible/ansible
+        sudo apt-get install -y ansible
     else
         echo "Ansible is already installed."
         ansible --version
@@ -270,24 +273,7 @@ ubuntu_installations() {
 
 # Execute root installations
 root_installations
-
-# Switch to ubuntu user and execute ubuntu installations
-su - ubuntu << EOF
-$(declare -f ubuntu_installations)
-$(declare -f install_conda)
-$(declare -f install_comfyui)
-$(declare -f install_code_server)
-
 ubuntu_installations
-EOF
-
-
-
-# mkdir -p /home/ubuntu/.config/code-server
-# touch /home/ubuntu/.config/code-server/config.yaml
-# mkdir -p /home/ubuntu/setup/ansible
-# mkdir -p /home/ubuntu/docker
-
 
 echo "===---===---===---"
 echo "All installations completed."

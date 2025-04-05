@@ -4,6 +4,7 @@
 allowed_source_ips      = []
 ami                     = "ami-08a0d1e16fc3f61ea"
 instance_type           = "m5.2xlarge"
+gpu_instance_type       = "g5.xlarge"  
 project_id              = "myowu"
 admin_password          = ""
 code_server_password    = ""
@@ -15,4 +16,5 @@ controller_auth_key     = ""
 region                  = "us-east-1"
 availability_zone       = "us-east-1a"
 create_gpu_instance     = false
+
 

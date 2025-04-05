@@ -74,6 +74,9 @@ echo comfy      = Opens ComfyUI (GPU EC2) in Browser >> help.txt
 doskey esl=%SCRIPTS_DIR%\ec2-setup-logs.bat
 echo esl   = See EC2 setup logs >> help.txt
 
+doskey eslg=%SCRIPTS_DIR%\gpu-ec2-setup-logs.bat
+echo eslg   = See EC2 setup logs for GPU >> help.txt
+
 doskey ulc=%SCRIPTS_DIR%\update-litellm-config.bat
 echo ulc   = Update LiteLLM config >> help.txt
 
@@ -83,7 +86,7 @@ echo tcl   = Tail Controller Lambda logs >> help.txt
 doskey tec2=ssh-keygen -R %ELASTIC_IP% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.main_instance $T %SCRIPTS_DIR%\tf-apply.bat 
 echo tec2  = Taint ec2 and destroy and recreate it >> help.txt
 
-doskey tec2g=ssh-keygen -R %ELASTIC_IP_G% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.gpu_instance $T %SCRIPTS_DIR%\tf-apply.bat 
+doskey tec2g=ssh-keygen -R %ELASTIC_IP_G% $T cd %TERRAFORM_DIR% $T terraform taint aws_instance.gpu_instance[0] $T %SCRIPTS_DIR%\tf-apply.bat 
 echo tec2g = Taint GPU ec2 and destroy and recreate it >> help.txt
 
 doskey rkh=ssh-keygen -R %ELASTIC_IP%  

@@ -8,6 +8,7 @@ variable "ami" {}
 variable "instance_type" {}
 variable "availability_zone" {}
 variable "create_gpu_instance" {}
+variable "gpu_instance_type" {}
 
 variable "jupyter_lab_token" {
   type        = string
@@ -573,7 +574,7 @@ resource "aws_instance" "gpu_instance" {
   ami = "ami-003c04f18386a1dcc"
 
   # instance_type = "g4dn.xlarge"  
-  instance_type = "g5.xlarge"  
+  instance_type               = var.gpu_instance_type
   subnet_id                   = aws_subnet.public.id
   key_name                    = aws_key_pair.main_key.key_name
   iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
@@ -582,11 +583,12 @@ resource "aws_instance" "gpu_instance" {
 
   user_data = <<-EOF
 #!/bin/bash
-aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/gpu-ec2-setup.sh /root/
-chmod +x /root/gpu-ec2-setup.sh
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/gpu-ec2-setup.sh /home/ubuntu
+chmod +x /home/ubuntu/gpu-ec2-setup.sh
+sudo chown ubuntu:ubuntu /home/ubuntu/gpu-ec2-setup.sh
 sudo apt-get install dos2unix
-dos2unix /root/gpu-ec2-setup.sh
-/root/gpu-ec2-setup.sh
+dos2unix /home/ubuntu/gpu-ec2-setup.sh
+su - ubuntu -c /home/ubuntu/gpu-ec2-setup.sh
 EOF
 
 
@@ -598,7 +600,7 @@ EOF
   }
 
   tags = {
-    Name      = "${var.project_id}_gpu"
+    Name      = "${var.project_id}_gpu_server"
     CreatedBy = "terraform"
   }
 }

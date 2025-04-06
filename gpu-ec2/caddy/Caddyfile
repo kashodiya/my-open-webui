@@ -1,67 +1,20 @@
 {
     auto_https off
 }
-
 (common) {
     encode gzip
     tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
 }
-
-(auth_config) {
-    basicauth {
-        admin $2a$14$k7SnOMazPtbhmS6ynmg6me1uJNjhOCqXCVtx/GOKqGGaqpzTTEcM6
+(auth_basic) {
+    basicauth /* {
+        import /etc/caddy/users.txt
     }
     request_header X-Authenticated-User {http.auth.user.id}
 }
 
+# Just for test
 :7100 {
-    respond "Hello from Caddy!"
+    respond "Hello from my server!"
 }
 
-# portainer
-:7102 {
-    import common
-    reverse_proxy https://localhost:9102 {
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }    
-}
-
-# jupyter-lab
-:7103 {
-    import common
-    reverse_proxy localhost:9103
-}
-
-# comfyui
-:7104 {
-    reverse_proxy localhost:9104
-    import common
-    # import auth_config
-}
-
-# code-server
-:7109 {
-    import common
-    reverse_proxy localhost:9109
-}
-
-# dify
-:7110 {
-    import common
-    reverse_proxy localhost:9110
-}
-
-# dify
-:7111 {
-    import common
-    reverse_proxy localhost:9111
-}
-
-# n8n
-:7112 {
-    import common
-    reverse_proxy localhost:9112
-}
-
+import apps/*.Caddyfile

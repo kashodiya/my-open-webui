@@ -669,3 +669,13 @@ Restart Portainer btn
 
 set-dev.bat
     - shortcut help - show again
+
+- GPU
+    - DONE: ZIP is done, copied to s3
+    - DONE: Unzip in user data
+    - Generate: apps json store it in s3
+    - Use caddy from unzipped folder
+    - Generate hashed password for caddy admin
+
+## Verify
+- GPU user data is deleting "~/temp/~Miniconda3-latest-Linux-x86_64.sh" after install.

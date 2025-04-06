@@ -9,6 +9,7 @@ variable "instance_type" {}
 variable "availability_zone" {}
 variable "create_gpu_instance" {}
 variable "gpu_instance_type" {}
+variable "gpu_ami" {}
 
 variable "jupyter_lab_token" {
   type        = string
@@ -381,6 +382,13 @@ resource "aws_key_pair" "main_key" {
 #   etag = data.archive_file.caddy_zip.output_md5
 # }
 
+module "gpu-ec2_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "gpu-ec2"
+  source_dir      = "${path.module}/../gpu-ec2"
+  output_filename = "gpu-ec2.zip"
+}
 
 module "caddy_zip_upload" {
   source          = "./modules/zip_and_upload_to_s3"
@@ -571,7 +579,7 @@ resource "aws_instance" "gpu_instance" {
   # ami           = "ami-001c6931a3dcdfbff"
 
   # Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 20.04) 20240827
-  ami = "ami-003c04f18386a1dcc"
+  ami = var.gpu_ami
 
   # instance_type = "g4dn.xlarge"  
   instance_type               = var.gpu_instance_type
@@ -598,6 +606,16 @@ EOF
     encrypted             = true
     delete_on_termination = true
   }
+
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2 # Increase this value as needed for docker container
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 
   tags = {
     Name      = "${var.project_id}_gpu_server"

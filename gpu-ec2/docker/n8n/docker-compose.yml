@@ -3,8 +3,10 @@ services:
     image: docker.n8n.io/n8nio/n8n    
     user: "1000:1000"
     container_name: n8n
+    extra_hosts:
+      - "host.docker.internal:host-gateway"    
     ports:      
-      - "9112:5678"    
+      - "8107:5678"    
     environment:      
       - N8N_BASIC_AUTH_ACTIVE=true      
       - N8N_BASIC_AUTH_USER=user      
@@ -12,12 +14,12 @@ services:
       - N8N_SECURE_COOKIE=false
     volumes:      
       - n8n_storage:/home/node/.n8n
-#     networks:
-#       - common-network
+    networks:
+      - shared_network
 
-# networks:
-#   common-network:
-#     external: true
+networks:
+  shared_network:
+    external: true
     
 volumes:
   n8n_storage:

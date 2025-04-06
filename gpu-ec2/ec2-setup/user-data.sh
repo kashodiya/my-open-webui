@@ -19,6 +19,7 @@ get_code_from_s3 (){
 
     # Download all files from S3 bucket to ~/code
     aws s3 cp s3://${DATA_BUCKET_NAME}/code/gpu-ec2.zip $CODE_DIR
+    aws s3 cp s3://${DATA_BUCKET_NAME}/code/scripts.zip $CODE_DIR
 
     # Check if the download was successful
     if [ $? -eq 0 ]; then
@@ -50,8 +51,60 @@ get_code_from_s3 (){
 
     # sudo chown -R ubuntu:ubuntu $CODE_DIR
     cp -a /home/ubuntu/code/gpu-ec2 /home/ubuntu/
+    cp -a /home/ubuntu/code/scripts /home/ubuntu/
 
     echo "Download and unzip process completed."
+}
+
+
+add_vars_to_bashrc() {
+    # Array of variable names to add to .bashrc
+    variables=(
+        "PROJECT_ID"
+        "AWS_REGION"
+        "CODE_SERVER_PASSWORD"
+        "LITELLM_API_KEY"
+        "BEDROCK_GATEWAY_API_KEY"
+        "JUPYTER_LAB_TOKEN"
+        "DATA_BUCKET_NAME"
+    )
+
+    # Path to .bashrc file
+    bashrc_file="/home/ubuntu/.bashrc"
+
+    # Function to add variable to .bashrc if it's set and not already present
+    add_variable_to_bashrc() {
+        local var_name=$1
+        local var_value=${!var_name}
+        
+        if [ -n "$var_value" ]; then
+            if ! grep -q "export $var_name=" "$bashrc_file"; then
+                echo "export $var_name=\"$var_value\"" >> "$bashrc_file"
+                echo "Added $var_name to .bashrc"
+            else
+                echo "$var_name already exists in .bashrc, skipping"
+            fi
+        else
+            echo "$var_name is not set, skipping"
+        fi
+    }
+
+    # Main loop to process each variable
+    for var in "${variables[@]}"; do
+        add_variable_to_bashrc "$var"
+    done
+
+    echo "Finished updating .bashrc"
+}
+
+
+create_apps_json() {
+    SCRIPTS_DIR=/home/ubuntu/scripts
+    cd $SCRIPTS_DIR
+    # chown -R ubuntu:ubuntu $SCRIPTS_DIR
+    export PATH=/home/ubuntu/miniconda/bin:$PATH
+    python generate-app-urls.py
+    echo "apps.json has been generated."
 }
 
 command_exists() {
@@ -78,7 +131,7 @@ install_comfyui() {
         cd $COMFY_DIR/custom_nodes/
         git clone https://github.com/ltdrdata/ComfyUI-Manager comfyui-manager
 
-        echo "alias comfy='cd /home/ubuntu/projects/comfy/ComfyUI && python main.py --port 9104'" >> ~/.bashrc
+        echo "alias comfy='cd /home/ubuntu/projects/comfy/ComfyUI && python main.py --port 8108'" >> ~/.bashrc
         echo "DONE Installing ComfyUI..."
     fi
 }
@@ -190,6 +243,9 @@ EOF'
         sudo systemctl daemon-reload
         sudo systemctl start caddy
         sudo systemctl enable caddy
+
+        # Generate admin hash
+        generate_caddy_users
     fi
 }
 
@@ -213,10 +269,17 @@ install_conda() {
         /home/ubuntu/miniconda/bin/conda init
         source $HOME/.bashrc
         echo "DONE Installing mini-conda..."
+
+        echo "Installing pytghon packages..."
+        /home/ubuntu/miniconda/bin/pip install --quiet boto3 ansible
+        echo "DONE Installing python packages"
     fi
     
     # Verify installation
     /home/ubuntu/miniconda/bin/conda --version
+
+
+
 }
 
 install_ansible() {
@@ -255,12 +318,60 @@ EOF
     fi
 }
 
+generate_caddy_users() {
+    echo "Installing expect..."
+    sudo apt install expect -y
+    echo "DONE Installing expect..."
+    echo "Generating admin pwd hash..."
+    export PASSWORD="$ADMIN_PASSWORD"
+    export VERIFICATION_PASSWORD="$ADMIN_PASSWORD"
+    # Create a temporary expect script
+    EXPECT_SCRIPT=$(mktemp)
+    cat > "$EXPECT_SCRIPT" << 'EOF'
+    #!/usr/bin/expect
+    set timeout 10
+    # Start the caddy hash command
+    spawn caddy hash-password
+    # Wait for the "Enter password:" prompt
+    expect "Enter password:"
+    send "$env(PASSWORD)\r"
+    # Wait for the "Confirm password:" prompt
+    expect "Confirm password:"
+    send "$env(VERIFICATION_PASSWORD)\r"
+    # Wait for the hash to be printed
+    expect {
+        "Passwords do not match" {
+            puts "Error: Passwords do not match"
+            exit 1
+        }
+        eof
+    }
+    # Capture the last line of output as the hash
+    set HASH [wait]
+    puts "$HASH"
+EOF
+    chmod +x "$EXPECT_SCRIPT"
+    # Run the expect script and capture the output
+    OUTPUT=$(expect "$EXPECT_SCRIPT")
+    echo OUTPUT
+    echo "$OUTPUT"
+    echo OUTPUT-END
+    # Extract the last line into the HASH variable
+    HASH=$(echo "$OUTPUT" | awk '{lines[NR]=$0} END{print lines[NR-1]}')
+    echo "HASH: $HASH"
+    # Clean up the temporary expect script
+    rm "$EXPECT_SCRIPT"
+    # Add the admin user with the hashed password to the file
+    echo "admin $HASH" | sudo tee -a /etc/caddy/users.txt
+    echo "DONE Generating admin pwd hash..."
+}
+
 install_jupyterlab() {
     if command -v jupyter; then
         echo "JupyterLab is already installed."
     else
         echo "Installing JupyterLab..."
-        /home/ubuntu/miniconda/bin/pip install --quiet jupyterlab boto3 ansible
+        /home/ubuntu/miniconda/bin/pip install --quiet jupyterlab
         /home/ubuntu/miniconda/bin/jupyter --version
     fi
 
@@ -377,7 +488,7 @@ start_containers() {
 install_portainer() {
     echo "Installing portainer in docker"
     export PORTAINER_DIR=/home/ubuntu/gpu-ec2/docker/portainer
-    # mkdir -p $PORTAINER_DIR
+    # mkdir -p $PORTAINER_DIRID-gpu-ec2-setup
     # echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
     cd $PORTAINER_DIR
     docker-compose up -d --quiet-pull
@@ -385,10 +496,29 @@ install_portainer() {
     echo "Portainer installed"
 }
 
+register_start() {
+    current_datetime=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$current_datetime" > "$PROJECT_ID-gpu-ec2-setup-started"
+    echo "Copying $PROJECT_ID-gpu-ec2-setup-started to s3://$DATA_BUCKET_NAME"
+    aws s3 cp $PROJECT_ID-gpu-ec2-setup-started s3://$DATA_BUCKET_NAME/
+    rm $PROJECT_ID-gpu-ec2-setup-started
+
+    S3_FILE_PATH="s3://${DATA_BUCKET_NAME}/${PROJECT_ID}-ec2-setup-ended"
+    aws s3 rm "$S3_FILE_PATH" --quiet
+}
+
+register_end() {
+    current_datetime=$(date "+%Y-%m-%d %H:%M:%S")
+    echo "$current_datetime" > "$PROJECT_ID-gpu-ec2-setup-ended"
+    echo "Copying $PROJECT_ID-gpu-ec2-setup-ended to s3://$DATA_BUCKET_NAME"
+    aws s3 cp $PROJECT_ID-gpu-ec2-setup-ended s3://$DATA_BUCKET_NAME/
+    rm $PROJECT_ID-gpu-ec2-setup-ended
+}
 
 # Main installation process for root user
 root_installations() {
     echo "===---===---===--- START ===---"
+    add_vars_to_bashrc    
     echo "===---===---===---"
     get_code_from_s3
     echo "===---===---===---"
@@ -406,20 +536,37 @@ root_installations() {
 }
 
 # Main installation process for ubuntu user
-# IMPORTANT: Whatever function you use in this must be declared in "su - ubuntu << EOF" block below
 ubuntu_installations() {
     echo "===---===---===---"
     install_code_server
     echo "===---===---===---"
     install_conda
     echo "===---===---===---"
-    install_jupyterlab
-    # install_comfyui
+
+    # Check if GPU_EC2_INSTALL_JUPYTERLAB is set
+    if [ "${GPU_EC2_INSTALL_JUPYTERLAB}" = "true" ]; then
+        install_jupyterlab
+    else
+        echo "Not installing Jupyter Lab."
+    fi
+    
+    echo "===---===---===---"
+    create_apps_json
+    echo "===---===---===---"
+
+    # Check if GPU_EC2_INSTALL_COMFYUI is set
+    if [ "${GPU_EC2_INSTALL_COMFYUI}" = "true" ]; then
+        install_comfyui
+    else
+        echo "Not installing ComfyUI."
+    fi
 }
 
 # Execute root installations
+register_start
 root_installations
 ubuntu_installations
+register_end
 
 echo "===---===---===---"
 echo "All installations completed."

@@ -375,6 +375,10 @@ cat /home/ec2-user/.config/code-server/config.yaml
 
 ## Tips and tricks
 
+### Naming the project
+- To use differnt project name, add ``project_id`` varaible to the terraform\terraform.tfvars.json file
+- DO NOT USE HYPHEN ``-`` CHARACTER IN THE NAME
+
 ### Want to explore Open WebUI APIs?
 - Open Open WebUI and add /docs after the port number in the URL!
 - If you want to programatically use the API, create a API Key.
@@ -667,15 +671,3 @@ Create shortcuts to enable disable ec2 schedular
 
 Restart Portainer btn
 
-set-dev.bat
-    - shortcut help - show again
-
-- GPU
-    - DONE: ZIP is done, copied to s3
-    - DONE: Unzip in user data
-    - Generate: apps json store it in s3
-    - Use caddy from unzipped folder
-    - Generate hashed password for caddy admin
-
-## Verify
-- GPU user data is deleting "~/temp/~Miniconda3-latest-Linux-x86_64.sh" after install.

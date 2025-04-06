@@ -166,6 +166,113 @@
   
             </v-col>
           </v-row>
+          <v-row>
+
+
+            <v-col>
+              <v-card>
+                <v-card-title>
+                  Project Information
+                </v-card-title>
+                <v-card-text>
+                  <v-list>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Elastic IP</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.elasticIP }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>EIP Public DNS</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.eipPublicDns }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Instance ID (G)</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.instanceIdG }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>EC2 Public DNS</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.ec2PublicDns }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Instance ID</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.instanceId }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Elastic IP (G)</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.elasticIPG }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>EIP Public DNS (G)</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.eipPublicDnsG }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Controller URL</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.controllerUrl }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Data Bucket Name</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.dataBucketName }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>Project ID</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.projectId }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                    <v-list-item>
+                      <v-list-item-content>
+                        <v-list-item-title>EC2 Security Group ID</v-list-item-title>
+                      </v-list-item-content>
+                      <v-list-item-content>
+                        <v-list-item-subtitle>{{ projectInfo.ec2SecurityGroupId }}</v-list-item-subtitle>
+                      </v-list-item-content>
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </v-card>              
+
+            </v-col>
+
+
+
+          </v-row>
         </v-col>
       </v-row>
 

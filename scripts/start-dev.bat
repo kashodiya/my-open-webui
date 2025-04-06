@@ -51,25 +51,38 @@ doskey ec2s=aws ec2 describe-instances --query "Reservations[].Instances[].[Inst
 echo ec2s  = EC2 status >> help.txt
 
 doskey open-webui=start https://%ELASTIC_IP%:7101/
-echo open-webui  = Opens Open WebUI in Browser >> help.txt
+echo open-webui   = Opens Open WebUI in Browser >> help.txt
 
 doskey portainer=start https://%ELASTIC_IP%:7102/
-echo portainer   = Opens Portainer in Browser >> help.txt
+echo portainer    = Opens Portainer in Browser >> help.txt
 
 doskey jupyterlab=start https://%ELASTIC_IP%:7103/
-echo jupyterlab  = Opens Jupyter Lab in Browser >> help.txt
+echo jupyterlab   = Opens Jupyter Lab in Browser >> help.txt
 
 doskey code-server=start https://%ELASTIC_IP%:7104/
-echo code-server = Opens code-server in Browser >> help.txt
+echo code-server  = Opens code-server in Browser >> help.txt
 
 doskey litellm=start https://%ELASTIC_IP%:7105/
-echo litellm     = Opens LiteLLM in Browser >> help.txt
+echo litellm      = Opens LiteLLM in Browser >> help.txt
 
 doskey controller=start %CONTROLLER_URL%
-echo controller  = Opens Controller in Browser >> help.txt
+echo controller   = Opens Controller in Browser >> help.txt
 
 doskey comfy=start https://%ELASTIC_IP_G%:7104/
-echo comfy      = Opens ComfyUI (GPU EC2) in Browser >> help.txt
+echo comfy        = Opens ComfyUI on GPU in Browser >> help.txt
+
+doskey litellmg=start https://%ELASTIC_IP%:7105/
+echo litellmg     = Opens LiteLLM on GPU in Browser >> help.txt
+
+doskey code-serverg=start https://%ELASTIC_IP_G%:7104/
+echo code-serverg = Opens code-server on GPU in Browser >> help.txt
+
+doskey open-webuig=start https://%ELASTIC_IP_G%:7101/
+echo open-webuig  = Opens Open WebUI on GPU in Browser >> help.txt
+
+doskey jupyterlabg=start https://%ELASTIC_IP%:7103/
+echo jupyterlabg  = Opens Jupyter Lab on GPU in Browser >> help.txt
+
 
 doskey esl=%SCRIPTS_DIR%\ec2-setup-logs.bat
 echo esl   = See EC2 setup logs >> help.txt

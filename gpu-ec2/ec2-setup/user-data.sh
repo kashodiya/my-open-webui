@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+# THIS SCRIPT IS RUN AS USER "ubuntu" from user data script, see terraform\main.tf
+
 exec > >(tee /home/ubuntu/user-data.log|logger -t user-data -s 2>&1) 2>&1
 
 # Function to update and upgrade the system
@@ -8,6 +9,56 @@ update_system() {
     sudo apt-get update
     sudo apt-get upgrade -y
 }
+
+get_code_from_s3 (){
+
+    echo "Downloading zips from S3."
+    # Create the ~/code directory if it doesn't exist
+    CODE_DIR=/home/ubuntu/code
+    mkdir -p $CODE_DIR
+
+    # Download all files from S3 bucket to ~/code
+    aws s3 cp s3://${DATA_BUCKET_NAME}/code/gpu-ec2.zip $CODE_DIR
+
+    # Check if the download was successful
+    if [ $? -eq 0 ]; then
+        echo "Files downloaded successfully from S3."
+    else
+        echo "Error downloading files from S3. Exiting."
+        exit 1
+    fi
+
+    # Unzip all files in ~/code
+    for zip_file in $CODE_DIR/*.zip; do
+        if [ -f "$zip_file" ]; then
+            # Extract the filename without extension
+            folder_name=$(basename "$zip_file" .zip)
+
+            # Create the directory if it doesn't exist
+            mkdir -p "$CODE_DIR/$folder_name"
+
+            unzip -o "$zip_file" -d "$CODE_DIR/$folder_name"
+            if [ $? -eq 0 ]; then
+                echo "Unzipped: $zip_file"
+                # Optionally, remove the zip file after extraction
+                # rm "$zip_file"
+            else
+                echo "Error unzipping: $zip_file"
+            fi
+        fi
+    done
+
+    # sudo chown -R ubuntu:ubuntu $CODE_DIR
+    cp -a /home/ubuntu/code/gpu-ec2 /home/ubuntu/
+
+    echo "Download and unzip process completed."
+}
+
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+
 
 install_comfyui() {
     COMFY_DIR="/home/ubuntu/projects/comfy/ComfyUI"
@@ -49,73 +100,83 @@ install_docker_compose() {
     docker-compose --version
 }
 
+
 install_caddy() {
-    if command -v caddy &> /dev/null; then
+    if command_exists caddy; then
         echo "Caddy is already installed."
-        caddy -v
     else
         echo "Installing Caddy..."
         cd /tmp
         wget -q https://github.com/caddyserver/caddy/releases/download/v2.9.1/caddy_2.9.1_linux_amd64.tar.gz
-        tar -xzvf caddy_2.9.1_linux_amd64.tar.gz
+        tar xzf caddy_2.9.1_linux_amd64.tar.gz
         sudo mv caddy /usr/local/bin/
-        rm caddy_2.9.1_linux_amd64.tar.gz
-
-        DOMAIN=ec2-34-195-186-102.compute-1.amazonaws.com
+        sudo chmod +x /usr/local/bin/caddy
+        caddy version
         sudo mkdir -p /etc/caddy/certs
 
-        # Generate private key
-        sudo openssl genrsa -out /etc/caddy/certs/server.key 2048
+        CERT_DIR="/etc/caddy/certs"
+        DOMAIN="localhost"  # Using localhost as the default domain
+        DAYS_VALID=365
+        IP_ADDRESS=$(curl -s https://api.ipify.org)
 
-        # Create temporary config files
-        cat > /tmp/openssl_csr.cnf <<EOF
+        sudo mkdir -p $CERT_DIR
+
+        sudo openssl genrsa -out $CERT_DIR/server.key 2048
+
+        sudo bash -c "cat << EOF > $CERT_DIR/server.cnf
 [req]
-distinguished_name = req_distinguished_name
-x509_extensions = v3_req
+default_bits = 2048
 prompt = no
-[req_distinguished_name]
+default_md = sha256
+distinguished_name = dn
+x509_extensions = v3_req
+
+[dn]
+C = US
+ST = State
+L = City
+O = Organization
+OU = OrganizationalUnit
 CN = $DOMAIN
+
 [v3_req]
-subjectAltName = DNS:$DOMAIN
-keyUsage = critical, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = $DOMAIN
+IP.1 = $IP_ADDRESS
 EOF
+"
 
-        cat > /tmp/openssl_cert.cnf <<EOF
-[v3_req]
-subjectAltName = DNS:$DOMAIN
-keyUsage = critical, digitalSignature, keyEncipherment
-extendedKeyUsage = serverAuth
-EOF
+        sudo openssl req -x509 -nodes -days $DAYS_VALID \
+            -keyout $CERT_DIR/server.key \
+            -out $CERT_DIR/server.crt \
+            -config $CERT_DIR/server.cnf
 
-        # Create CSR with Subject Alternative Name
-        sudo openssl req -new -key /etc/caddy/certs/server.key -out /etc/caddy/certs/server.csr -subj "/CN=$DOMAIN" -config /tmp/openssl_csr.cnf
+        sudo chown caddy:caddy $CERT_DIR/server.key $CERT_DIR/server.crt
+        sudo chmod 600 $CERT_DIR/server.key
+        sudo chmod 644 $CERT_DIR/server.crt
 
-        # Generate self-signed certificate
-        sudo openssl x509 -req -days 365 -in /etc/caddy/certs/server.csr -signkey /etc/caddy/certs/server.key -out /etc/caddy/certs/server.crt -extfile /tmp/openssl_cert.cnf -extensions v3_req
+        # sudo rm $CERT_DIR/server.cnf
 
-        # Clean up temporary files
-        rm /tmp/openssl_csr.cnf /tmp/openssl_cert.cnf
+        echo "Self-signed certificate created for $DOMAIN and IP $IP_ADDRESS"
+        echo "Certificate location: $CERT_DIR/server.crt"
+        echo "Private key location: $CERT_DIR/server.key"
 
-        # Set ownership and permissions
-        sudo chmod 600 /etc/caddy/certs/server.key
-        sudo chmod 644 /etc/caddy/certs/server.crt
-        sudo chown ubuntu:ubuntu /etc/caddy/certs/server.key /etc/caddy/certs/server.crt
 
-        # Create a systemd service file for Caddy
-        sudo tee /etc/systemd/system/caddy.service > /dev/null <<EOF
+        echo "Copying caddy files from ubunt/home/ubuntu/gpu-ec2/caddyu to /etc/caddy"
+        sudo cp -R /home/ubuntu/gpu-ec2/caddy /etc
+
+
+        sudo bash -c 'cat << EOF > /etc/systemd/system/caddy.service
 [Unit]
 Description=Caddy
-Documentation=https://caddyserver.com/docs/
-After=network.target network-online.target
-Requires=network-online.target
+After=network.target
 
 [Service]
-User=ubuntu
-Group=ubuntu
 ExecStart=/usr/local/bin/caddy run --config /etc/caddy/Caddyfile
 ExecReload=/usr/local/bin/caddy reload --config /etc/caddy/Caddyfile
-TimeoutStopSec=5s
+TimeoutStopSec=5
 LimitNOFILE=1048576
 LimitNPROC=512
 PrivateTmp=true
@@ -124,69 +185,14 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 
 [Install]
 WantedBy=multi-user.target
-EOF
+EOF'
 
-        # Create a basic Caddyfile
-        sudo tee /etc/caddy/Caddyfile > /dev/null <<'EOF'
-{
-    auto_https off
-}
-
-(common) {
-    encode gzip
-    tls /etc/caddy/certs/server.crt /etc/caddy/certs/server.key
-}
-
-(auth_config) {
-    basicauth {
-        admin $2a$14$J6BFoAGj68Y7DwZ3NT1yx./ILPGHSbnq4nGCqdQAisqlEGtxpL7xq
-    }
-    request_header X-Authenticated-User {http.auth.user.id}
-}
-
-:7100 {
-    respond "Hello from my server!"
-}
-
-# portainer
-:7102 {
-    import common
-    reverse_proxy https://localhost:9102 {
-        transport http {
-            tls_insecure_skip_verify
-        }
-    }    
-}
-
-# jupyter-lab
-:7103 {
-    import common
-    reverse_proxy localhost:9103
-}
-
-# comfyui
-:7104 {
-    reverse_proxy localhost:9104
-    import common
-    import auth_config
-}
-
-# code-server
-:7109 {
-    import common
-    reverse_proxy localhost:9109
-}
-EOF
-
-        sudo chown ubuntu:ubuntu /etc/caddy/Caddyfile
-        # Reload systemd, enable and start Caddy service
         sudo systemctl daemon-reload
-        sudo systemctl enable caddy
         sudo systemctl start caddy
-
-        echo "Caddy has been installed and started successfully."
+        sudo systemctl enable caddy
     fi
 }
+
 
 
 install_conda() {
@@ -200,6 +206,8 @@ install_conda() {
         wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
         bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
         
+        rm Miniconda3-latest-Linux-x86_64.sh
+
         # Add conda to PATH
         # echo 'export PATH="$HOME/miniconda/bin:$PATH"' >> $HOME/.bashrc
         /home/ubuntu/miniconda/bin/conda init
@@ -236,7 +244,7 @@ install_code_server() {
 
         # Create the file with the specified content
         cat << EOF > "$CONFIG_FILE"
-bind-addr: 127.0.0.1:9109
+bind-addr: 127.0.0.1:8104
 auth: password
 password: $CODE_SERVER_PASSWORD
 cert: false
@@ -247,15 +255,152 @@ EOF
     fi
 }
 
+install_jupyterlab() {
+    if command -v jupyter; then
+        echo "JupyterLab is already installed."
+    else
+        echo "Installing JupyterLab..."
+        /home/ubuntu/miniconda/bin/pip install --quiet jupyterlab boto3 ansible
+        /home/ubuntu/miniconda/bin/jupyter --version
+    fi
+
+    echo "Configuring JupyterLab to run on port 8103..."
+
+    mkdir -p /home/ubuntu/.jupyter
+    cat << EOF > /home/ubuntu/.jupyter/jupyter_server_config.py
+c.ServerApp.port = 8103
+c.ServerApp.ip = "0.0.0.0"
+c.ServerApp.allow_origin = "*"
+c.ServerApp.open_browser = False
+c.ServerApp.disable_check_xsrf = True
+c.ServerApp.root_dir = '/home/ubuntu'
+c.ServerApp.token = "$JUPYTER_LAB_TOKEN"
+EOF
+
+    # chown -R ubuntu:ubuntu /home/ubuntu/.jupyter
+
+
+    sudo bash -c 'cat << EOF > /etc/systemd/system/jupyter-lab.service
+[Unit]
+Description=Jupyter Lab
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Environment="PATH=/home/ubuntu/miniconda/bin:/home/ubuntu/.local/bin:/home/ubuntu/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+ExecStart=/bin/bash -c "source /home/ubuntu/.bashrc && jupyter lab --no-browser"
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF'
+
+
+    sudo chmod 644 /etc/systemd/system/jupyter-lab.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable jupyter-lab.service
+    sudo systemctl start jupyter-lab.service
+
+    echo "Jupyter Lab service has been created, enabled, and started."
+
+    echo "JupyterLab installation and configuration completed."
+}
+
+docker_command() {
+    local cmd="$1"
+    local max_attempts=3
+    local attempt=1
+
+    while [ $attempt -le $max_attempts ]; do
+        if timeout 300 $cmd; then
+            return 0
+        fi
+        echo "Docker command failed. Attempt $attempt of $max_attempts. Retrying in 10 seconds..."
+        sleep 10
+        ((attempt++))
+    done
+
+    echo "Docker command failed after $max_attempts attempts."
+    return 1
+}
+
+
+start_containers() {
+    export OPEN_WEBUI_DIR=/home/ubuntu/gpu-ec2/docker/open-webui
+    # mkdir -p $OPEN_WEBUI_DIR
+
+    echo "Creating docker network: shared_network"
+    docker network create shared_network
+
+    echo "Creating Open WebUI, Ollama, LiteLLM containers"
+    cd $OPEN_WEBUI_DIR
+
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
+        echo "Failed to start containers. Cleaning up and exiting."
+        return
+    fi
+
+    echo "Open WebUI containers started. Building Bedrock gateway image..."
+
+    mkdir -p /home/ubuntu/temp
+    cd /home/ubuntu/temp
+    git clone https://github.com/aws-samples/bedrock-access-gateway.git
+    cd bedrock-access-gateway/src
+    docker build -q -t bedrock-gateway -f Dockerfile_ecs .    
+    cd ../..
+    rm -rf bedrock-access-gateway
+
+    export BEDROCK_GATEWAY_DIR=/home/ubuntu/gpu-ec2/docker/bedrock-gateway
+    # mkdir -p $BEDROCK_GATEWAY_DIR
+
+    # echo "$BEDROCK_GATEWAY_COMPOSE_CONTENT" > "$BEDROCK_GATEWAY_DIR/docker-compose.yml"
+    # echo "$(eval "echo \"$BEDROCK_GATEWAY_COMPOSE_CONTENT\"")" > "$BEDROCK_GATEWAY_DIR/docker-compose.yml"
+    # echo "Docker composefile for bedrock gateway created"
+
+    # sudo chown -R ubuntu:ubuntu $BEDROCK_GATEWAY_DIR
+    # sudo chown -R ubuntu:ubuntu /home/ubuntu/temp
+
+    echo "Creating Bedrock Gateway container"
+    cd $BEDROCK_GATEWAY_DIR
+
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
+        echo "Failed to start containers. Cleaning up and exiting."
+        return 
+    fi
+
+    # sudo chown -R ubuntu:ubuntu $OPEN_WEBUI_DIR/..
+
+}
+
+install_portainer() {
+    echo "Installing portainer in docker"
+    export PORTAINER_DIR=/home/ubuntu/gpu-ec2/docker/portainer
+    # mkdir -p $PORTAINER_DIR
+    # echo "$PORTAINER_COMPOSE_CONTENT" > "$PORTAINER_DIR/docker-compose.yml"
+    cd $PORTAINER_DIR
+    docker-compose up -d --quiet-pull
+    # sudo chown -R ubuntu:ubuntu $PORTAINER_DIR
+    echo "Portainer installed"
+}
+
 
 # Main installation process for root user
 root_installations() {
     echo "===---===---===--- START ===---"
+    echo "===---===---===---"
+    get_code_from_s3
+    echo "===---===---===---"
     # update_system
     # echo "===---===---===---"
     install_caddy    
     echo "===---===---===---"
     install_docker_compose
+    echo "===---===---===---"
+    start_containers
+    echo "===---===---===---"
+    install_portainer
     echo "===---===---===---"
     install_ansible
 }
@@ -268,7 +413,8 @@ ubuntu_installations() {
     echo "===---===---===---"
     install_conda
     echo "===---===---===---"
-    install_comfyui
+    install_jupyterlab
+    # install_comfyui
 }
 
 # Execute root installations

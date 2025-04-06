@@ -240,12 +240,13 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 WantedBy=multi-user.target
 EOF'
 
+        # Generate admin hash
+        generate_caddy_users
+
         sudo systemctl daemon-reload
         sudo systemctl start caddy
         sudo systemctl enable caddy
 
-        # Generate admin hash
-        generate_caddy_users
     fi
 }
 

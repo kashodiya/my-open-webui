@@ -165,6 +165,8 @@
               </v-card>
   
             </v-col>
+          </v-row>
+        </v-col>
       </v-row>
 
 
@@ -323,10 +325,10 @@
         this.getEc2SetupStatus();
         this.getEc2Status(0);
         if(this.projectInfo.instanceIdG){
+          console.log('EC2 GPU server exist. ');
           this.ec2List.push({name: 'GPU EC2', ec2Status: 'unknown'});
           this.getEc2Status(1);
         }
-
 
         console.log('Home mounted');
       },

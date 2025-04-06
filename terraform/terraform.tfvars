@@ -17,5 +17,6 @@ controller_auth_key     = ""
 region                  = "us-east-1"
 availability_zone       = "us-east-1a"
 create_gpu_instance     = false
-
+gpu_ec2_install_comfyui = false
+gpu_ec2_install_jupyterlab = false
 

@@ -10,6 +10,9 @@ variable "availability_zone" {}
 variable "create_gpu_instance" {}
 variable "gpu_instance_type" {}
 variable "gpu_ami" {}
+variable "gpu_ec2_install_comfyui" {}
+variable "gpu_ec2_install_jupyterlab" {}
+
 
 variable "jupyter_lab_token" {
   type        = string
@@ -485,6 +488,9 @@ export LITELLM_API_KEY="${var.litellm_api_key}"
 export BEDROCK_GATEWAY_API_KEY="${var.bedrock_gateway_api_key}"
 export JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
 export DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
+export GPU_EC2_INSTALL_COMFYUI=${var.gpu_ec2_install_comfyui}
+export GPU_EC2_INSTALL_JUPYTERLAB=${var.gpu_ec2_install_jupyterlab}
+
 
 ${local.gpu_user_data_script}
 
@@ -1015,6 +1021,8 @@ set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 set EC2_SECURITY_GROUP_ID=${aws_security_group.allow_sources.id}
+set GPU_EC2_INSTALL_COMFYUI=${var.gpu_ec2_install_comfyui}
+set GPU_EC2_INSTALL_JUPYTERLAB=${var.gpu_ec2_install_jupyterlab}
 EOT
 }
 # set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}

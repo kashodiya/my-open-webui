@@ -1,0 +1,10 @@
+# ComfyUI
+:7108 {
+    import common
+    import auth_basic
+    reverse_proxy https://localhost:8108 {
+        transport http {
+            tls_insecure_skip_verify
+        }
+    }    
+}

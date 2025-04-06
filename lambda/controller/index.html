@@ -112,18 +112,43 @@
             </v-card-title>
 
             <v-card-text>
+
               <v-list>
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title style="font-weight: bold; font-size: 1.2em; color: #1976D2;">Running on EC2</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
                 <v-list-item
                   v-for="app in projectInfo.apps"
                   :key="app.name"
                   :href="'https://' + projectInfo.eipPublicDns + ':' + app.port"
-                  XXhref="'https://' + projectInfo.elasticIP + ':' + app.port"
                   target="_blank"
                 >
                   <v-list-item-title>{{ app.name }}</v-list-item-title>
                 </v-list-item>
               </v-list>
+              
+              <v-list v-if="projectInfo.appsg">
+                <v-list-item>
+                  <v-list-item-content>
+                    <v-list-item-title style="font-weight: bold; font-size: 1.2em; color: #1976D2;">Running on GPU EC2</v-list-item-title>
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item
+                  v-for="app in projectInfo.appsg"
+                  :key="app.name"
+                  :href="'https://' + projectInfo.eipPublicDnsG + ':' + app.port"
+                  target="_blank"
+                >
+                  <v-list-item-title>{{ app.name }}</v-list-item-title>
+                </v-list-item>
+              </v-list>              
+
             </v-card-text>
+
+
+
           </v-card>
         </v-col>
     

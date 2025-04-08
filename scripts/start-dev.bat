@@ -68,7 +68,7 @@ echo litellm      = Opens LiteLLM in Browser >> help.txt
 doskey controller=start %CONTROLLER_URL%
 echo controller   = Opens Controller in Browser >> help.txt
 
-doskey comfy=start https://%ELASTIC_IP_G%:7104/
+doskey comfy=start https://%ELASTIC_IP_G%:7108/
 echo comfy        = Opens ComfyUI on GPU in Browser >> help.txt
 
 doskey litellmg=start https://%ELASTIC_IP%:7105/

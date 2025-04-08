@@ -68,6 +68,12 @@ sudo dpkg -i Pinokio_3.6.23_amd64.deb
 
 
 
+## Try other
+
+### localai
+- https://github.com/mudler/LocalAI?tab=readme-ov-file
+- Chat, generate image etc.
+docker run -ti --name local-ai -p 7109:8080 --gpus all localai/localai:latest-gpu-nvidia-cuda-12
 
 
 

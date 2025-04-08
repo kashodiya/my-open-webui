@@ -8,6 +8,11 @@ variable "ami" {}
 variable "instance_type" {}
 variable "availability_zone" {}
 variable "create_gpu_instance" {}
+variable "gpu_instance_type" {}
+variable "gpu_ami" {}
+variable "gpu_ec2_install_comfyui" {}
+variable "gpu_ec2_install_jupyterlab" {}
+
 
 variable "jupyter_lab_token" {
   type        = string
@@ -380,6 +385,13 @@ resource "aws_key_pair" "main_key" {
 #   etag = data.archive_file.caddy_zip.output_md5
 # }
 
+module "gpu-ec2_zip_upload" {
+  source          = "./modules/zip_and_upload_to_s3"
+  bucket_name     = aws_s3_bucket.data_bucket.id
+  folder_name     = "gpu-ec2"
+  source_dir      = "${path.module}/../gpu-ec2"
+  output_filename = "gpu-ec2.zip"
+}
 
 module "caddy_zip_upload" {
   source          = "./modules/zip_and_upload_to_s3"
@@ -476,6 +488,9 @@ export LITELLM_API_KEY="${var.litellm_api_key}"
 export BEDROCK_GATEWAY_API_KEY="${var.bedrock_gateway_api_key}"
 export JUPYTER_LAB_TOKEN="${var.jupyter_lab_token}"
 export DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
+export GPU_EC2_INSTALL_COMFYUI=${var.gpu_ec2_install_comfyui}
+export GPU_EC2_INSTALL_JUPYTERLAB=${var.gpu_ec2_install_jupyterlab}
+
 
 ${local.gpu_user_data_script}
 
@@ -570,10 +585,10 @@ resource "aws_instance" "gpu_instance" {
   # ami           = "ami-001c6931a3dcdfbff"
 
   # Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 20.04) 20240827
-  ami = "ami-003c04f18386a1dcc"
+  ami = var.gpu_ami
 
   # instance_type = "g4dn.xlarge"  
-  instance_type = "g5.xlarge"  
+  instance_type               = var.gpu_instance_type
   subnet_id                   = aws_subnet.public.id
   key_name                    = aws_key_pair.main_key.key_name
   iam_instance_profile        = aws_iam_instance_profile.instance_profile.name
@@ -582,11 +597,12 @@ resource "aws_instance" "gpu_instance" {
 
   user_data = <<-EOF
 #!/bin/bash
-aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/gpu-ec2-setup.sh /root/
-chmod +x /root/gpu-ec2-setup.sh
+aws s3 cp s3://${aws_s3_bucket.data_bucket.id}/gpu-ec2-setup.sh /home/ubuntu
+chmod +x /home/ubuntu/gpu-ec2-setup.sh
+sudo chown ubuntu:ubuntu /home/ubuntu/gpu-ec2-setup.sh
 sudo apt-get install dos2unix
-dos2unix /root/gpu-ec2-setup.sh
-/root/gpu-ec2-setup.sh
+dos2unix /home/ubuntu/gpu-ec2-setup.sh
+su - ubuntu -c /home/ubuntu/gpu-ec2-setup.sh
 EOF
 
 
@@ -597,8 +613,18 @@ EOF
     delete_on_termination = true
   }
 
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2 # Increase this value as needed for docker container
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+
   tags = {
-    Name      = "${var.project_id}_gpu"
+    Name      = "${var.project_id}_gpu_server"
     CreatedBy = "terraform"
   }
 }
@@ -995,6 +1021,8 @@ set EC2_PUBLIC_DNS=${aws_instance.main_instance.public_dns}
 set CONTROLLER_URL=${aws_lambda_function_url.controller_lambda_url.function_url}
 set DATA_BUCKET_NAME=${aws_s3_bucket.data_bucket.id}
 set EC2_SECURITY_GROUP_ID=${aws_security_group.allow_sources.id}
+set GPU_EC2_INSTALL_COMFYUI=${var.gpu_ec2_install_comfyui}
+set GPU_EC2_INSTALL_JUPYTERLAB=${var.gpu_ec2_install_jupyterlab}
 EOT
 }
 # set CONTROLLER_AUTH_KEY=${random_string.controller_auth_key.result}

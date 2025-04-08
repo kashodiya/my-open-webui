@@ -1,0 +1,70 @@
+
+# Expected env vars:
+#    LITELLM_API_KEY
+#    BEDROCK_GATEWAY_API_KEY
+#    JUPYTER_LAB_TOKEN
+
+services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama:/root/.ollama
+    environment:
+      - OLLAMA_DEBUG=1
+    restart: always
+    networks:
+      - shared_network
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    extra_hosts:
+      - "host.docker.internal:host-gateway"    
+    volumes:
+      - open-webui:/app/backend/data
+    environment:
+      - OPENAI_API_BASE_URLS=http://litellm;http://bedrock-gateway/api/v1
+      # - OPENAI_API_BASE_URLS=http://litellm:8105;http://host.docker.internal:8106/api/v1
+      # - OPENAI_API_BASE_URL=http://litellm:8105
+      # See ec2-setup\user-data.sh for how LITELLM_API_KEY is created
+      - OPENAI_API_KEYS=${LITELLM_API_KEY};${BEDROCK_GATEWAY_API_KEY}
+      # - OPENAI_API_KEY=$LITELLM_API_KEY
+      - GLOBAL_LOG_LEVEL="DEBUG"     
+      - OLLAMA_BASE_URL=http://ollama:11434 
+      - ENV=dev
+      - CODE_EXECUTION_ENGINE=jupyter
+      - CODE_EXECUTION_JUPYTER_URL=http://host.docker.internal:8103
+      - CODE_EXECUTION_JUPYTER_AUTH=token
+      # See ec2-setup\user-data.sh for how JUPYTER_LAB_TOKEN is created
+      - CODE_EXECUTION_JUPYTER_AUTH_TOKEN=${JUPYTER_LAB_TOKEN}
+    ports:
+      - "8101:8080"
+    restart: always
+    networks:
+      - shared_network
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    volumes:
+      - ./litellm-config.yml:/app/config.yaml
+    ports:
+      - "8105:80"
+    restart: unless-stopped
+    environment:
+      # See ec2-setup\user-data.sh for how LITELLM_API_KEY is created
+      - LITELLM_API_KEY=${LITELLM_API_KEY}
+      - AWS_REGION=us-east-1
+      - PORT=80
+    command: --config /app/config.yaml --detailed_debug
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true
+volumes:
+  ollama:
+  open-webui:
+

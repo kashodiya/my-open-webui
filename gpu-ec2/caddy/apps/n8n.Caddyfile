@@ -1,0 +1,5 @@
+# n8n (not activated)
+:7107 {
+    import common
+    reverse_proxy localhost:8107
+}

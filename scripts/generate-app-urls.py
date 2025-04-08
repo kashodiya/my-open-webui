@@ -2,9 +2,13 @@ import os
 import glob
 import json
 import boto3
+import getpass
 
+# Get the current user
+current_user = getpass.getuser()
 
 PROJECT_ID = os.environ.get('PROJECT_ID')
+print(f'Generating apps for project: {PROJECT_ID}')
 
 # Get the AWS region from the environment variable
 aws_region = os.environ.get('AWS_REGION')
@@ -62,6 +66,13 @@ json_data = json.dumps(processed_data, indent=2)
 
 # Construct the parameter name
 parameter_name = f"/{PROJECT_ID}/apps"
+
+if current_user == 'ubuntu':
+    print("The current user is 'ubuntu'.")
+    parameter_name = f"/{PROJECT_ID}/appsg"
+
+print(f'Param store key is: {parameter_name}')
+
 
 # Put the parameter
 response = ssm_client.put_parameter(

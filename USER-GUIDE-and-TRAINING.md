@@ -102,7 +102,8 @@ https://docs.yugabyte.com/images/sample-data/chinook/chinook-er-diagram.png
 - New chat
 - Select model: Claude 3 Haiku By Anthropic
 - Click "Code Interpreter" button
-- Enter question: Get current time
+- Enter question: Write python code to get current time
+- OR: Write python code to get user name
 - Hit Enter
 - Expand: Analyzed dropdown
 - Check the time printed in "STDOUT/STDERR"
@@ -214,14 +215,15 @@ https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-runtime_example_bed
 - Create new Notebook
 - Paste following code and replace your key on line 3.
 ```python
+import os
 import requests
 
 url = "http://localhost:8105/v1/completions"
-litellm_key = "YOUR-KEY-HERE"
+litellm_key = os.getenv('LITELLM_API_KEY')
 headers = {"Authorization": f"Bearer {litellm_key}", "Content-Type": "application/json"}
 question = "What is the capital of India?"
 data = {
-    "model": "Claude 3 Haiku By Anthropic", 
+    "model": "Claude 3 Haiku By Anthropic (Served via LiteLLM)", 
     "prompt": question,
     "max_tokens": 50
 }
@@ -244,17 +246,19 @@ else:
 - Run: pip install langchain langchain-community
 - Paste following code and replace your key on line 3.
 ```python
+import os
 from langchain.llms import OpenAI
+
+openai_api_key = os.getenv('LITELLM_API_KEY')
 
 llm = OpenAI(
     openai_api_base="http://localhost:8105/v1",  # Your LiteLLM server
     openai_api_key="YOUR-KEY-HERE",  # Required by LangChain but ignored by LiteLLM
-    model_name="Claude 3 Haiku By Anthropic"
+    model_name="Claude 3 Haiku By Anthropic (Served via LiteLLM)"
 )
 question = "What is the capital of India?"
 response = llm.predict(question)
 print(response)
-
 ```
 - Run code
 - Review code
@@ -271,7 +275,6 @@ model="bedrock/anthropic.claude-3-haiku-20240307-v1:0"
 prompt = "What is the capital of India"
 
 response = completion(
-  api_key="123123",  
   model=model, 
   messages=[{ "content": prompt,"role": "user"}]
 )    

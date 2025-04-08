@@ -1,0 +1,22 @@
+
+# Expected env vars:
+#    BEDROCK_GATEWAY_API_KEY
+
+services:
+  bedrock-gateway:
+    image: bedrock-gateway
+    container_name: bedrock-gateway
+    environment:
+      - AWS_REGION=$AWS_REGION
+      - AWS_DEFAULT_REGION=$AWS_REGION
+      - DEBUG=true
+      - API_KEY=${BEDROCK_GATEWAY_API_KEY}
+    ports:
+      - "8106:80"
+    networks:
+      - shared_network
+    restart: unless-stopped
+
+networks:
+  shared_network:
+    external: true

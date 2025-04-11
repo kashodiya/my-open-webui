@@ -671,3 +671,7 @@ Create shortcuts to enable disable ec2 schedular
 
 Restart Portainer btn
 
+### Write MCP server
+- Create MCP server to execute tasks like start stop servers
+- Implement the MCP server inside the controller lambda
+- Using VSCode Copilot Agent let users do the operations

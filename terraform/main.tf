@@ -974,8 +974,9 @@ resource "aws_ssm_parameter" "resource_ids" {
   name  = "/${var.project_id}/info"
   type  = "String"
   value = jsonencode({
+    awsAccountId              = data.aws_caller_identity.current.account_id
     elasticIP                 = aws_eip.dev_ec2_eip.public_ip,
-    elasticIPG = try(aws_eip.gpu_ec2_eip[0].public_ip, null),
+    elasticIPG                = try(aws_eip.gpu_ec2_eip[0].public_ip, null),
     projectId                 = var.project_id,
     instanceId                = aws_instance.main_instance.id,
     instanceIdG               = try(aws_instance.gpu_instance[0].id, null),
@@ -1009,6 +1010,7 @@ resource "aws_ssm_parameter" "resource_ids" {
 resource "local_file" "outputs" {
   filename = "${path.module}/set-tf-output-2-env-var.bat"
   content  = <<-EOT
+set AWS_ACCOUNT_ID=${data.aws_caller_identity.current.account_id}
 set AWS_REGION=${data.aws_region.current.name}
 set ELASTIC_IP=${aws_eip.dev_ec2_eip.public_ip}
 set ELASTIC_IP_G=${try(aws_eip.gpu_ec2_eip[0].public_ip, "")}

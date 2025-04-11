@@ -35,7 +35,7 @@ echo sshe  = SSH into EC2 >> help.txt
 doskey ssheg=ssh -i %PROJECT_DIR%\keys\private_key.pem -o ServerAliveInterval=60 -o ServerAliveCountMax=180 ubuntu@%ELASTIC_IP_G%
 echo ssheg = SSH into GPU EC2 >> help.txt
 
-doskey tog=aws ssm start-session --target %INSTANCE_ID_G% --document-name AWS-StartPortForwardingSession --parameters "{"localPortNumber":["11434"],"portNumber":["9114"]}"
+doskey tog=aws ssm start-session --target %INSTANCE_ID_G% --document-name AWS-StartPortForwardingSession --parameters "{\"localPortNumber\":[\"11434\"],\"portNumber\":[\"9114\"]}"
 echo tog   = Tunnel to Ollama into GPU EC2 >> help.txt
 
 doskey ec2=aws ec2 start-instances --instance-ids %INSTANCE_ID%

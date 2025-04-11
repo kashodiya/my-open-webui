@@ -8,6 +8,8 @@ services:
   ollama:
     image: ollama/ollama
     container_name: ollama
+    ports:
+      - "9114:11434"
     volumes:
       - ollama:/root/.ollama
     environment:

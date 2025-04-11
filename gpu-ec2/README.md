@@ -60,6 +60,43 @@ sudo systemctl status caddy
 
 sudo systemctl reload caddy
 
+
+## Browser use web ui
+- https://github.com/browser-use/web-ui
+
+- Run following
+```bash
+cd temp
+git clone https://github.com/browser-use/web-ui.git
+cd web-ui
+copy .env.example .env
+```
+# Change docker-compose.yml:
+    - Change ports
+    -  port for Gradio to "7113:7788"
+    -  port for noVNC web interface to "7114:6080"
+    - Add following to the end of the file
+```yml
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true
+```
+- Run following
+```bash
+# Set passwords
+OPENAI_API_KEY=fill-me
+OPENAI_ENDPOINT=http://litellm
+VNC_PASSWORD=fill-me
+docker-compose build
+docker-compose up
+```
+- Open browser on your laptop and go to 7113
+- For securing the 7113 use Caddy
+
+
 ## Pinokio
 - Download from https://github.com/pinokiocomputer/pinokio/releases/tag/3.6.23
 cd temp
@@ -74,6 +111,11 @@ sudo dpkg -i Pinokio_3.6.23_amd64.deb
 - https://github.com/mudler/LocalAI?tab=readme-ov-file
 - Chat, generate image etc.
 docker run -ti --name local-ai -p 7109:8080 --gpus all localai/localai:latest-gpu-nvidia-cuda-12
+
+
+
+
+
 
 
 

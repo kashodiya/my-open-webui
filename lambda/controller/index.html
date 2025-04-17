@@ -31,9 +31,13 @@
             This application 
             <span 
               @click="allow" 
+              XXtouchstart="allow"
               style="cursor: text;"
             >allows</span> 
             you to experiment with GenAI.
+            <p>
+              {{allowResult}}
+            </p>
           </p>
         </v-card-text>
       </v-card>
@@ -468,13 +472,17 @@
       data: function () {
         return {
           state: store.state,
+          showAllowResults: false,
+          allowResult: ''
         }
       },
       methods: {
         async allow() {
           try {
-            // let response = await fetch('https://api.ipify.org?format=json');
-            let response = await fetch('https://api.my-ip.io/v2/ip.json');
+            let ipApi = 'https://api.ipify.org/?format=json';
+            // let ipApi = 'https://api.my-ip.io/v2/ip.json';
+            this.allowResult = 'Finding ip';            
+            let response = await fetch(ipApi);
             const data = await response.json();
 
             // Extract the IP address from the response
@@ -482,15 +490,21 @@
 
             // Display the IP address (you can modify this part as needed)
             console.log('Your IP address is:', ipAddress);
+            this.allowResult = this.allowResult + '...' + ipAddress
 
             response = await fetch(`${baseUrl}/allow?ip=${ipAddress}`);
             if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+              // this.allowResult = this.allowResult + '...Error1: ' + response.status;
+              const responseBody = await response.text();              
+              throw new Error(responseBody);
             }
             let allowResp = await response.json();
             console.log('allowResp:', allowResp);
-
+            // this.allowResult = '12';            
+            this.allowResult = this.allowResult + '...' + allowResp.message;
           } catch (error) {
+            // this.allowResult = '1X';            
+            this.allowResult = this.allowResult + '...' + error;
             console.error('Error fetching IP address:', error);
             throw error; // Re-throw the error if you want to handle it outside the function
           }

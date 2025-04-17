@@ -8,6 +8,8 @@ import boto3
 from botocore.exceptions import ClientError
 from dateutil.relativedelta import relativedelta
 # import requests
+import ipaddress
+
 
 
 # Add the /package directory to the Python path
@@ -403,7 +405,18 @@ def read_file_from_s3(controller_token_bucket, file_key):
             print(f"An error occurred: {e}")
         return None
 
-
+def check_ip_type(ip_address):
+    try:
+        # Try to create an IPv4Address object
+        ipaddress.IPv4Address(ip_address)
+        return "IPv4"
+    except ipaddress.AddressValueError:
+        try:
+            # If it's not IPv4, try to create an IPv6Address object
+            ipaddress.IPv6Address(ip_address)
+            return "IPv6"
+        except ipaddress.AddressValueError:
+            return "Invalid IP address"
 
 def allow_get_handler(event, ec2_security_group_id):
     print(f"Event received: {event}")
@@ -411,7 +424,11 @@ def allow_get_handler(event, ec2_security_group_id):
 
     query_params = event.get('queryStringParameters', {})
     allow_ip = query_params.get('ip')    
-    ip_range = f'{allow_ip}/32'
+    if check_ip_type(allow_ip) == "IPv4":
+        ip_range = f'{allow_ip}/32'
+    else:
+        ip_range = f'{allow_ip}/128'
+
     print(f"IP to allow: {allow_ip}, IP range: {ip_range}")
 
     try:
@@ -447,22 +464,32 @@ def allow_get_handler(event, ec2_security_group_id):
 
             # Create a new ingress rule with the same port and new IP range
             print(f"Adding new ingress rule for IP range: {ip_range}")
+            permission = {
+                        'IpProtocol': ip_protocol,
+                        'FromPort': from_port,
+                        'ToPort': to_port
+                    }
+            if check_ip_type(allow_ip) == "IPv4":
+                rangeData = [{'CidrIp': ip_range, 'Description': new_description}]
+                permission['IpRanges'] = rangeData
+            else:
+                rangeData = [{'CidrIpv6': ip_range, 'Description': new_description}]
+                permission['Ipv6Ranges'] = rangeData
+            
             ec2_client.authorize_security_group_ingress(
                 GroupId=ec2_security_group_id,
                 IpPermissions=[
-                    {
-                        'IpProtocol': ip_protocol,
-                        'FromPort': from_port,
-                        'ToPort': to_port,
-                        'IpRanges': [{'CidrIp': ip_range, 'Description': new_description}]
-                    }
+                    permission
                 ]
             )
             
             print(f"New ingress rule added successfully with IP range: {ip_range}")
             return {
                 'statusCode': 200,
-                'body': json.dumps({'result': 'All ok'}),
+                                'body': json.dumps({
+                    'message': 'Done',
+                    'error': False
+                }),
             }
         else:
             print("No ingress rule found with description 'main-range'")
@@ -498,7 +525,7 @@ def allow_get_handler(event, ec2_security_group_id):
         return {
             'statusCode': 500,
             'body': json.dumps({
-                'message': 'Failed to transfer money',
+                'message': 'Failed to allow.',
                 'error': str(e)
             })
         }

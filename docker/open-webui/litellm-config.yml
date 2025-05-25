@@ -5,9 +5,9 @@ model_list:
   - model_name: amazon.nova-pro-v1:0 (Served via LiteLLM)
     litellm_params:
       model: bedrock/amazon.nova-pro-v1:0
-  - model_name: Claude 3.7 Sonnet By Anthropic (Served via LiteLLM)
+  - model_name: US Claude 3.7 Sonnet By Anthropic (Served via LiteLLM)
     litellm_params:
-      model: anthropic.claude-3-7-sonnet-20250219-v1:0
+      model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
   
 
 litellm_settings:

@@ -665,6 +665,19 @@ export ANTHROPIC_SMALL_FAST_MODEL='anthropic.claude-3-haiku-20240307-v1:0'
 ANTHROPIC_MODEL='us.anthropic.claude-3-7-sonnet-20250219-v1:0'
 
 
+## Searxng is used as a WebSearch engine
+- Check docker\open-webui\docker-compose.yml
+    - This file starts searxng service and also configure Open WebUI to use it
+- Searxng config file
+    - docker\open-webui\searxng\settings.yml
+### How to enable Searxng in OpenWebUI
+- Navigate to: Admin Panel -> Settings -> Web Search
+- Toggle Enable Web Search
+- Set Web Search Engine from dropdown menu to searxng
+- Set Searxng Query URL to
+    - http://searxng:8080/search?q=<query>
+
+
 ## TODO:
 
 Create shortcuts to enable disable ec2 schedular
@@ -675,3 +688,9 @@ Restart Portainer btn
 - Create MCP server to execute tasks like start stop servers
 - Implement the MCP server inside the controller lambda
 - Using VSCode Copilot Agent let users do the operations
+
+
+## How to observe that a EC2 is not been used
+- Observe a communication over several ports of EC2
+    - If you do not find any meaningful activity over a period of time, shutdown the EC2
+    

@@ -40,6 +40,12 @@ services:
       - CODE_EXECUTION_JUPYTER_AUTH=token
       # See ec2-setup\user-data.sh for how JUPYTER_LAB_TOKEN is created
       - CODE_EXECUTION_JUPYTER_AUTH_TOKEN=${JUPYTER_LAB_TOKEN}
+      - ENABLE_RAG_WEB_SEARCH=True
+      - RAG_WEB_SEARCH_ENGINE="searxng"
+      - RAG_WEB_SEARCH_RESULT_COUNT=3
+      - RAG_WEB_SEARCH_CONCURRENT_REQUESTS=10
+      - ENABLE_WEB_SEARCH=True
+      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>
     ports:
       - "8101:8080"
     restart: always
@@ -60,6 +66,22 @@ services:
       - AWS_REGION=us-east-1
       - PORT=80
     command: --config /app/config.yaml --detailed_debug
+    networks:
+      - shared_network
+
+  searxng:
+    container_name: searxng
+    image: docker.io/searxng/searxng:latest
+    restart: unless-stopped
+    volumes:
+      - ./searxng:/etc/searxng:rw
+    environment:
+      - SEARXNG_HOSTNAME=localhost:8080/
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "1m"
+        max-file: "1"
     networks:
       - shared_network
 

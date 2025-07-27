@@ -218,6 +218,14 @@ resource "aws_security_group" "allow_sources" {
     cidr_blocks = local.all_allowed_ips
   }
 
+  ingress {
+    description = "openhands-range"  
+    from_port   = 30000
+    to_port     = 60000
+    protocol    = "tcp"
+    cidr_blocks = local.all_allowed_ips
+  }
+
   # ingress {
   #   description     = "Allow ingress from controller lambda security group"
   #   from_port       = 0

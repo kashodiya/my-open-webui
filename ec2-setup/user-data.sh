@@ -94,6 +94,16 @@ start_containers() {
 
     sudo chown -R ec2-user:ec2-user $OPEN_WEBUI_DIR/..
 
+
+    echo "Creating OpenHands container..."
+    export OPENHANDS_DIR=/home/ec2-user/docker/openhands
+    cd $OPENHANDS_DIR
+    if ! docker_command "docker-compose up -d --quiet-pull"; then
+        log "Failed to start open hands containers."
+    fi
+    sudo chown -R ec2-user:ec2-user $OPENHANDS_DIR/..
+    echo "Done creating OpenHands container."
+
 }
 
 docker_command() {

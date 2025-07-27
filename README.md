@@ -447,6 +447,13 @@ docker-compose down --rmi all
 docker-compose up -d
 ```
 
+### OpenHands related info
+- It is run using Docker. Which is defined in docker\openhands
+- Note docker compose 
+- This script creates the container: ec2-setup\user-data.sh
+- This is the starting config of OpenHands: docker\openhands\.openhands\settings.json
+
+
 ## Resources and references
 ### Open WebUI
 - [Docs](https://docs.openwebui.com/)

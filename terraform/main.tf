@@ -992,6 +992,7 @@ resource "aws_ssm_parameter" "resource_ids" {
     dataBucketName            = aws_s3_bucket.data_bucket.id,
     codeServerPassword        = var.code_server_password,
     serverToolPassword        = var.server_tool_password,
+    adminPassword             = var.admin_password,
     serverToolJwtSecret       = random_string.server_tool_jwt_secret.result,
     liteLLMApiKey             = var.litellm_api_key,
     jupyterLabToken           = var.jupyter_lab_token,

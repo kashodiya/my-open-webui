@@ -1,0 +1,6 @@
+# Browser Use (not installed)
+:7188 {
+    import common
+    import auth_basic
+    reverse_proxy localhost:8188
+}

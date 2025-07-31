@@ -373,6 +373,17 @@ sudo systemctl restart code-server@$USER
 cat /home/ec2-user/.config/code-server/config.yaml
 
 
+### How to Install Browser Use Web UI
+- SSH into ec2
+```bash
+cd code/scripts
+bash install-browser-use.sh
+```
+- Actual URLs will be printed at the end of the script execution
+- Browser-Use Web UI installed and running at https://[ec2-dns]:7188
+- VNC access at http://[ec2-dns]:7189 with password: [your-admin-password]
+
+
 ## Tips and tricks
 
 ### Naming the project

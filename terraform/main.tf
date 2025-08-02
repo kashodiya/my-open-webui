@@ -473,6 +473,7 @@ locals {
 
 export PROJECT_ID=${var.project_id}
 export AWS_REGION=${data.aws_region.current.name}
+export AWS_DEFAULT_REGION=${data.aws_region.current.name}
 export CODE_SERVER_PASSWORD="${var.code_server_password}"
 export ADMIN_PASSWORD="${var.admin_password}"
 export LITELLM_API_KEY="${var.litellm_api_key}"
@@ -490,6 +491,7 @@ EOT
 
 export PROJECT_ID=${var.project_id}
 export AWS_REGION=${data.aws_region.current.name}
+export AWS_DEFAULT_REGION=${data.aws_region.current.name}
 export CODE_SERVER_PASSWORD="${var.code_server_password}"
 export ADMIN_PASSWORD="${var.admin_password}"
 export LITELLM_API_KEY="${var.litellm_api_key}"

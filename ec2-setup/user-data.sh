@@ -515,6 +515,7 @@ add_vars_to_bashrc() {
     variables=(
         "PROJECT_ID"
         "AWS_REGION"
+        "AWS_DEFAULT_REGION"
         "CODE_SERVER_PASSWORD"
         "LITELLM_API_KEY"
         "BEDROCK_GATEWAY_API_KEY"

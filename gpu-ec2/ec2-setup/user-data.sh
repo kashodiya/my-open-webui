@@ -4,6 +4,15 @@
 
 exec > >(tee /home/ubuntu/user-data.log|logger -t user-data -s 2>&1) 2>&1
 
+# # Wait for cloud-init to finish
+# echo "Waiting for cloud-init to complete..."
+# cloud-init status --wait
+
+# # Update package database first
+# apt-get update
+# echo "DONE Waiting for cloud-init to complete...and also did apt-get update."
+
+
 # Function to update and upgrade the system
 update_system() {
     sudo apt-get update
@@ -62,6 +71,7 @@ add_vars_to_bashrc() {
     variables=(
         "PROJECT_ID"
         "AWS_REGION"
+        "AWS_DEFAULT_REGION"
         "CODE_SERVER_PASSWORD"
         "LITELLM_API_KEY"
         "BEDROCK_GATEWAY_API_KEY"
@@ -516,6 +526,24 @@ register_end() {
     rm $PROJECT_ID-gpu-ec2-setup-ended
 }
 
+wait_for_apt_locks() {
+    echo "Checking for apt/dpkg locks..."
+    
+    # Loop until locks are free
+    while sudo lsof /var/lib/dpkg/lock >/dev/null 2>&1 || 
+          sudo lsof /var/lib/apt/lists/lock >/dev/null 2>&1 || 
+          sudo lsof /var/cache/apt/archives/lock >/dev/null 2>&1 ||
+          sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1 ||
+          sudo fuser /var/lib/apt/lists/lock >/dev/null 2>&1 ||
+          sudo fuser /var/cache/apt/archives/lock >/dev/null 2>&1
+    do
+        echo "Waiting for package manager locks to be released... (sleeping for 5s)"
+        sleep 5
+    done
+    
+    echo "No locks detected, proceeding with package operations."
+}
+
 # Main installation process for root user
 root_installations() {
     echo "===---===---===--- START ===---"
@@ -534,10 +562,21 @@ root_installations() {
     install_portainer
     echo "===---===---===---"
     install_ansible
+    # This is a workaround for dpkg lock
+    apt-get update
+
 }
 
 # Main installation process for ubuntu user
 ubuntu_installations() {
+
+    # echo "===---===---===---"
+    # echo "Installing Browser Use..."
+    # cd /home/ubuntu/code/scripts
+    # bash install-browser-use-gpu.sh 
+    # echo "DONE Installing Browser Use."
+    # echo "===---===---===---"
+
     echo "===---===---===---"
     install_code_server
     echo "===---===---===---"
@@ -561,11 +600,15 @@ ubuntu_installations() {
     else
         echo "Not installing ComfyUI."
     fi
+
 }
 
 # Execute root installations
 register_start
 root_installations
+
+# wait_for_apt_locks
+
 ubuntu_installations
 register_end
 

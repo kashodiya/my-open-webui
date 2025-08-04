@@ -383,6 +383,23 @@ bash install-browser-use.sh
 - Browser-Use Web UI installed and running at https://[ec2-dns]:7188
 - VNC access at http://[ec2-dns]:7189 with password: [your-admin-password]
 
+### How to install Perplexica
+- SSH into ec2
+```bash
+cd code/scripts
+bash install-perplexica.sh
+```
+- See the output for url and port
+- Configure LLM
+    - Open the app in browser
+    - Use admin and admin password to login
+    - Click gear icon at bottom left
+    - Chat Model Provider: Custom OpenAI
+    - Custom OpenAI Base URL: 
+        - Use http://<ec2-dns>:8105 as the base url (this is the URL for the LiteLLM running in docker)
+    - Model Name: Use "US Claude 3.7 Sonnet By Anthropic (Served via LiteLLM)" as the model name. You can use any model name from docker\open-webui\litellm-config.yml
+    - Custom OpenAI API Key: Value of litellm_api_key from terraform\terraform.tfvars.json
+
 
 ## Tips and tricks
 

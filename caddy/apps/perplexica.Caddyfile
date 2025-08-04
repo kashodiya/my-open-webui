@@ -1,0 +1,6 @@
+# Perplexica
+:7130 {
+    import common
+    import auth_basic
+    reverse_proxy localhost:8130
+}

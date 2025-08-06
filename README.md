@@ -556,6 +556,15 @@ docker restart portainer
 - It uses a dummy cert to serve HTTPS
 - Caddy can manage users and password and offer authentication. This is useful for appss that do not have native/local user management, like demo apps you may create etc.
 
+### How to change Caddy password
+- Generate new password hash
+```bash
+caddy hash-password
+```
+- Copy the hash and update by replace old hash in - /etc/caddy/users.txt
+- Reload caddy ``sudo systemctl reload caddy``
+- Note that you can add more users in /etc/caddy/users.txt if you want.
+
 ### How server prodcuts are instaled on EC2?
 - Server is setup using user-data script when creating EC2
 - User data script is dynamically generated in terraform main.tf

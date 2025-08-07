@@ -738,3 +738,6 @@ Restart Portainer btn
 - Observe a communication over several ports of EC2
     - If you do not find any meaningful activity over a period of time, shutdown the EC2
     
+
+## TODOs
+- Change ec2-setup\user-data.sh, function add_vars_to_bashrc, add ADMIN_PASSWORD

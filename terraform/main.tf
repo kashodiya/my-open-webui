@@ -549,7 +549,7 @@ EOF
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = 2048 # 2TB root volume
+    volume_size = 200 # 200 gb
     # encrypted = false 
     # delete_on_termination = true
   }

@@ -1,17 +1,17 @@
 model_list:
-  - model_name: Claude 3 Haiku By Anthropic (Served via LiteLLM)
+  - model_name: claude3
     litellm_params:
       model: anthropic.claude-3-haiku-20240307-v1:0
-  - model_name: amazon.nova-pro-v1:0 (Served via LiteLLM)
+  - model_name: novapro
     litellm_params:
       model: bedrock/amazon.nova-pro-v1:0
-  - model_name: US Claude 3.7 Sonnet By Anthropic (Served via LiteLLM)
+  - model_name: claude3.7
     litellm_params:
       model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
-  - model_name: Claude Sonnet 4 LiteLLM
+  - model_name: claude4
     litellm_params:
       model: us.anthropic.claude-sonnet-4-20250514-v1:0
-  - model_name: Claude Opus 4.1 LiteLLM
+  - model_name: claude4.1
     litellm_params:
       model: us.anthropic.claude-opus-4-1-20250805-v1:0  
 

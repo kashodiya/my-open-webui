@@ -9,6 +9,7 @@ keys/*.pem
 keys/*.pub
 temp
 terraform/terraform.tfvars.json
+terraform/terraform.json
 terraform/set-tf-output-2-env-var.bat
 launcher.bat
 lambda/function.zip

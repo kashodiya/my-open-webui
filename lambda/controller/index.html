@@ -100,9 +100,34 @@
       </v-row>
       <v-row>
         <v-col cols="4">
+          <!-- Cost Card -->
           <v-card>
-            <!-- <v-card-title>Application Links</v-card-title> -->
+            <v-card-title class="d-flex align-center">
+              AWS Cost
+              <v-btn
+                icon
+                x-small
+                class="ml-2"
+                @click="getCost"
+              >
+                <v-icon>mdi-refresh</v-icon>
+              </v-btn>
+            </v-card-title>
+            <v-card-text>
+              <div v-if="costInfo.cost !== null">
+                <div class="text-h6">${{ costInfo.cost.toFixed(2) }} {{ costInfo.currency }}</div>
+                <div class="text-caption">{{ costInfo.month }}</div>
+              </div>
+              <div v-else-if="costError">
+                <div class="text-body-2 error--text">{{ costError }}</div>
+              </div>
+              <div v-else>
+                <div class="text-body-2">Loading...</div>
+              </div>
+            </v-card-text>
+          </v-card>
 
+          <v-card class="mt-4">
             <v-card-title class="d-flex align-center">
               Application Links
               <v-btn
@@ -146,9 +171,6 @@
               </v-list>              
 
             </v-card-text>
-
-
-
           </v-card>
         </v-col>
     
@@ -321,10 +343,25 @@
           projectInfo: {},
           isLoading: false,
           ec2List: [{name: 'EC2', ec2Status: 'unknown'}],   // If GPU exist we will add a element 
-          ec2SetupStatus: 'Loading...'
+          ec2SetupStatus: 'Loading...',
+          costInfo: { cost: null, currency: '', month: '' },
+          costError: null
         }
       },
       methods: {
+        async getCost() {
+          try {
+            this.costError = null;
+            const response = await fetch(`${baseUrl}/cost`);
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.costInfo = await response.json();
+          } catch (error) {
+            console.error("Error fetching cost:", error);
+            this.costError = "Failed to load cost data";
+          }
+        },
         async getEc2Status(index){
             this.ec2List[index].ec2Status = '...';
             const response = await fetch(`${baseUrl}/ec2_status?index=${index}`);
@@ -416,6 +453,7 @@
 
         this.getEc2SetupStatus();
         this.getEc2Status(0);
+        this.getCost();
         if(this.projectInfo.instanceIdG){
           console.log('EC2 GPU server exist. ');
           this.ec2List.push({name: 'GPU EC2', ec2Status: 'unknown'});

@@ -2,15 +2,12 @@ import os
 import sys
 import json
 import hashlib
-# from datetime import datetime, timedelta
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, date
+import calendar
 import boto3
 from botocore.exceptions import ClientError
 from dateutil.relativedelta import relativedelta
-# import requests
 import ipaddress
-
-
 
 # Add the /package directory to the Python path
 sys.path.append(os.path.join(os.path.dirname(__file__), "package"))
@@ -18,13 +15,11 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "package"))
 # Now you can import your packages
 import jwt
 
-
 # Create EC2 client
 ec2_client = boto3.client('ec2')
 user_pool_name = 'myllm-user-pool'
 s3_client = boto3.client('s3')
 scheduler = boto3.client('scheduler')
-
 
 def get_project_info(parameter_name):
     ssm_client = boto3.client('ssm')
@@ -42,14 +37,6 @@ def get_project_info(parameter_name):
     except Exception as e:
         print(f"An error occurred: {str(e)}")
     return None
-
-
-
-# Add this at the beginning of your file, after the imports
-# TOKEN_STORAGE = {}
-# Change this to a year in seconds
-# TOKEN_EXPIRATION = 365 * 24 * 60 * 60  # One year in seconds
-
 
 def generate_token(auth_key, jwt_secret_key):
     print(f"Generating token for auth_key: {auth_key}")
@@ -78,52 +65,49 @@ def verify_token(token, jwt_secret_key):
         print(f"An unexpected error occurred: {str(e)}")
         return False
 
-
-# def generate_token(auth_key, controller_token_bucket):
-#     timestamp = datetime.utcnow().timestamp()
-#     token = hashlib.sha256(f"{auth_key}{timestamp}".encode()).hexdigest()
-#     expiration = int((datetime.utcnow() + timedelta(seconds=TOKEN_EXPIRATION)).timestamp())
-    
-#     S3_CLIENT.put_object(
-#         Bucket=controller_token_bucket,
-#         Key=f"tokens/{token}",
-#         Body=json.dumps({"expiration": expiration})
-#     )
-#     return token
-
-# def verify_token(token, controller_token_bucket):
-#     print(f"Verifying token: {token}")
-#     try:
-#         print(f"Attempting to retrieve token data from S3 bucket: {controller_token_bucket}")
-#         response = S3_CLIENT.get_object(Bucket=controller_token_bucket, Key=f"tokens/{token}")
-#         print("Successfully retrieved token data from S3")
+def cost_get_handler(event):
+    try:
+        ce_client = boto3.client('ce')
+        today = date.today()
         
-#         token_data = json.loads(response['Body'].read().decode('utf-8'))
-#         print(f"Token data: {token_data}")
+        start_date = today.replace(day=1).strftime('%Y-%m-%d')
+        last_day = calendar.monthrange(today.year, today.month)[1]
+        end_date = today.replace(day=last_day).strftime('%Y-%m-%d')
         
-#         expiration = token_data['expiration']
-#         current_time = datetime.utcnow().timestamp()
-#         print(f"Current time: {current_time}, Token expiration: {expiration}")
+        response = ce_client.get_cost_and_usage(
+            TimePeriod={'Start': start_date, 'End': end_date},
+            Granularity='MONTHLY',
+            Metrics=['BlendedCost']
+        )
         
-#         if current_time < expiration:
-#             print("Token is valid")
-#             return True
-#         else:
-#             print("Token has expired, deleting from S3")
-#             S3_CLIENT.delete_object(Bucket=controller_token_bucket, Key=f"tokens/{token}")
-#             print("Expired token deleted from S3")
-#             return False
-#     except S3_CLIENT.exceptions.NoSuchKey:
-#         print(f"Token not found in S3: {token}")
-#         return False
-#     except Exception as e:
-#         print(f"An unexpected error occurred: {str(e)}")
-#         return False
-
+        total_cost = response['ResultsByTime'][0]['Total']['BlendedCost']['Amount']
+        currency = response['ResultsByTime'][0]['Total']['BlendedCost']['Unit']
+        
+        return {
+            'statusCode': 200,
+            'body': json.dumps({
+                'cost': float(total_cost),
+                'currency': currency,
+                'month': today.strftime('%B %Y')
+            }),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)}),
+            'headers': {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*'
+            }
+        }
 
 def login_post_handler(event, auth_key, jwt_secret_key):
     body = json.loads(event['body'])
-    print(f'Body key: {body.get('key')}')
+    print(f'Body key: {body.get("key")}')
     print(f'auth_key: {auth_key}')
     if body.get('key') == auth_key:
         token = generate_token(auth_key, jwt_secret_key)
@@ -228,7 +212,6 @@ def project_info_get_handler(event, project_info):
         }
     return response
 
-
 def stop_ec2_get_handler(event, instance_id):
     try:
         stop_response = ec2_client.stop_instances(InstanceIds=[instance_id])
@@ -255,8 +238,6 @@ def stop_ec2_get_handler(event, instance_id):
         }
     return response
 
-
-
 def start_ec2_get_handler(event, instance_id):
     try:
         start_response = ec2_client.start_instances(InstanceIds=[instance_id])
@@ -282,8 +263,6 @@ def start_ec2_get_handler(event, instance_id):
             }
         }
     return response
-
-
 
 def ec2_status_get_handler(event, instance_id):
     try:
@@ -374,24 +353,6 @@ def get_sg(security_group_id):
                 'error': str(e)
             })
         }
-
-# def get_apps(data_controller_token_bucket):
-#     json_txt = read_file_from_s3(data_controller_token_bucket, 'apps.json')
-#     print(f'{json_txt}')
-#     return json_txt
-
-# def get_first_data_bucket():
-#     response = s3_client.list_buckets()
-#     for bucket in response['Buckets']:
-#         if '-data-' in bucket['Name']:
-#             name = bucket['Name']
-#             print(f'Found data bucket name: {name}')
-#             return name
-#     return None
-
-# def get_data_controller_token_bucket():
-#     return get_first_data_bucket()
-
 
 def read_file_from_s3(controller_token_bucket, file_key):
     try:
@@ -529,8 +490,6 @@ def allow_get_handler(event, ec2_security_group_id):
                 'error': str(e)
             })
         }
-    
-
 
 def ec2_schedular_info_get_handler(event, project_id):
     try:
@@ -539,7 +498,6 @@ def ec2_schedular_info_get_handler(event, project_id):
 
         start_info = get_scheduler_info(start_name)
         stop_info = get_scheduler_info(stop_name)
-
 
         response = {
             'statusCode': 200,
@@ -559,7 +517,6 @@ def ec2_schedular_info_get_handler(event, project_id):
             }
         }
     return response
-
 
 def get_scheduler_info(scheduler_name):
     try:
@@ -668,49 +625,6 @@ def add_ingress_rule(ip_range):
         else:
             print(f"Error adding ingress rule: {e}")
 
-# def get_token_from_event(event, context):
-#     """Extract the token from the Lambda event"""
-#     print("Attempting to extract token from event")
-
-#     # Check Authorization header
-#     headers = event.get('headers', {})
-#     auth_header = headers.get('Authorization') or headers.get('authorization')
-#     if auth_header:
-#         print("Found Authorization header")
-#         parts = auth_header.split()
-#         if parts[0].lower() == 'bearer' and len(parts) == 2:
-#             print("Bearer token found in Authorization header")
-#             return parts[1]
-
-#     # Check query parameters
-#     query_params = event.get('queryStringParameters', {})
-#     if query_params:
-#         token = query_params.get('token')
-#         if token:
-#             print("Token found in query parameters")
-#             return token
-
-#     # Check form data or JSON body
-#     body = event.get('body')
-#     if body:
-#         # Try to parse as JSON
-#         try:
-#             body_json = json.loads(body)
-#             token = body_json.get('token')
-#             if token:
-#                 print("Token found in JSON body")
-#                 return token
-#         except json.JSONDecodeError:
-#             # If not JSON, treat as form data
-#             form_data = parse_qs(body)
-#             token = form_data.get('token', [None])[0]
-#             if token:
-#                 print("Token found in form data")
-#                 return token
-
-#     print("No token found in event")
-#     return None
-
 def logout_get_handler(event):
     # Set up the response object
     response = {
@@ -751,18 +665,6 @@ def calculate_time_elapsed(ended_str):
     days = time_elapsed.days
     hours, remainder = divmod(time_elapsed.seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
-    
-    # Prepare the response
-    # response = {
-    #     "time_elapsed": {
-    #         "days": days,
-    #         "hours": hours,
-    #         "minutes": minutes,
-    #         "seconds": seconds
-    #     }
-    # }
-    
-    # return response
 
     parts = []
     if days > 0:
@@ -887,24 +789,6 @@ def ec2_setup_status_get_handler(event, bucket_name, project_id):
         }
     return response
 
-# def call_server_tool():
-#     url = "http://ec2-44-213-29-205.compute-1.amazonaws.com:7100/"
-    
-#     try:
-#         # Send a GET request to the URL
-#         response = requests.get(url)
-        
-#         # Check if the request was successful
-#         if response.status_code == 200:
-#             print("Request successful!")
-#             print("Response content:")
-#             print(response.text)
-#         else:
-#             print(f"Request failed with status code: {response.status_code}")
-    
-#     except requests.exceptions.RequestException as e:
-#         print(f"An error occurred: {e}")
-
 def getInstanceIdByIndex(event, project_info):
     query_params = event.get('queryStringParameters', {})
     index = int(query_params['index'])
@@ -912,7 +796,6 @@ def getInstanceIdByIndex(event, project_info):
         return project_info['instanceId']
     else:
         return project_info['instanceIdG']
-
 
 # Define a dictionary mapping (path, method) tuples to handler functions
 HANDLERS = {
@@ -930,6 +813,7 @@ HANDLERS = {
     ('/ec2_status', 'GET'): ec2_status_get_handler,
     ('/ec2-schedular-info', 'GET'): ec2_schedular_info_get_handler,
     ('/ensble-disable-start-stop-ec2-schedular', 'GET'): ensble_disable_start_stop_ec2_schedular_get_handler,
+    ('/cost', 'GET'): cost_get_handler,
     ('/hello', 'GET'): hello_get_handler
 }
 S3_CLIENT = boto3.client('s3')
@@ -945,7 +829,6 @@ def parse_cookies(cookie_string):
 
 def lambda_handler(event, context):
     try:
-        # call_server_tool()
         function_name = context.function_name
         project_id = function_name.split('-')[0]
         parameter_name = f'/{project_id}/info'
@@ -956,27 +839,16 @@ def lambda_handler(event, context):
         project_info['appsg'] = appsg
 
         # Remove keys
-        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key', 'bedrockGatewayApiKey', 'codeServerPassword', 'jupyterLabToken', 'liteLLMApiKey', 'serverToolPassword', 'serverToolJwtSecret']  # Replace with the actual keys you want to remove
+        keys_to_remove = ['controller_jwt_secret_key', 'controller_auth_key', 'bedrockGatewayApiKey', 'codeServerPassword', 'jupyterLabToken', 'liteLLMApiKey', 'serverToolPassword', 'serverToolJwtSecret']
         safe_project_info = {k: v for k, v in project_info.items() if k not in keys_to_remove}
         auth_key = project_info['controller_auth_key']
-        # controller_token_bucket = project_info['controller_token_bucket']
-        # TODO: Generate it in tf and read from info
         jwt_secret_key = project_info['controller_jwt_secret_key']
 
-        # apps = project_info['apps'] 
         print(project_info)
         print(auth_key)
         
-        # data_controller_token_bucket = get_data_controller_token_bucket()
         security_group_id = 'NONE'
         
-        # cookies = event.get('headers', {}).get('cookie', '')
-        # token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
-        # cookies = event.get('headers', {}).get('cookie', '')
-        # token = next((c.split('=')[1] for c in cookies.split('; ') if c.startswith('token=')), None)
-
-        # token = get_token_from_event(event, context)
-
         # Extract cookies from the event
         cookies = event.get('headers', {}).get('cookie', '')
 
@@ -993,8 +865,6 @@ def lambda_handler(event, context):
             pass
         else:
             if token:
-                # authenticated_paths = ['/ec2s', '/allow', '/sg', '/apps', '/project-info']
-                # if path in authenticated_paths:
                 print(f'Verifying token: {token}')
                 if not verify_token(token, jwt_secret_key):
                     return {
@@ -1024,15 +894,12 @@ def lambda_handler(event, context):
             ec2_security_group_id = project_info['ec2SecurityGroupId'] 
             return handler(event, ec2_security_group_id)
         elif handler == start_ec2_get_handler:
-            # instance_id = project_info['instanceId']
             instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == stop_ec2_get_handler:
-            # instance_id = project_info['instanceId'] 
             instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == ec2_status_get_handler:
-            # instance_id = project_info['instanceId'] 
             instance_id = getInstanceIdByIndex(event, project_info) 
             return handler(event, instance_id)
         elif handler == ensble_disable_start_stop_ec2_schedular_get_handler:

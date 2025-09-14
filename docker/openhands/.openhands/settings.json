@@ -4,7 +4,7 @@
   "max_iterations": null,
   "security_analyzer": null,
   "confirmation_mode": false,
-  "llm_model": "litellm_proxy/US Claude 3.7 Sonnet By Anthropic (Served via LiteLLM)",
+  "llm_model": "litellm_proxy/claude3.7",
   "llm_api_key": "sk-this-is-not-even-used",
   "llm_base_url": "http://litellm",
   "remote_runtime_resource_factor": 1,

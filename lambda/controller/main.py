@@ -402,62 +402,86 @@ def allow_get_handler(event, ec2_security_group_id):
         security_group = response['SecurityGroups'][0]
         print(f"Security group details: {security_group}")
         
-        # Find the ingress rule with description "main-range"
+        # Find the ingress rules with descriptions "main-range" and "openhands-range"
         main_range_rule = None
+        openhands_range_rule = None
         for rule in security_group['IpPermissions']:
             print(f"Checking rule: {rule}")
-            if 'IpRanges' in rule and rule['IpRanges'] and 'Description' in rule['IpRanges'][0] and rule['IpRanges'][0]['Description'] == 'main-range':
-                main_range_rule = rule
-                print(f"Found main-range rule: {main_range_rule}")
-                break
-                    
+            if 'IpRanges' in rule and rule['IpRanges'] and 'Description' in rule['IpRanges'][0]:
+                description = rule['IpRanges'][0]['Description']
+                if description == 'main-range':
+                    main_range_rule = rule
+                    print(f"Found main-range rule: {main_range_rule}")
+                elif description == 'openhands-range':
+                    openhands_range_rule = rule
+                    print(f"Found openhands-range rule: {openhands_range_rule}")
+        
+        # Generate the description with current timestamp
+        current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        permissions_to_add = []
+        
+        # Add rule based on main-range if found
         if main_range_rule:
-            # Extract the port information from the main-range rule
             from_port = main_range_rule['FromPort']
             to_port = main_range_rule['ToPort']
             ip_protocol = main_range_rule['IpProtocol']
             print(f"Main range rule details - From Port: {from_port}, To Port: {to_port}, IP Protocol: {ip_protocol}")
             
-            # Generate the description with current timestamp
-            current_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-            new_description = f"added-on-{current_time}" 
-            print(f"New rule description: {new_description}")
-
-            # Create a new ingress rule with the same port and new IP range
-            print(f"Adding new ingress rule for IP range: {ip_range}")
+            new_description = f"added-on-{current_time}"
             permission = {
-                        'IpProtocol': ip_protocol,
-                        'FromPort': from_port,
-                        'ToPort': to_port
-                    }
+                'IpProtocol': ip_protocol,
+                'FromPort': from_port,
+                'ToPort': to_port
+            }
             if check_ip_type(allow_ip) == "IPv4":
-                rangeData = [{'CidrIp': ip_range, 'Description': new_description}]
-                permission['IpRanges'] = rangeData
+                permission['IpRanges'] = [{'CidrIp': ip_range, 'Description': new_description}]
             else:
-                rangeData = [{'CidrIpv6': ip_range, 'Description': new_description}]
-                permission['Ipv6Ranges'] = rangeData
+                permission['Ipv6Ranges'] = [{'CidrIpv6': ip_range, 'Description': new_description}]
             
+            permissions_to_add.append(permission)
+        
+        # Add rule based on openhands-range if found
+        if openhands_range_rule:
+            from_port = openhands_range_rule['FromPort']
+            to_port = openhands_range_rule['ToPort']
+            ip_protocol = openhands_range_rule['IpProtocol']
+            print(f"Openhands range rule details - From Port: {from_port}, To Port: {to_port}, IP Protocol: {ip_protocol}")
+            
+            new_description = f"openhands-added-on-{current_time}"
+            permission = {
+                'IpProtocol': ip_protocol,
+                'FromPort': from_port,
+                'ToPort': to_port
+            }
+            if check_ip_type(allow_ip) == "IPv4":
+                permission['IpRanges'] = [{'CidrIp': ip_range, 'Description': new_description}]
+            else:
+                permission['Ipv6Ranges'] = [{'CidrIpv6': ip_range, 'Description': new_description}]
+            
+            permissions_to_add.append(permission)
+        
+        if permissions_to_add:
+            # Add all new ingress rules
+            print(f"Adding {len(permissions_to_add)} new ingress rules for IP range: {ip_range}")
             ec2_client.authorize_security_group_ingress(
                 GroupId=ec2_security_group_id,
-                IpPermissions=[
-                    permission
-                ]
+                IpPermissions=permissions_to_add
             )
             
-            print(f"New ingress rule added successfully with IP range: {ip_range}")
+            print(f"New ingress rules added successfully with IP range: {ip_range}")
             return {
                 'statusCode': 200,
-                                'body': json.dumps({
+                'body': json.dumps({
                     'message': 'Done',
                     'error': False
                 }),
             }
         else:
-            print("No ingress rule found with description 'main-range'")
+            print("No ingress rules found with descriptions 'main-range' or 'openhands-range'")
             return {
                 'statusCode': 500,
                 'body': json.dumps({
-                    'message': 'Not able to find main range',
+                    'message': 'Not able to find main range or openhands range',
                     'error': True
                 })
             }
@@ -616,12 +640,23 @@ def add_ingress_rule(ip_range):
                         },
                     ],
                 },
+                {
+                    'IpProtocol': 'tcp',
+                    'FromPort': 30000,
+                    'ToPort': 60000,
+                    'IpRanges': [
+                        {
+                            'CidrIp': ip_range,
+                            'Description': 'Allowed via controller'
+                        },
+                    ],
+                },
             ],
         )
         print(f"Ingress rule added successfully: {response}")
     except ClientError as e:
         if e.response['Error']['Code'] == 'InvalidPermission.Duplicate':
-            print(f"Ingress rule already exists for ports 8100-8199 from {ip_range}")
+            print(f"Ingress rule already exists for ports 8100-8199 and 30000-60000 from {ip_range}")
         else:
             print(f"Error adding ingress rule: {e}")
 

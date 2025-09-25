@@ -1,0 +1,18 @@
+services:
+  localstack:
+    image: localstack/localstack
+    container_name: localstack_main
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    environment:
+      - SERVICES=s3,lambda,dynamodb,cloudwatch,iam,sqs,sns,apigateway
+      - DEBUG=1
+    volumes:
+      - "${HOME}/.localstack:/var/lib/localstack"
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true

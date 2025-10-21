@@ -1,0 +1,16 @@
+services:
+  mcpo:
+    container_name: mcpo
+    build: .
+    # ports:
+    #   - 8007:8000
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - shared_network
+
+networks:
+  shared_network:
+    external: true
+    

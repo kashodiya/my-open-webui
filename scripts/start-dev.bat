@@ -114,6 +114,11 @@ echo rkhg  = Remove known SSH host of GPU EC2 >> help.txt
 doskey help=type %PROJECT_DIR%\help.txt
 echo help  = Print this help >> help.txt
 
+
+doskey op=%PROJECT_DIR%\scripts\open-url-port.bat $*
+echo op    = Open port using EC2 doamin >> help.txt
+
+
 title %PROJECT_ID%
 
 type help.txt

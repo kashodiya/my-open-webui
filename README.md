@@ -58,13 +58,7 @@ cd my-open-webui
 - If you are using AWS Access Portal, after login, you will see screen like (Click on your name):  
 <img src="docs/images/aws-login.PNG" width="100%" alt="Screen after AWS login">
 - Click on "Acces keys", then go to Windows tab:  
-
-<img src="docs/images/aws-login-creds-windows-tab.PNG" width="100%" alt="AWS keys windows tab">
-
 - Go to Options 1 and copy credentials by clicking the blue icon on the right: 
-
-<img src="docs/images/aws-login-creds-option1.PNG" width="100%" alt="AWS keys windows tab">
-
 - Go back to the cmd window and paste it and hit Enter.
 - Better way to login is to use AWS Profile. See guide here: https://docs.aws.amazon.com/cli/v1/userguide/cli-configure-files.html
 

@@ -780,6 +780,27 @@ resource "aws_lambda_function_url" "controller_lambda_url" {
   }
 }
 
+resource "aws_lambda_permission" "controller_lambda_url_permission" {
+  statement_id           = "AllowFunctionUrlInvoke"
+  action                 = "lambda:InvokeFunctionUrl"
+  function_name          = aws_lambda_function.main_controller_lambda.function_name
+  principal              = "*"
+  function_url_auth_type = "NONE"
+}
+
+resource "aws_lambda_permission" "controller_lambda_invoke_permission" {
+  statement_id  = "AllowFunctionInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.main_controller_lambda.function_name
+  principal     = "*"
+  
+  #condition {
+  #  test     = "StringEquals"
+  #  variable = "lambda:InvokedViaFunctionUrl"
+  #  values   = ["true"]
+  #}
+}
+
 
 
 

@@ -212,6 +212,10 @@ show_passwords
     - SSH into the server and execute: docker restart portainer
     - Refresh the web page
 
+### Restart OpenHands (if browser shows an error)
+    - SSH into the server and execute: docker restart openhands-app
+    - check openhands container is running - docker ps --filter "name=openhands-app" --filter "status=running" 
+    - Refresh the web page
 
 
 ## Maintenance and operations
